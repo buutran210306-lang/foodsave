@@ -128,7 +128,12 @@ export const getSocketServer = (): SocketIOServer => {
 };
 
 export const emitStoreStatusChanged = (payload: StoreStatusChangedPayload): void => {
-  const io = getSocketServer();
+  if (!socketServer) {
+    logger.warn("Socket.io server is not initialized; skipping STORE_STATUS_CHANGED emit", payload);
+    return;
+  }
+
+  const io = socketServer;
 
   // Gửi riêng tới dashboard của seller để màn hình cửa hàng đổi trạng thái ngay.
   io.to(sellerRoom(payload.sellerId)).emit(REALTIME_EVENTS.STORE_STATUS_CHANGED, payload);

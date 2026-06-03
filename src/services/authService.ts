@@ -35,7 +35,12 @@ interface AuthContext {
 }
 
 export interface AuthResult {
-  user: Pick<User, "id" | "email" | "phone" | "created_at">;
+  user: {
+    id: string;
+    email: string;
+    phone: string;
+    created_at: string;
+  };
   profile: Profile;
   session: {
     access_token: string;
@@ -179,7 +184,7 @@ const buildAuthResult = async (user: User, session: Session): Promise<AuthResult
       id: user.id,
       email: user.email ?? "",
       phone: user.phone ?? "",
-      created_at: user.created_at
+      created_at: user.created_at ?? ""
     },
     profile,
     session: {
