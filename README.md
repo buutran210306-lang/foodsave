@@ -20,8 +20,13 @@ Production-oriented Node.js + TypeScript + Express backend for the FoodSave user
 3. Run the full migration script at `database/001_foodsave_schema.sql`.
 4. Run the realtime seller reputation migration at `database/002_seller_reputation_realtime.sql`.
 5. Run the auth flow migration at `database/003_auth_flow.sql`.
-6. In Supabase Auth, enable email/password sign-in.
-7. Create manual users only when needed. Normal registration should call the backend auth endpoints with one of:
+6. Run the OAuth auth migration at `database/004_oauth_auth_flow.sql`.
+7. Run the phone OTP auth migration at `database/005_phone_otp_auth_flow.sql`.
+8. In Supabase Auth, enable email/password sign-in and phone sign-in. Configure an SMS provider so Supabase can send OTP to real phone numbers.
+9. In Supabase Auth Providers, enable Google. In Google Cloud authorized redirect URIs, add the Supabase callback URL, for example `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`. Add the frontend URL, for example `https://YOUR_FRONTEND_DOMAIN/FOODSAVE_USER.html`, to Supabase Auth redirect URLs.
+10. In Supabase Auth Providers, enable Facebook with your Facebook App ID/secret and request `email,public_profile`. In Facebook Login valid OAuth redirect URIs, add the Supabase callback URL, for example `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`. Add the frontend URL, for example `https://YOUR_FRONTEND_DOMAIN/FOODSAVE_USER.html`, to Supabase Auth redirect URLs.
+11. In Supabase Auth Email Templates, make sure the OTP email includes the 6-digit token, usually via the template variable `{{ .Token }}`.
+12. Create manual users only when needed. Normal registration should call the backend auth endpoints with one of:
    - `customer`
    - `partner`
    - `charity`
@@ -44,6 +49,10 @@ SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
 PASSWORD_RESET_REDIRECT_URL=http://localhost:8080/reset-password
+GOOGLE_OAUTH_REDIRECT_URL=http://localhost:5500/FOODSAVE_USER.html
+FACEBOOK_OAUTH_REDIRECT_URL=http://localhost:5500/FOODSAVE_USER.html
+GOOGLE_OTP_EXPIRES_SECONDS=600
+PHONE_OTP_EXPIRES_SECONDS=600
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5500,http://127.0.0.1:5500
 SOCKET_CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8081,http://10.0.2.2:8081
 DATABASE_HOST=localhost
@@ -92,6 +101,8 @@ When opened from `file://` or a localhost frontend dev server, the standalone HT
 http://localhost:8080/api/v1
 ```
 
+OAuth providers cannot redirect back to `file://`. For Google/Facebook login locally, serve the static frontend over HTTP, for example `http://localhost:5500/FOODSAVE_USER.html`, and add that same URL to Supabase Auth redirect URLs. For Facebook, the Facebook App valid OAuth redirect URI should be the Supabase callback URL: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
+
 When served from a production HTTP/HTTPS domain, the HTML files call the same origin by default:
 
 ```text
@@ -114,6 +125,9 @@ You can also configure the script tag or a meta tag:
 ## Auth Flow
 
 - `FOODSAVE_USER.html` uses `frontend/foodsave-auth-client.js` to call `POST /auth/login`, `POST /auth/register/customer`, `POST /auth/password-reset`, and `POST /auth/logout`.
+- Customer phone OTP login calls `POST /auth/phone/otp` with the user's phone number, Supabase sends the OTP by SMS, then the user enters the 6-digit code and the frontend calls `POST /auth/phone/verify` before saving the FoodSave session.
+- Customer Google login calls `POST /auth/google/start`, redirects to Supabase Google OAuth, then automatically calls `POST /auth/google/otp` after the callback. The OTP is sent directly to the Google email returned by OAuth, not to a user-entered email. `POST /auth/google/verify` accepts only the challenge id and OTP before saving the FoodSave session.
+- Customer Facebook login calls `POST /auth/facebook/start`, redirects the user to Facebook Login, asks the user to approve linking FoodSave with their Facebook account, then calls `POST /auth/facebook/callback` after consent. The backend verifies that the Supabase session belongs to Facebook and returns the FoodSave session immediately.
 - `FOODSAVE_PARTNER.html` uses the same client script to call `POST /auth/login` with `expected_role: "partner"` and `POST /auth/register/partner`.
 - `FOODSAVE_CHARITY.html` uses the same client script to call `POST /auth/login` with `expected_role: "charity"` and `POST /auth/register/charity`.
 - Customer registration creates an active Supabase Auth user and `profiles` row.
@@ -141,6 +155,13 @@ or:
 - `POST /auth/register/partner`
 - `POST /auth/register/charity`
 - `POST /auth/login`
+- `POST /auth/google/start`
+- `POST /auth/google/otp`
+- `POST /auth/google/verify`
+- `POST /auth/facebook/start`
+- `POST /auth/facebook/callback`
+- `POST /auth/phone/otp`
+- `POST /auth/phone/verify`
 - `POST /auth/refresh`
 - `POST /auth/password-reset`
 - `POST /auth/logout`

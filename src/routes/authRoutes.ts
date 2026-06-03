@@ -3,8 +3,15 @@ import { authController } from "../controllers/authController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { validateRequest } from "../middlewares/validateRequest";
 import {
+  facebookOAuthCallbackBodySchema,
+  facebookOAuthStartBodySchema,
+  googleOAuthStartBodySchema,
+  googleOtpRequestBodySchema,
+  googleOtpVerifyBodySchema,
   loginBodySchema,
   passwordResetBodySchema,
+  phoneOtpRequestBodySchema,
+  phoneOtpVerifyBodySchema,
   refreshTokenBodySchema,
   registerCharityBodySchema,
   registerCustomerBodySchema,
@@ -36,6 +43,48 @@ authRoutes.post(
   "/login",
   validateRequest({ body: loginBodySchema }),
   asyncHandler(authController.login)
+);
+
+authRoutes.post(
+  "/google/start",
+  validateRequest({ body: googleOAuthStartBodySchema }),
+  asyncHandler(authController.startGoogleOAuth)
+);
+
+authRoutes.post(
+  "/google/otp",
+  validateRequest({ body: googleOtpRequestBodySchema }),
+  asyncHandler(authController.requestGoogleOtp)
+);
+
+authRoutes.post(
+  "/google/verify",
+  validateRequest({ body: googleOtpVerifyBodySchema }),
+  asyncHandler(authController.verifyGoogleOtp)
+);
+
+authRoutes.post(
+  "/facebook/start",
+  validateRequest({ body: facebookOAuthStartBodySchema }),
+  asyncHandler(authController.startFacebookOAuth)
+);
+
+authRoutes.post(
+  "/facebook/callback",
+  validateRequest({ body: facebookOAuthCallbackBodySchema }),
+  asyncHandler(authController.completeFacebookOAuth)
+);
+
+authRoutes.post(
+  "/phone/otp",
+  validateRequest({ body: phoneOtpRequestBodySchema }),
+  asyncHandler(authController.requestPhoneOtp)
+);
+
+authRoutes.post(
+  "/phone/verify",
+  validateRequest({ body: phoneOtpVerifyBodySchema }),
+  asyncHandler(authController.verifyPhoneOtp)
 );
 
 authRoutes.post(

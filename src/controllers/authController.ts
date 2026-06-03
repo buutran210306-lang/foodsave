@@ -1,8 +1,15 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/http";
 import type {
+  FacebookOAuthCallbackBody,
+  FacebookOAuthStartBody,
+  GoogleOAuthStartBody,
+  GoogleOtpRequestBody,
+  GoogleOtpVerifyBody,
   LoginBody,
   PasswordResetBody,
+  PhoneOtpRequestBody,
+  PhoneOtpVerifyBody,
   RefreshTokenBody,
   RegisterCharityBody,
   RegisterCustomerBody,
@@ -52,6 +59,48 @@ export const authController = {
   async login(req: Request, res: Response): Promise<void> {
     const body = req.validated?.body as LoginBody;
     const result = await authService.login(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async startGoogleOAuth(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as GoogleOAuthStartBody;
+    const result = await authService.startGoogleOAuth(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async requestGoogleOtp(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as GoogleOtpRequestBody;
+    const result = await authService.requestGoogleOtp(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async verifyGoogleOtp(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as GoogleOtpVerifyBody;
+    const result = await authService.verifyGoogleOtp(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async startFacebookOAuth(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as FacebookOAuthStartBody;
+    const result = await authService.startFacebookOAuth(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async completeFacebookOAuth(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as FacebookOAuthCallbackBody;
+    const result = await authService.completeFacebookOAuth(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async requestPhoneOtp(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as PhoneOtpRequestBody;
+    const result = await authService.requestPhoneOtp(body, requestMeta(req));
+    sendSuccess(res, result);
+  },
+
+  async verifyPhoneOtp(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as PhoneOtpVerifyBody;
+    const result = await authService.verifyPhoneOtp(body, requestMeta(req));
     sendSuccess(res, result);
   },
 

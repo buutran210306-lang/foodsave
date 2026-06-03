@@ -29,6 +29,42 @@ export const passwordResetBodySchema = z.object({
   identifier: z.string().trim().min(3).max(180)
 }).strict();
 
+export const googleOAuthStartBodySchema = z.object({
+  redirect_to: z.string().trim().url().optional()
+}).strict();
+
+export const facebookOAuthStartBodySchema = googleOAuthStartBodySchema;
+
+export const facebookOAuthCallbackBodySchema = z.object({
+  access_token: z.string().trim().min(20),
+  refresh_token: z.string().trim().min(20),
+  expires_at: z.number().int().positive().nullable().optional(),
+  token_type: z.string().trim().min(1).default("bearer"),
+  expected_role: authRoleSchema.optional()
+}).strict();
+
+export const googleOtpRequestBodySchema = z.object({
+  access_token: z.string().trim().min(20),
+  expected_role: authRoleSchema.optional()
+}).strict();
+
+export const googleOtpVerifyBodySchema = z.object({
+  challenge_id: z.string().uuid(),
+  otp: z.string().trim().regex(/^\d{6}$/, "OTP must contain 6 digits"),
+  expected_role: authRoleSchema.optional()
+}).strict();
+
+export const phoneOtpRequestBodySchema = z.object({
+  phone: phoneSchema,
+  expected_role: authRoleSchema.optional()
+}).strict();
+
+export const phoneOtpVerifyBodySchema = z.object({
+  phone: phoneSchema,
+  otp: z.string().trim().regex(/^\d{6}$/, "OTP must contain 6 digits"),
+  expected_role: authRoleSchema.optional()
+}).strict();
+
 export const registerCustomerBodySchema = z.object({
   full_name: shortTextSchema,
   email: emailSchema,
@@ -80,6 +116,13 @@ export const registerCharityBodySchema = z.object({
 export type LoginBody = z.infer<typeof loginBodySchema>;
 export type RefreshTokenBody = z.infer<typeof refreshTokenBodySchema>;
 export type PasswordResetBody = z.infer<typeof passwordResetBodySchema>;
+export type GoogleOAuthStartBody = z.infer<typeof googleOAuthStartBodySchema>;
+export type GoogleOtpRequestBody = z.infer<typeof googleOtpRequestBodySchema>;
+export type GoogleOtpVerifyBody = z.infer<typeof googleOtpVerifyBodySchema>;
+export type FacebookOAuthStartBody = z.infer<typeof facebookOAuthStartBodySchema>;
+export type FacebookOAuthCallbackBody = z.infer<typeof facebookOAuthCallbackBodySchema>;
+export type PhoneOtpRequestBody = z.infer<typeof phoneOtpRequestBodySchema>;
+export type PhoneOtpVerifyBody = z.infer<typeof phoneOtpVerifyBodySchema>;
 export type RegisterCustomerBody = z.infer<typeof registerCustomerBodySchema>;
 export type RegisterPartnerBody = z.infer<typeof registerPartnerBodySchema>;
 export type RegisterCharityBody = z.infer<typeof registerCharityBodySchema>;
