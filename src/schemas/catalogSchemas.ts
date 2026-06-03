@@ -69,12 +69,9 @@ const createProductBodyBaseSchema = z.object({
   is_active: z.boolean().default(true)
 }).strict();
 
-const productPriceRefinement = (value: { price_cents?: number; original_price_cents?: number }): boolean => {
-  if (value.price_cents === undefined || value.original_price_cents === undefined) return true;
+export const createProductBodySchema = createProductBodyBaseSchema.refine((value) => {
   return value.original_price_cents >= value.price_cents;
-};
-
-export const createProductBodySchema = createProductBodyBaseSchema.refine(productPriceRefinement, {
+}, {
   message: "original_price_cents must be greater than or equal to price_cents",
   path: ["original_price_cents"]
 });
@@ -83,7 +80,10 @@ export const updateProductBodySchema = createProductBodyBaseSchema
   .omit({ store_id: true })
   .partial()
   .strict()
-  .refine(productPriceRefinement, {
+  .refine((value) => {
+    if (value.price_cents === undefined || value.original_price_cents === undefined) return true;
+    return value.original_price_cents >= value.price_cents;
+  }, {
     message: "original_price_cents must be greater than or equal to price_cents",
     path: ["original_price_cents"]
   });
