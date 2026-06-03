@@ -1,8 +1,42 @@
 (function () {
   "use strict";
 
-  const API_BASE_URL = window.FOODSAVE_API_BASE || "http://localhost:8080/api/v1";
+  const LOCAL_API_BASE_URL = "http://localhost:8080/api/v1";
+  const API_PATH = "/api/v1";
   const AUTH_STORAGE_KEY = "foodsave.auth.session";
+
+  function trimTrailingSlash(value) {
+    return String(value || "").replace(/\/+$/, "");
+  }
+
+  function explicitApiBase() {
+    const script = document.currentScript;
+    const scriptBase = script && script.getAttribute ? script.getAttribute("data-api-base") : "";
+    const meta = document.querySelector('meta[name="foodsave-api-base"]');
+    const metaBase = meta && meta.getAttribute ? meta.getAttribute("content") : "";
+    return window.FOODSAVE_API_BASE || scriptBase || metaBase || "";
+  }
+
+  function resolveApiBaseUrl() {
+    const explicit = trimTrailingSlash(explicitApiBase());
+    if (explicit) return explicit;
+
+    const location = window.location;
+    const isHttp = location.protocol === "http:" || location.protocol === "https:";
+    const isLocalHost = location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "::1";
+
+    if (isHttp && !isLocalHost) {
+      return `${location.origin}${API_PATH}`;
+    }
+
+    if (isHttp && isLocalHost && location.port === "8080") {
+      return `${location.origin}${API_PATH}`;
+    }
+
+    return LOCAL_API_BASE_URL;
+  }
+
+  const API_BASE_URL = resolveApiBaseUrl();
 
   const portalConfig = {
     partner: {

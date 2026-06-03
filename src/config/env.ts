@@ -3,6 +3,11 @@ import { z } from "zod";
 
 dotenv.config();
 
+const optionalNonEmptyString = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().min(1).optional()
+);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(8080),
@@ -16,6 +21,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  DATABASE_URL: optionalNonEmptyString,
   DATABASE_HOST: z.string().min(1).default("localhost"),
   DATABASE_PORT: z.coerce.number().int().min(1).max(65535).default(5432),
   DATABASE_NAME: z.string().min(1).default("foodsave"),
@@ -24,6 +30,10 @@ const envSchema = z.object({
   DATABASE_SSL: z
     .enum(["true", "false"])
     .default("false")
+    .transform((value) => value === "true"),
+  DATABASE_SSL_REJECT_UNAUTHORIZED: z
+    .enum(["true", "false"])
+    .default("true")
     .transform((value) => value === "true")
 });
 

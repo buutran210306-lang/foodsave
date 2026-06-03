@@ -52,6 +52,7 @@ DATABASE_NAME=foodsave
 DATABASE_USER=postgres
 DATABASE_PASSWORD=foodsave_secure_local_password
 DATABASE_SSL=false
+DATABASE_SSL_REJECT_UNAUTHORIZED=true
 ```
 
 Use the service role key only on the backend. Do not expose it in frontend HTML or client bundles.
@@ -67,7 +68,7 @@ npm start
 
 ## API Base
 
-Default base URL:
+Backend default base URL:
 
 ```text
 http://localhost:8080/api/v1
@@ -85,16 +86,29 @@ The standalone HTML frontends store the current auth session in:
 localStorage["foodsave.auth.session"]
 ```
 
-They call this API base by default:
+When opened from `file://` or a localhost frontend dev server, the standalone HTML files call:
 
 ```text
 http://localhost:8080/api/v1
 ```
 
-To deploy the HTML files against another API URL, set this before loading `frontend/foodsave-auth-client.js`:
+When served from a production HTTP/HTTPS domain, the HTML files call the same origin by default:
+
+```text
+https://your-frontend-domain.com/api/v1
+```
+
+If the API is on a different domain, set this before loading `frontend/foodsave-auth-client.js` and `frontend/foodsave-live-data.js`:
 
 ```html
 <script>window.FOODSAVE_API_BASE = "https://api.foodsave.vn/api/v1";</script>
+```
+
+You can also configure the script tag or a meta tag:
+
+```html
+<meta name="foodsave-api-base" content="https://api.foodsave.vn/api/v1">
+<script src="frontend/foodsave-auth-client.js" data-api-base="https://api.foodsave.vn/api/v1"></script>
 ```
 
 ## Auth Flow
@@ -234,3 +248,5 @@ npm run build
 3. Set `NODE_ENV=production`.
 4. Set `CORS_ORIGINS` to the exact frontend origins, separated by commas.
 5. Keep `SUPABASE_SERVICE_ROLE_KEY` in server-only secret storage.
+6. For managed Postgres, set `DATABASE_URL`. It takes precedence over the split `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, and `DATABASE_PASSWORD` variables.
+7. Set `DATABASE_SSL=true` for hosted Postgres. If your provider uses a certificate chain unavailable to the runtime, set `DATABASE_SSL_REJECT_UNAUTHORIZED=false`.
