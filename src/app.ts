@@ -14,10 +14,16 @@ export const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 
+const isAllowedCorsOrigin = (origin: string | undefined): boolean => {
+  if (!origin) return true;
+  if (env.CORS_ORIGINS.includes(origin)) return true;
+  return env.NODE_ENV !== "production" && origin === "null";
+};
+
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || env.CORS_ORIGINS.includes(origin)) {
+    if (isAllowedCorsOrigin(origin)) {
       callback(null, true);
       return;
     }

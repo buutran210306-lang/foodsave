@@ -3841,10 +3841,14 @@ const $$ = sel => document.querySelectorAll(sel);
 const fmt = n => n === 0 ? 'Miễn phí' : n.toLocaleString('vi-VN') + '₫';
 const fmtPlain = n => n.toLocaleString('vi-VN') + '₫';
 
-function toast(msg, type='info') {
+function toast(msg, type='info', key='') {
   const icons = { info: 'ti-circle-check', warn: 'ti-alert-triangle', error: 'ti-circle-x' };
+  if (key) {
+    document.querySelectorAll(`#toast-wrap .toast[data-key="${key}"]`).forEach(el => el.remove());
+  }
   const t = document.createElement('div');
   t.className = 'toast ' + (type === 'info' ? '' : type);
+  if (key) t.dataset.key = key;
   t.innerHTML = `<i class="ti ${icons[type] || icons.info}"></i><span>${msg}</span>`;
   $('#toast-wrap').appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = 'all .3s'; }, 2700);
@@ -3917,12 +3921,7 @@ function doLogin() {
 
 function socialLogin(provider) {
   const names = { google: 'Google', facebook: 'Facebook', apple: 'Apple', zalo: 'Zalo' };
-  toast(`Đang chuyển đến ${names[provider]}...`, 'info');
-  // Simulate OAuth popup
-  setTimeout(() => {
-    toast(`✓ Đăng nhập bằng ${names[provider]} thành công`, 'info');
-    setTimeout(() => navTo('home'), 400);
-  }, 800);
+  toast(`${names[provider]} chưa được bật trong Supabase OAuth. Vui lòng dùng email/mật khẩu để đăng ký hoặc đăng nhập.`, 'warn', 'oauth');
 }
 
 function loginWithOTP() {

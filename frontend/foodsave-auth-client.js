@@ -4,6 +4,11 @@
   const LOCAL_API_BASE_URL = "http://localhost:8080/api/v1";
   const API_PATH = "/api/v1";
   const AUTH_STORAGE_KEY = "foodsave.auth.session";
+  let oauthNoticeTimer = 0;
+  let customerLoginPending = false;
+  let customerRegisterPending = false;
+  let portalLoginPending = false;
+  let portalRegisterPending = false;
 
   function trimTrailingSlash(value) {
     return String(value || "").replace(/\/+$/, "");
@@ -80,10 +85,22 @@
       return;
     }
     if (typeof window.toast === "function") {
-      window.toast(message ? `${title}: ${message}` : title, type === "error" ? "error" : type === "warn" ? "warn" : "info");
+      const mappedType = type === "error" ? "error" : type === "warn" ? "warn" : "info";
+      const key = mappedType === "error" ? "auth-error" : mappedType === "warn" ? "auth-warn" : "";
+      window.toast(message ? `${title}: ${message}` : title, mappedType, key);
       return;
     }
     window.alert(message ? `${title}\n${message}` : title);
+  }
+
+  function notifyOnce(key, title, message, type, cooldownMs) {
+    const now = Date.now();
+    const stateKey = `__foodsaveNotify_${key}`;
+    const last = Number(window[stateKey] || 0);
+
+    if (last && now - last < cooldownMs) return;
+    window[stateKey] = now;
+    notify(title, message, type);
   }
 
   function normalizePhone(value) {
@@ -134,14 +151,19 @@
   }
 
   async function request(path, options) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      method: options.method || "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.token ? { Authorization: `Bearer ${options.token}` } : {})
-      },
-      body: options.body ? JSON.stringify(options.body) : undefined
-    });
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        method: options.method || "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.token ? { Authorization: `Bearer ${options.token}` } : {})
+        },
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+    } catch (error) {
+      throw new Error(`Không thể kết nối FoodSave API tại ${API_BASE_URL}. Hãy kiểm tra backend đang chạy và CORS_ORIGINS đã cho phép domain frontend.`);
+    }
 
     let payload = null;
     try {
@@ -173,6 +195,8 @@
   }
 
   async function loginCustomer() {
+    if (customerLoginPending) return;
+    customerLoginPending = true;
     try {
       const emailTab = select("#login-email-tab");
       const identifier = visible(emailTab)
@@ -195,10 +219,14 @@
       if (typeof window.navTo === "function") window.navTo("home");
     } catch (error) {
       notify("Đăng nhập thất bại", error.message, "error");
+    } finally {
+      customerLoginPending = false;
     }
   }
 
   async function registerCustomer() {
+    if (customerRegisterPending) return;
+    customerRegisterPending = true;
     try {
       const fullName = requireValue("#reg-name", "họ tên");
       const phone = `${readValue("#reg-country") || "+84"} ${requireValue("#reg-phone", "số điện thoại")}`;
@@ -239,6 +267,8 @@
       notify("Tạo tài khoản thành công", "Session đã được lưu an toàn trên trình duyệt.", "info");
     } catch (error) {
       notify("Đăng ký thất bại", error.message, "error");
+    } finally {
+      customerRegisterPending = false;
     }
   }
 
@@ -358,6 +388,8 @@
   }
 
   async function registerPortal(role) {
+    if (portalRegisterPending) return;
+    portalRegisterPending = true;
     const account = window.FoodSavePortalRegistration || {};
     const selectedType = typeof selBType === "string" && selBType ? selBType : "other";
 
@@ -406,10 +438,14 @@
       enterPortalWithAuth(role, data);
     } catch (error) {
       notify("Đăng ký thất bại", error.message, "error");
+    } finally {
+      portalRegisterPending = false;
     }
   }
 
   async function loginPortal(role) {
+    if (portalLoginPending) return;
+    portalLoginPending = true;
     try {
       const data = await request("/auth/login", {
         method: "POST",
@@ -424,6 +460,8 @@
       enterPortalWithAuth(role, data);
     } catch (error) {
       notify("Đăng nhập thất bại", error.message, "error");
+    } finally {
+      portalLoginPending = false;
     }
   }
 
@@ -442,7 +480,17 @@
   }
 
   function oauthNotice() {
-    notify("SSO chưa bật trong cổng này", "Luồng hiện tại dùng email/mật khẩu qua backend FoodSave để tránh đăng nhập giả lập.", "warn");
+    clearTimeout(oauthNoticeTimer);
+    notifyOnce(
+      "oauth",
+      "Đăng nhập mạng xã hội chưa bật",
+      "Google, Facebook, Zalo và Apple cần cấu hình OAuth provider trong Supabase. Hiện tại vui lòng dùng email/mật khẩu để đăng ký hoặc đăng nhập.",
+      "warn",
+      2500
+    );
+    oauthNoticeTimer = window.setTimeout(() => {
+      window.__foodsaveNotify_oauth = 0;
+    }, 2500);
   }
 
   window.FoodSaveAuth = {

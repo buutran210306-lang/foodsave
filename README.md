@@ -40,11 +40,11 @@ npm run dev
 Fill `.env` with values from Supabase Project Settings:
 
 ```bash
-SUPABASE_URL=https://foodsave-project.supabase.co
-SUPABASE_ANON_KEY=foodsave_local_anon_key
-SUPABASE_SERVICE_ROLE_KEY=foodsave_local_service_role_key
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
 PASSWORD_RESET_REDIRECT_URL=http://localhost:8080/reset-password
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5500,http://127.0.0.1:5500
 SOCKET_CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8081,http://10.0.2.2:8081
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
@@ -250,3 +250,5 @@ npm run build
 5. Keep `SUPABASE_SERVICE_ROLE_KEY` in server-only secret storage.
 6. For managed Postgres, set `DATABASE_URL`. It takes precedence over the split `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER`, and `DATABASE_PASSWORD` variables.
 7. Set `DATABASE_SSL=true` for hosted Postgres. If your provider uses a certificate chain unavailable to the runtime, set `DATABASE_SSL_REJECT_UNAUTHORIZED=false`.
+
+Use `.env.production.example` as the production template, then replace every `YOUR_*` value with the real Supabase project URL, anon key, service role key, database password, and frontend domain.
