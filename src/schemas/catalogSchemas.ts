@@ -53,7 +53,7 @@ export const updateStoreBodySchema = createStoreBodySchema.partial().extend({
   status: z.enum(["active", "pending", "suspended"]).optional()
 }).strict();
 
-export const createProductBodySchema = z.object({
+const createProductBodyBaseSchema = z.object({
   store_id: z.string().uuid(),
   name: z.string().trim().min(2).max(180),
   description: z.string().trim().min(10).max(3000),
@@ -67,12 +67,26 @@ export const createProductBodySchema = z.object({
   stock_quantity: z.number().int().min(0),
   is_donation: z.boolean().default(false),
   is_active: z.boolean().default(true)
-}).strict().refine((value) => value.original_price_cents >= value.price_cents, {
+}).strict();
+
+const productPriceRefinement = (value: { price_cents?: number; original_price_cents?: number }): boolean => {
+  if (value.price_cents === undefined || value.original_price_cents === undefined) return true;
+  return value.original_price_cents >= value.price_cents;
+};
+
+export const createProductBodySchema = createProductBodyBaseSchema.refine(productPriceRefinement, {
   message: "original_price_cents must be greater than or equal to price_cents",
   path: ["original_price_cents"]
 });
 
-export const updateProductBodySchema = createProductBodySchema.omit({ store_id: true }).partial().strict();
+export const updateProductBodySchema = createProductBodyBaseSchema
+  .omit({ store_id: true })
+  .partial()
+  .strict()
+  .refine(productPriceRefinement, {
+    message: "original_price_cents must be greater than or equal to price_cents",
+    path: ["original_price_cents"]
+  });
 
 export const createVoucherBodySchema = z.object({
   store_id: z.string().uuid().nullable().optional(),

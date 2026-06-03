@@ -177,8 +177,8 @@ const buildAuthResult = async (user: User, session: Session): Promise<AuthResult
   return {
     user: {
       id: user.id,
-      email: user.email,
-      phone: user.phone,
+      email: user.email ?? "",
+      phone: user.phone ?? "",
       created_at: user.created_at
     },
     profile,
