@@ -1,5 +1,5 @@
 [build]
-  command = ""
+  command = "npm install && npm run build"
   publish = "."
   functions = "netlify/functions"
 
@@ -14,3 +14,4 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
+  
