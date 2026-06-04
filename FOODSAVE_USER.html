@@ -1848,15 +1848,15 @@
           <span style="font-size:11px;font-weight:800;color:var(--green)">Google và Facebook riêng biệt</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px">
-          <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="loginWithGoogle()" aria-label="Đăng nhập bằng Google và nhận OTP qua Gmail" style="background:#fff;border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
+          <button class="btn btn-ghost" type="button" onclick="loginWithGoogle()" aria-label="Đăng nhập bằng Google tự động" style="background:#fff;border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
             <svg width="20" height="20" viewBox="0 0 24 24" style="grid-row:1 / span 2"><path fill="#FFC107" d="M21.8 12.2c0-.7 0-1.4-.2-2H12v3.8h5.5c-.2 1.3-1 2.4-2 3.1v2.6h3.4c2-1.8 3.1-4.5 3.1-7.5z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.4-2.6c-.9.6-2 .9-3.3.9-2.5 0-4.7-1.7-5.5-4H3v2.6C4.7 19.8 8 22 12 22z"/><path fill="#FBBC04" d="M6.5 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.4H3C2.3 8.8 2 10.3 2 12s.3 3.2 1 4.6l3.5-2.7z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9C16.9 2.9 14.7 2 12 2 8 2 4.7 4.2 3 7.4l3.5 2.7C7.3 7.6 9.5 5.9 12 5.9z"/></svg>
             <span style="font-weight:900;color:var(--ink);line-height:1">Google</span>
-            <span class="text-muted" data-oauth-status style="font-size:11px;line-height:1.25;font-weight:700">Nhận OTP qua Gmail</span>
+            <span class="text-muted" style="font-size:11px;line-height:1.25;font-weight:700">Đăng nhập tự động</span>
           </button>
-          <button class="btn btn-ghost" type="button" data-oauth-provider="facebook" onclick="socialLogin('facebook')" aria-label="Đăng nhập bằng Facebook và đồng ý liên kết trên Facebook" style="background:#1877F2;color:#fff;border:1px solid #1877F2;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
+          <button class="btn btn-ghost" type="button" data-oauth-provider="facebook" onclick="loginWithFacebook()" aria-label="Đăng nhập bằng Facebook và đồng ý liên kết trên Facebook" style="background:#1877F2;color:#fff;border:1px solid #1877F2;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
             <i class="ti ti-brand-facebook-filled" style="font-size:22px;grid-row:1 / span 2"></i>
             <span style="font-weight:900;line-height:1">Facebook</span>
-            <span data-oauth-status style="font-size:11px;line-height:1.25;font-weight:700;color:rgba(255,255,255,.86)">Đồng ý liên kết Facebook</span>
+            <span data-oauth-status aria-live="polite" style="font-size:11px;line-height:1.25;font-weight:700;color:rgba(255,255,255,.86)">Đồng ý liên kết Facebook</span>
           </button>
         </div>
         <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:11px;font-weight:800">
@@ -1975,7 +1975,7 @@
           <div id="register-methods">
             <form onsubmit="event.preventDefault();beginPhoneSignup()" autocomplete="tel">
               <div class="field" style="margin-bottom:18px">
-                <input type="tel" id="signup-phone-entry" placeholder="Phone Number" autocomplete="tel" inputmode="tel" style="width:100%;height:60px;border:1px solid #9ca3af;border-radius:3px;padding:0 18px;font-size:21px;background:#fff;color:#111827">
+                <input type="tel" id="signup-phone-entry" placeholder="Phone Number/Email" autocomplete="tel" inputmode="tel" style="width:100%;height:60px;border:1px solid #9ca3af;border-radius:3px;padding:0 18px;font-size:21px;background:#fff;color:#111827">
               </div>
               <button class="btn btn-block btn-lg" type="submit" style="height:60px;border-radius:3px;background:#fb7d6b;color:#fff;border:1px solid #fb7d6b;font-size:20px;font-weight:900;letter-spacing:.02em">NEXT</button>
             </form>
@@ -1985,11 +1985,11 @@
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:34px">
-              <button class="btn btn-ghost" type="button" data-oauth-provider="facebook" onclick="socialLogin('facebook')" aria-label="Tạo tài khoản bằng Facebook và đồng ý liên kết trên Facebook" style="height:58px;border-radius:3px;background:#fff;border:1px solid #c4c7cc;color:#111827;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:500;padding:0 12px">
+              <button class="btn btn-ghost" type="button" data-oauth-provider="facebook" onclick="loginWithFacebook()" aria-label="Tạo tài khoản bằng Facebook và đồng ý liên kết trên Facebook" style="height:58px;border-radius:3px;background:#fff;border:1px solid #c4c7cc;color:#111827;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:500;padding:0 12px">
                 <i class="ti ti-brand-facebook-filled" style="font-size:34px;color:#1877f2"></i>
                 <span>Facebook</span>
               </button>
-              <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="socialLogin('google')" aria-label="Tạo tài khoản bằng Google và nhận OTP qua Gmail" style="height:58px;border-radius:3px;background:#fff;border:1px solid #c4c7cc;color:#111827;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:500;padding:0 12px">
+              <button class="btn btn-ghost" type="button" onclick="loginWithGoogle()" aria-label="Tạo tài khoản bằng Google tự động" style="height:58px;border-radius:3px;background:#fff;border:1px solid #c4c7cc;color:#111827;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:500;padding:0 12px">
                 <svg width="31" height="31" viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFC107" d="M21.8 12.2c0-.7 0-1.4-.2-2H12v3.8h5.5c-.2 1.3-1 2.4-2 3.1v2.6h3.4c2-1.8 3.1-4.5 3.1-7.5z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.4-2.6c-.9.6-2 .9-3.3.9-2.5 0-4.7-1.7-5.5-4H3v2.6C4.7 19.8 8 22 12 22z"/><path fill="#FBBC04" d="M6.5 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.4H3C2.3 8.8 2 10.3 2 12s.3 3.2 1 4.6l3.5-2.7z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9C16.9 2.9 14.7 2 12 2 8 2 4.7 4.2 3 7.4l3.5 2.7C7.3 7.6 9.5 5.9 12 5.9z"/></svg>
                 <span>Google</span>
               </button>
@@ -3958,8 +3958,22 @@ function doLogin() {
 }
 
 function socialLogin(provider) {
+  if (provider === 'facebook') {
+    loginWithFacebook();
+    return;
+  }
+
   const names = { google: 'Google', facebook: 'Facebook', apple: 'Apple', zalo: 'Zalo' };
   toast(`${names[provider]} chưa được bật trong Supabase OAuth. Vui lòng dùng email/mật khẩu để đăng ký hoặc đăng nhập.`, 'warn', 'oauth');
+}
+
+function loginWithFacebook() {
+  if (window.FoodSaveAuth?.startFacebookLogin) {
+    window.FoodSaveAuth.startFacebookLogin();
+    return;
+  }
+
+  toast('Đang tải kết nối Facebook OAuth. Vui lòng thử lại sau vài giây.', 'warn', 'oauth');
 }
 
 function loginWithOTP() {
@@ -5597,7 +5611,7 @@ function updateReputationRules(){
       provider: 'google',
       options: {
         // Link chuyển hướng về web FoodSave sau khi đăng nhập xong
-        redirectTo: 'https://foodsave-vn.netlify.app' 
+        redirectTo: 'https://foodsave-vn.netlify.app/foodsave_user'
       }
     });
 
