@@ -1359,8 +1359,10 @@
     '.badge-emo', '.auth-stat-icon', '.icon-circle', '.icon-tile',
     '.brand-ic', '.tile-ic'
   ];
+  onclick="event.preventDefault(); loginSupabaseFacebook()"
   function getIconClass(el) {
     if (!el || !el.classList) return null;
+    onclick="event.preventDefault(); loginSupabaseGoogle()"
     for (var i = 0; i < el.classList.length; i++) {
       var c = el.classList[i];
       if (c.indexOf('ti-') === 0 && c !== 'ti-') return c;
