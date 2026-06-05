@@ -5720,6 +5720,46 @@ function updateReputationRules(){
 
     alert('Đang tải kết nối Google OAuth. Vui lòng thử lại sau vài giây.');
   }
-</script>
+// 1. Khởi tạo Supabase (Đảm bảo bạn vẫn giữ nguyên URL và Key nhé)
+const supabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
+const supabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// 2. CAMERA GIÁM SÁT: Tự động chuyển trang khi phát hiện có người đăng nhập
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    // Ngay khi có session (đăng nhập thành công), lập tức mở trang đặt hàng
+    // navTo('home') là hàm có sẵn của template FoodSave để mở trang mua sắm
+    if (typeof navTo === "function") {
+      navTo('home'); 
+    } else {
+      // Đề phòng trường hợp lỗi hàm navTo, tự động ẩn trang login và hiện trang home
+      document.getElementById('page-login').classList.remove('active');
+      document.getElementById('page-register').classList.remove('active');
+      document.getElementById('page-home').classList.add('active');
+    }
+  }
+});
+
+// 3. Nút Google: Chuyển hướng màn hình lớn (KHÔNG popup)
+async function loginWithGoogle() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      // Dùng window.location.href để nó quay về đúng trang hiện tại trên màn hình lớn
+      redirectTo: window.location.origin + '/FOODSAVE_USER.html' 
+    }
+  });
+}
+
+// 4. Nút Facebook: Chuyển hướng màn hình lớn
+async function loginWithFacebook() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'facebook',
+    options: {
+      redirectTo: window.location.origin + '/FOODSAVE_USER.html'
+    }
+  });
+}
 </body>
 </html>
