@@ -4,21 +4,20 @@
   const LOCAL_API_BASE_URL = "http://localhost:8080/api/v1";
   const API_PATH = "/api/v1";
   const AUTH_STORAGE_KEY = "foodsave.auth.session";
-  const GOOGLE_OTP_STORAGE_KEY = "foodsave.auth.googleOtp";
   const PHONE_OTP_STORAGE_KEY = "foodsave.auth.phoneOtp";
-  const OAUTH_PROVIDER_STORAGE_KEY = "foodsave.auth.oauthProvider";
+  const SUPABASE_URL = "https://pggcbgtoxlhlgmwxupoc.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p";
   let oauthNoticeTimer = 0;
   let customerLoginPending = false;
   let customerRegisterPending = false;
   let googleLoginPending = false;
   let facebookLoginPending = false;
   let phoneLoginOtpPending = false;
-  let googleOtpPending = null;
-  let googleOtpTimer = 0;
   let phoneOtpPending = null;
   let phoneOtpTimer = 0;
   let portalLoginPending = false;
   let portalRegisterPending = false;
+  let supabaseAuthInitialized = false;
 
   function trimTrailingSlash(value) {
     return String(value || "").replace(/\/+$/, "");
@@ -80,6 +79,18 @@
     if (file.includes("foodsave_charity")) return "charity";
     return "customer";
   })();
+
+  function getFoodSaveSupabase() {
+    if (window.foodsaveSupabase) return window.foodsaveSupabase;
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("Supabase JS chưa sẵn sàng. Hãy kiểm tra thứ tự nhúng script @supabase/supabase-js.");
+    }
+
+    window.foodsaveSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return window.foodsaveSupabase;
+  }
+
+  window.getFoodSaveSupabaseClient = getFoodSaveSupabase;
 
   function select(selector) {
     return document.querySelector(selector);
@@ -167,7 +178,6 @@
       return;
     }
 
-    clearGoogleOtpPending();
     const parsedPhone = splitSignupPhone(phone);
     const countryInput = select("#reg-country");
     const phoneInput = select("#reg-phone");
@@ -209,7 +219,6 @@
     if (step1) step1.style.display = "block";
     if (step2) step2.style.display = "none";
     if (step3) step3.style.display = "none";
-    clearGoogleOtpPending();
     setRegisterStepperVisible(false);
     resetRegisterStepper();
   }
@@ -262,41 +271,6 @@
     window.FoodSaveCurrentAuth = null;
   }
 
-  function readStoredGoogleOtp() {
-    try {
-      const raw = sessionStorage.getItem(GOOGLE_OTP_STORAGE_KEY);
-      if (!raw) return null;
-      const pending = JSON.parse(raw);
-      if (!pending || !pending.expiresAt || new Date(pending.expiresAt).getTime() <= Date.now()) {
-        sessionStorage.removeItem(GOOGLE_OTP_STORAGE_KEY);
-        return null;
-      }
-      return pending;
-    } catch (error) {
-      sessionStorage.removeItem(GOOGLE_OTP_STORAGE_KEY);
-      return null;
-    }
-  }
-
-  function setGoogleOtpPending(pending) {
-    googleOtpPending = pending;
-    try {
-      sessionStorage.setItem(GOOGLE_OTP_STORAGE_KEY, JSON.stringify(pending));
-    } catch (error) {
-      // Session storage can be unavailable in strict privacy modes; in-memory still works for this tab.
-    }
-  }
-
-  function clearGoogleOtpPending() {
-    googleOtpPending = null;
-    clearInterval(googleOtpTimer);
-    try {
-      sessionStorage.removeItem(GOOGLE_OTP_STORAGE_KEY);
-    } catch (error) {
-      // Nothing to clear.
-    }
-  }
-
   function readStoredPhoneOtp() {
     try {
       const raw = sessionStorage.getItem(PHONE_OTP_STORAGE_KEY);
@@ -332,35 +306,6 @@
     }
   }
 
-  function setPendingOAuthProvider(provider) {
-    try {
-      sessionStorage.setItem(OAUTH_PROVIDER_STORAGE_KEY, provider);
-    } catch (error) {
-      window.__foodsavePendingOAuthProvider = provider;
-    }
-  }
-
-  function readPendingOAuthProvider() {
-    try {
-      return sessionStorage.getItem(OAUTH_PROVIDER_STORAGE_KEY) || window.__foodsavePendingOAuthProvider || "";
-    } catch (error) {
-      return window.__foodsavePendingOAuthProvider || "";
-    }
-  }
-
-  function normalizeOAuthProvider(provider) {
-    return provider === "google" || provider === "facebook" ? provider : "";
-  }
-
-  function clearPendingOAuthProvider() {
-    try {
-      sessionStorage.removeItem(OAUTH_PROVIDER_STORAGE_KEY);
-    } catch (error) {
-      // Nothing to clear.
-    }
-    window.__foodsavePendingOAuthProvider = "";
-  }
-
   function setOAuthButtonPending(provider, pending) {
     const buttons = document.querySelectorAll(`[data-oauth-provider="${provider}"]`);
     buttons.forEach((button) => {
@@ -377,142 +322,6 @@
           : "Đang mở Google..."
         : status.dataset.defaultText;
     });
-  }
-
-  function oauthRedirectUrl(provider) {
-    const location = window.location;
-    const isHttp = location.protocol === "http:" || location.protocol === "https:";
-    if (!isHttp) {
-      const label = provider === "facebook" ? "Facebook" : "Google";
-      throw new Error(`${label} OAuth cần mở FOODSAVE_USER.html qua HTTP/HTTPS, không hỗ trợ file://. Hãy chạy backend/frontend hoặc deploy Netlify rồi thử lại.`);
-    }
-
-    const url = new URL(location.href);
-    url.hash = "";
-    url.searchParams.set("oauth_provider", provider);
-    return url.toString();
-  }
-
-  function readOAuthProviderFromUrl() {
-    return normalizeOAuthProvider(new URLSearchParams(window.location.search).get("oauth_provider"));
-  }
-
-  function readOAuthHash() {
-    const hash = window.location.hash ? window.location.hash.slice(1) : "";
-    if (!hash) return null;
-
-    const params = new URLSearchParams(hash);
-    const errorDescription = params.get("error_description") || params.get("error");
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    const expiresAt = params.get("expires_at");
-    const tokenType = params.get("token_type") || "bearer";
-
-    if (errorDescription) {
-      return { error: errorDescription };
-    }
-
-    if (!accessToken) return null;
-    return {
-      accessToken,
-      refreshToken,
-      expiresAt: expiresAt ? Number(expiresAt) : null,
-      tokenType
-    };
-  }
-
-  function clearOAuthHash() {
-    if (!window.history || !window.history.replaceState) return;
-    const url = new URL(window.location.href);
-    url.hash = "";
-    url.searchParams.delete("oauth_provider");
-    window.history.replaceState(null, document.title, `${url.pathname}${url.search}`);
-  }
-
-  function oauthPopupFeatures() {
-    const width = 920;
-    const height = 780;
-    const left = Math.max(0, Math.round((window.screenX || 0) + ((window.outerWidth || width) - width) / 2));
-    const top = Math.max(0, Math.round((window.screenY || 0) + ((window.outerHeight || height) - height) / 2));
-    return `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=yes`;
-  }
-
-  function openOAuthPopup(provider) {
-    const label = provider === "google" ? "Google" : "Facebook";
-    const color = provider === "google" ? "#fff" : "#1877f2";
-    const textColor = provider === "google" ? "#1f2937" : "#fff";
-    const mark = provider === "google" ? "G" : "f";
-    const shadow = provider === "google" ? "0 0 0 1px #d1d5db inset" : "none";
-    const popup = window.open("about:blank", `foodsave-${provider}-oauth`, oauthPopupFeatures());
-    if (!popup) return null;
-
-    try {
-      popup.document.title = `${label} - FoodSave`;
-      popup.document.body.style.cssText = "margin:0;font-family:Arial,sans-serif;background:#f0f2f5;color:#1c1e21;display:grid;place-items:center;min-height:100vh";
-      popup.document.body.innerHTML = `<div style="text-align:center;padding:28px"><div style="width:54px;height:54px;margin:0 auto 16px;border-radius:50%;background:${color};color:${textColor};box-shadow:${shadow};display:grid;place-items:center;font-size:34px;font-weight:700">${mark}</div><p style="font-size:17px;margin:0 0 6px">Đang mở ${label}</p><p style="font-size:13px;color:#606770;margin:0">Hãy xác nhận trên ${label} để tiếp tục với FoodSave.</p></div>`;
-    } catch (error) {
-      // Some browsers prevent writing to the popup before navigation; the OAuth redirect still works.
-    }
-
-    return popup;
-  }
-
-  function notifyOAuthOpener(provider, payload) {
-    if (!window.opener || window.opener === window) return false;
-
-    try {
-      const message = {
-        type: "foodsave:oauth-complete",
-        provider
-      };
-      if (provider === "facebook") message.authResult = payload;
-      if (provider === "google") message.googleOtp = payload;
-      window.opener.postMessage(message, window.location.origin);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function handleOAuthPopupMessage(event) {
-    if (event.origin !== window.location.origin) return;
-
-    const message = event.data || {};
-    if (message.type !== "foodsave:oauth-complete") return;
-
-    const provider = normalizeOAuthProvider(message.provider);
-    if (provider === "google" && message.googleOtp) {
-      googleLoginPending = false;
-      clearPendingOAuthProvider();
-      setOAuthButtonPending("google", false);
-      showGoogleOtpStep(message.googleOtp.otpData, message.googleOtp.accessToken);
-      return;
-    }
-
-    if (provider !== "facebook" || !message.authResult) return;
-
-    facebookLoginPending = false;
-    clearPendingOAuthProvider();
-    setOAuthButtonPending("facebook", false);
-    saveSession(message.authResult, "customer");
-    updateCustomerUiFromProfile(message.authResult.profile);
-    notify("Đăng nhập Facebook thành công", "Bạn đã đồng ý liên kết Facebook với FoodSave.", "info");
-    if (typeof window.navTo === "function") window.navTo("home");
-  }
-
-  function watchOAuthPopup(provider, popup) {
-    if (!popup) return;
-
-    const timer = window.setInterval(() => {
-      if (!popup.closed) return;
-      window.clearInterval(timer);
-      if (provider === "google" && !googleLoginPending) return;
-      if (provider === "facebook" && !facebookLoginPending) return;
-      if (provider === "google") googleLoginPending = false;
-      if (provider === "facebook") facebookLoginPending = false;
-      clearPendingOAuthProvider();
-      setOAuthButtonPending(provider, false);
-    }, 500);
   }
 
   async function request(path, options) {
@@ -559,6 +368,91 @@
     }
   }
 
+  function customerProfileFromSupabaseSession(session) {
+    const user = session && session.user ? session.user : {};
+    const metadata = user.user_metadata || {};
+    const appMetadata = user.app_metadata || {};
+    const fullName = metadata.full_name || metadata.name || metadata.display_name || user.email || user.phone || "bạn";
+
+    return {
+      id: user.id,
+      email: user.email || "",
+      phone: user.phone || "",
+      full_name: fullName,
+      avatar_url: metadata.avatar_url || metadata.picture || "",
+      provider: appMetadata.provider || "google"
+    };
+  }
+
+  function syncSupabaseCustomerSession(session, options) {
+    if (!session || !session.access_token) return null;
+
+    const profile = customerProfileFromSupabaseSession(session);
+    const authSession = saveSession({
+      session: {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at
+      },
+      profile,
+      context: {
+        provider: profile.provider,
+        source: "supabase"
+      }
+    }, "customer");
+
+    updateCustomerUiFromProfile(profile);
+    setOAuthButtonPending("google", false);
+    setOAuthButtonPending("facebook", false);
+    googleLoginPending = false;
+    facebookLoginPending = false;
+
+    if (options && options.navigateHome && typeof window.navTo === "function") {
+      window.navTo("home");
+    }
+
+    return authSession;
+  }
+
+  function shouldNavigateHomeAfterSupabaseAuth() {
+    const activePage = document.querySelector(".page.active");
+    return !activePage || ["page-landing", "page-login", "page-register"].includes(activePage.id);
+  }
+
+  function initSupabaseCustomerAuth() {
+    if (supabaseAuthInitialized) return;
+    supabaseAuthInitialized = true;
+
+    let client;
+    try {
+      client = getFoodSaveSupabase();
+    } catch (error) {
+      return;
+    }
+
+    client.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        syncSupabaseCustomerSession(session, {
+          navigateHome: event === "SIGNED_IN" || shouldNavigateHomeAfterSupabaseAuth()
+        });
+        return;
+      }
+
+      if (event === "SIGNED_OUT") {
+        clearSession();
+      }
+    });
+
+    client.auth.getSession().then(({ data, error }) => {
+      if (error || !data || !data.session) return;
+      syncSupabaseCustomerSession(data.session, {
+        navigateHome: shouldNavigateHomeAfterSupabaseAuth()
+      });
+    }).catch(() => {
+      // Supabase session hydration can fail when storage is blocked; login can still be retried.
+    });
+  }
+
   async function loginCustomer() {
     if (customerLoginPending) return;
     customerLoginPending = true;
@@ -587,42 +481,6 @@
     } finally {
       customerLoginPending = false;
     }
-  }
-
-  function clearOtpInputs() {
-    document.querySelectorAll(".otp-input").forEach((input) => {
-      input.value = "";
-      input.classList.remove("filled");
-    });
-  }
-
-  function startGoogleOtpTimer(seconds) {
-    clearInterval(googleOtpTimer);
-    const timer = select("#otp-timer");
-    const resend = select("#otp-resend");
-    let remaining = Math.max(0, Number(seconds || 0));
-
-    if (resend) {
-      resend.disabled = true;
-      resend.onclick = resendGoogleOtp;
-    }
-
-    const tick = () => {
-      const minutes = String(Math.floor(remaining / 60)).padStart(2, "0");
-      const secondsText = String(remaining % 60).padStart(2, "0");
-      if (timer) timer.textContent = `${minutes}:${secondsText}`;
-
-      if (remaining <= 0) {
-        clearInterval(googleOtpTimer);
-        if (resend) resend.disabled = false;
-        return;
-      }
-
-      remaining -= 1;
-    };
-
-    tick();
-    googleOtpTimer = window.setInterval(tick, 1000);
   }
 
   function clearPhoneLoginOtpInputs() {
@@ -717,199 +575,69 @@
     clearPhoneLoginOtpInputs();
   }
 
-  function showGoogleOtpStep(otpData, accessToken) {
-    setGoogleOtpPending({
-      challengeId: otpData.challenge_id,
-      email: otpData.email,
-      expiresAt: otpData.expires_at,
-      accessToken
-    });
-
-    if (typeof window.navTo === "function") window.navTo("register");
-
-    const step1 = select("#reg-step-1");
-    const step2 = select("#reg-step-2");
-    const step3 = select("#reg-step-3");
-    if (!step1 || !step2) {
-      const otp = window.prompt(`FoodSave đã gửi OTP về ${otpData.email}. Nhập mã 6 số:`);
-      if (otp) verifyGoogleOtp(otp);
-      return;
+  function supabaseOAuthRedirectUrl(provider) {
+    const location = window.location;
+    const isHttp = location.protocol === "http:" || location.protocol === "https:";
+    if (!isHttp) {
+      const label = provider === "facebook" ? "Facebook" : "Google";
+      throw new Error(`${label} OAuth cần mở FOODSAVE_USER.html qua HTTP/HTTPS, không hỗ trợ file://.`);
     }
 
-    step1.style.display = "none";
-    step2.style.display = "block";
-    if (step3) step3.style.display = "none";
-    setRegisterStepperVisible(true);
-    const otpBackButton = select("#otp-back-button");
-    if (otpBackButton) {
-      otpBackButton.textContent = "← Chọn cách đăng ký khác";
-      otpBackButton.onclick = backToRegisterMethods;
-    }
-
-    const target = select("#otp-target");
-    if (target) target.textContent = otpData.email;
-
-    const stepper1 = select("#rstep-1");
-    const stepper2 = select("#rstep-2");
-    const stepper3 = select("#rstep-3");
-    if (stepper1) {
-      stepper1.classList.remove("active");
-      stepper1.classList.add("done");
-      const num = stepper1.querySelector(".stepper-num");
-      if (num) num.innerHTML = '<i class="ti ti-brand-google"></i>';
-    }
-    if (stepper2) stepper2.classList.add("active");
-    if (stepper3) stepper3.classList.remove("active");
-
-    clearOtpInputs();
-    startGoogleOtpTimer(otpData.expires_in_seconds);
-    notify("Đã gửi OTP Google", `Kiểm tra Gmail ${otpData.email} để hoàn tất đăng nhập.`, "info");
-    window.setTimeout(() => document.querySelector(".otp-input")?.focus(), 100);
+    const url = new URL(location.href);
+    url.hash = "";
+    url.searchParams.delete("oauth_provider");
+    return url.toString();
   }
 
- // 1. Khởi tạo Supabase trực tiếp tại đây luôn!
-  const mySupabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
-  const mySupabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
-  const mySupabaseClient = window.supabase.createClient(mySupabaseUrl, mySupabaseKey);
-
-  // 2. Chạy thẳng Google
   async function startGoogleLogin() {
-    await mySupabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/FOODSAVE_USER.html'
-      }
-    });
-  }
-
-  // 3. Chạy thẳng Facebook
-  async function startFacebookLogin() {
-    await mySupabaseClient.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: {
-        redirectTo: window.location.origin + '/FOODSAVE_USER.html'
-      }
-    });
-  }
-
-  async function requestGoogleOtp(accessToken, options) {
-    const data = await request("/auth/google/otp", {
-      method: "POST",
-      body: {
-        access_token: accessToken,
-        expected_role: "customer"
-      }
-    });
-
-    if (!options || options.showStep !== false) {
-      showGoogleOtpStep(data, accessToken);
-    }
-    return data;
-  }
-
-  async function completeFacebookLogin(oauthHash) {
-    if (!oauthHash.refreshToken) {
-      throw new Error("Facebook callback thiếu refresh token. Vui lòng thử đăng nhập lại.");
-    }
-
-    const data = await request("/auth/facebook/callback", {
-      method: "POST",
-      body: {
-        access_token: oauthHash.accessToken,
-        refresh_token: oauthHash.refreshToken,
-        expires_at: oauthHash.expiresAt,
-        token_type: oauthHash.tokenType || "bearer",
-        expected_role: "customer"
-      }
-    });
-
-    clearPendingOAuthProvider();
-    setOAuthButtonPending("facebook", false);
-    saveSession(data, "customer");
-    updateCustomerUiFromProfile(data.profile);
-    notify("Đăng nhập Facebook thành công", "Bạn đã đồng ý liên kết Facebook với FoodSave.", "info");
-    if (notifyOAuthOpener("facebook", data)) {
-      window.setTimeout(() => window.close(), 250);
-      return;
-    }
-    if (typeof window.navTo === "function") window.navTo("home");
-  }
-
-  async function handleOAuthCallback() {
-    const oauthHash = readOAuthHash();
-    if (!oauthHash) {
-      const storedPhoneOtp = readStoredPhoneOtp();
-      if (storedPhoneOtp) {
-        const remainingSeconds = Math.max(0, Math.ceil((new Date(storedPhoneOtp.expiresAt).getTime() - Date.now()) / 1000));
-        showPhoneLoginOtpPanel({
-          phone: storedPhoneOtp.phone,
-          expires_in_seconds: remainingSeconds
-        });
-        return;
-      }
-
-      const stored = readStoredGoogleOtp();
-      if (stored) {
-        const remainingSeconds = Math.max(0, Math.ceil((new Date(stored.expiresAt).getTime() - Date.now()) / 1000));
-        showGoogleOtpStep({
-          challenge_id: stored.challengeId,
-          email: stored.email,
-          expires_at: stored.expiresAt,
-          expires_in_seconds: remainingSeconds
-        }, stored.accessToken);
-      }
-      return;
-    }
-
-    const provider = normalizeOAuthProvider(readPendingOAuthProvider()) || readOAuthProviderFromUrl() || "google";
-    clearOAuthHash();
-
-    if (oauthHash.error) {
-      notify(provider === "facebook" ? "Đăng nhập Facebook thất bại" : "Đăng nhập Google thất bại", oauthHash.error, "error");
-      clearPendingOAuthProvider();
-      setOAuthButtonPending(provider, false);
-      return;
-    }
+    if (googleLoginPending) return;
+    googleLoginPending = true;
+    setOAuthButtonPending("google", true);
 
     try {
-      if (provider === "facebook") {
-        notify("Facebook đã xác nhận", "FoodSave đang hoàn tất đăng nhập.", "info");
-        await completeFacebookLogin(oauthHash);
-        return;
-      }
-
-      notify("Google đã xác thực", "FoodSave đang gửi OTP về Gmail của bạn.", "info");
-      if (window.opener && window.opener !== window) {
-        const otpData = await requestGoogleOtp(oauthHash.accessToken, { showStep: false });
-        if (notifyOAuthOpener("google", { otpData, accessToken: oauthHash.accessToken })) {
-          window.setTimeout(() => window.close(), 250);
-          return;
+      const { error } = await getFoodSaveSupabase().auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: supabaseOAuthRedirectUrl("google")
         }
-        showGoogleOtpStep(otpData, oauthHash.accessToken);
-      } else {
-        await requestGoogleOtp(oauthHash.accessToken);
-      }
-      setOAuthButtonPending("google", false);
+      });
+      if (error) throw error;
     } catch (error) {
-      clearPendingOAuthProvider();
-      clearGoogleOtpPending();
-      setOAuthButtonPending(provider, false);
-      notify(provider === "facebook" ? "Không thể đăng nhập Facebook" : "Không thể gửi OTP Google", error.message, "error");
+      googleLoginPending = false;
+      setOAuthButtonPending("google", false);
+      notify("Không thể mở Google", error.message, "error");
     }
   }
 
-  async function resendGoogleOtp() {
-    const pending = googleOtpPending || readStoredGoogleOtp();
-    if (!pending || !pending.accessToken) {
-      notify("Cần đăng nhập Google lại", "Phiên Google đã hết hạn trước khi gửi lại OTP.", "warn");
-      return;
-    }
+  async function startFacebookLogin() {
+    if (facebookLoginPending) return;
+    facebookLoginPending = true;
+    setOAuthButtonPending("facebook", true);
 
     try {
-      await requestGoogleOtp(pending.accessToken);
+      const { error } = await getFoodSaveSupabase().auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: supabaseOAuthRedirectUrl("facebook")
+        }
+      });
+      if (error) throw error;
     } catch (error) {
-      notify("Không thể gửi lại OTP", error.message, "error");
+      facebookLoginPending = false;
+      setOAuthButtonPending("facebook", false);
+      notify("Không thể mở Facebook", error.message, "error");
     }
+  }
+
+  function restorePhoneOtpAfterReload() {
+    const storedPhoneOtp = readStoredPhoneOtp();
+    if (!storedPhoneOtp) return;
+
+    const remainingSeconds = Math.max(0, Math.ceil((new Date(storedPhoneOtp.expiresAt).getTime() - Date.now()) / 1000));
+    showPhoneLoginOtpPanel({
+      phone: storedPhoneOtp.phone,
+      expires_in_seconds: remainingSeconds
+    });
   }
 
   async function requestPhoneLoginOtp(phone) {
@@ -992,47 +720,8 @@
     }
   }
 
-  async function verifyGoogleOtp(otp) {
-    const pending = googleOtpPending || readStoredGoogleOtp();
-    if (!pending) {
-      notify("OTP đã hết hạn", "Vui lòng đăng nhập Google lại để nhận mã mới.", "warn");
-      return;
-    }
-
-    try {
-      const data = await request("/auth/google/verify", {
-        method: "POST",
-        body: {
-          challenge_id: pending.challengeId,
-          otp,
-          expected_role: "customer"
-        }
-      });
-
-      clearGoogleOtpPending();
-      clearPendingOAuthProvider();
-      saveSession(data, "customer");
-      updateCustomerUiFromProfile(data.profile);
-      notify("Đăng nhập Google thành công", "OTP đã được xác thực và phiên FoodSave đã sẵn sàng.", "info");
-      if (typeof window.navTo === "function") window.navTo("home");
-    } catch (error) {
-      notify("Xác thực OTP thất bại", error.message, "error");
-    }
-  }
-
   function verifyCustomerOtp() {
-    if (!googleOtpPending && !readStoredGoogleOtp()) {
-      registerCustomer();
-      return;
-    }
-
-    const otp = Array.from(document.querySelectorAll(".otp-input")).map((input) => input.value).join("");
-    if (!/^\d{6}$/.test(otp)) {
-      notify("Thiếu mã OTP", "Vui lòng nhập đủ 6 số OTP trong Gmail.", "warn");
-      return;
-    }
-
-    verifyGoogleOtp(otp);
+    registerCustomer();
   }
 
   function socialLogin(provider) {
@@ -1318,6 +1007,9 @@
     }, 2500);
   }
 
+  window.loginSupabaseGoogle = startGoogleLogin;
+  window.loginSupabaseFacebook = startFacebookLogin;
+
   window.FoodSaveAuth = {
     request,
     readSession,
@@ -1325,11 +1017,9 @@
     clearSession,
     loginCustomer,
     registerCustomer,
+    getSupabaseClient: getFoodSaveSupabase,
     startGoogleLogin,
     startFacebookLogin,
-    requestGoogleOtp,
-    verifyGoogleOtp,
-    resendGoogleOtp,
     startPhoneLoginOtp,
     resendPhoneLoginOtp,
     verifyPhoneLoginOtp,
@@ -1349,6 +1039,8 @@
     window.verifyOTP = verifyCustomerOtp;
     window.sendReset = function () { resetPassword(); };
     window.socialLogin = socialLogin;
+    window.loginSupabaseGoogle = startGoogleLogin;
+    window.loginSupabaseFacebook = startFacebookLogin;
     window.loginWithGoogle = startGoogleLogin;
     window.loginWithFacebook = startFacebookLogin;
     window.beginPhoneSignup = beginPhoneSignup;
@@ -1359,19 +1051,9 @@
     window.resendPhoneLoginOtp = resendPhoneLoginOtp;
     window.verifyPhoneLoginOtp = verifyPhoneLoginOtp;
     window.cancelPhoneLoginOtp = cancelPhoneLoginOtp;
-    window.otpUseEmail = function () {
-      if (googleOtpPending || readStoredGoogleOtp()) {
-        resendGoogleOtp();
-        return;
-      }
-      notify("OTP email", "Vui lòng dùng nút Google để nhận OTP qua Gmail.", "warn");
-    };
-    window.otpUseVoice = function () {
-      notify("OTP qua cuộc gọi chưa bật", "Google login hiện xác thực bằng OTP gửi về Gmail.", "warn");
-    };
     window.logout = function () { logout("customer"); };
-    window.addEventListener("message", handleOAuthPopupMessage);
-    handleOAuthCallback();
+    restorePhoneOtpAfterReload();
+    initSupabaseCustomerAuth();
     return;
   }
 

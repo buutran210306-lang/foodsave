@@ -1355,21 +1355,8 @@
   ];
   var DECORATIVE_SELECTORS = [
     '.card-icon', '.pillar-icon', '.medal-icon', '.faq-cluster-icon',
-    '.stat-icon', '.empty-state-ic', '.feature-icon', '.tile-icon',
-    <div style="display: flex; gap: 12px; margin-top: 10px;">
-  <div onclick="loginSupabaseFacebook()" style="cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; color: #0a0a0a; font-weight: 700; font-size: 14px;">
-    <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" style="width: 20px; height: 20px; object-fit: contain;">
-    <span>Facebook</span>
-  </div>
-
-  <div onclick="loginSupabaseGoogle()" style="cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; color: #0a0a0a; font-weight: 700; font-size: 14px;">
-    <img src="https://cdn-icons-png.flaticon.com/512/3002/300221.png" alt="Google" style="width: 20px; height: 20px; object-fit: contain;">
-    <span>Google</span>
-  </div>
-</div>
-    }
-    return null;
-  }
+    '.stat-icon', '.empty-state-ic', '.feature-icon', '.tile-icon'
+  ];
   function pickImageForContainer(container, index) {
     var icon = container.querySelector('.ti');
     if (icon) {
@@ -1851,10 +1838,10 @@
           <span style="font-size:11px;font-weight:800;color:var(--green)">Google và Facebook riêng biệt</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px">
-          <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="socialLogin('google')" aria-label="Đăng nhập bằng Google và nhận OTP qua Gmail" style="background:#fff;border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
+          <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="socialLogin('google')" aria-label="Đăng nhập bằng Google" style="background:#fff;border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
             <svg width="20" height="20" viewBox="0 0 24 24" style="grid-row:1 / span 2"><path fill="#FFC107" d="M21.8 12.2c0-.7 0-1.4-.2-2H12v3.8h5.5c-.2 1.3-1 2.4-2 3.1v2.6h3.4c2-1.8 3.1-4.5 3.1-7.5z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.4-2.6c-.9.6-2 .9-3.3.9-2.5 0-4.7-1.7-5.5-4H3v2.6C4.7 19.8 8 22 12 22z"/><path fill="#FBBC04" d="M6.5 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.4H3C2.3 8.8 2 10.3 2 12s.3 3.2 1 4.6l3.5-2.7z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9C16.9 2.9 14.7 2 12 2 8 2 4.7 4.2 3 7.4l3.5 2.7C7.3 7.6 9.5 5.9 12 5.9z"/></svg>
             <span style="font-weight:900;color:var(--ink);line-height:1">Google</span>
-            <span class="text-muted" data-oauth-status style="font-size:11px;line-height:1.25;font-weight:700">Nhận OTP qua Gmail</span>
+            <span class="text-muted" data-oauth-status style="font-size:11px;line-height:1.25;font-weight:700">Đăng nhập trực tiếp</span>
           </button>
           <button class="btn btn-ghost" type="button" data-oauth-provider="facebook" onclick="loginWithFacebook()" aria-label="Đăng nhập bằng Facebook và đồng ý liên kết trên Facebook" style="background:#1877F2;color:#fff;border:1px solid #1877F2;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
             <i class="ti ti-brand-facebook-filled" style="font-size:22px;grid-row:1 / span 2"></i>
@@ -2000,7 +1987,7 @@
                 <i class="ti ti-brand-facebook-filled" style="font-size:34px;color:#1877f2"></i>
                 <span>Facebook</span>
               </button>
-              <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="socialLogin('google')" aria-label="Tạo tài khoản bằng Google và nhận OTP qua Gmail" style="height:58px;border-radius:3px;background:#fff;border:1px solid #c4c7cc;color:#111827;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:500;padding:0 12px">
+              <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="socialLogin('google')" aria-label="Tạo tài khoản bằng Google" style="height:58px;border-radius:3px;background:#fff;border:1px solid #c4c7cc;color:#111827;display:flex;align-items:center;justify-content:center;gap:12px;font-size:21px;font-weight:500;padding:0 12px">
                 <svg width="31" height="31" viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFC107" d="M21.8 12.2c0-.7 0-1.4-.2-2H12v3.8h5.5c-.2 1.3-1 2.4-2 3.1v2.6h3.4c2-1.8 3.1-4.5 3.1-7.5z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.4-2.6c-.9.6-2 .9-3.3.9-2.5 0-4.7-1.7-5.5-4H3v2.6C4.7 19.8 8 22 12 22z"/><path fill="#FBBC04" d="M6.5 13.9c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9V7.4H3C2.3 8.8 2 10.3 2 12s.3 3.2 1 4.6l3.5-2.7z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9C16.9 2.9 14.7 2 12 2 8 2 4.7 4.2 3 7.4l3.5 2.7C7.3 7.6 9.5 5.9 12 5.9z"/></svg>
                 <span>Google</span>
               </button>
@@ -3974,8 +3961,7 @@ function socialLogin(provider) {
     return;
   }
 
-  const names = { google: 'Google', facebook: 'Facebook', apple: 'Apple', zalo: 'Zalo' };
-  toast(`${names[provider]} chưa được bật trong Supabase OAuth. Vui lòng dùng email/mật khẩu để đăng ký hoặc đăng nhập.`, 'warn', 'oauth');
+  window.loginSupabaseGoogle();
 }
 
 function loginWithFacebook() {
@@ -5605,20 +5591,31 @@ function updateReputationRules(){
 
 <script>window.FS = window.FS || {}; /* Backend data sync is loaded from frontend/foodsave-live-data.js. */</script>
 
-<script src="frontend/foodsave-auth-client.js?v=999"></script>
-<!-- 1. Nhúng thư viện Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- 2. Khởi tạo kết nối & Hàm đăng nhập -->
+<script src="frontend/foodsave-auth-client.js?v=1000"></script>
 <script>
-  // Bạn nhớ thay 2 dòng bên dưới bằng link và key trong Notepad nha:
-  const supabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
-  const supabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
-  
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
   let signupEmailForOtp = '';
 
-  async function sendSignupEmailOtp() {
+  function foodsaveSupabaseClient() {
+    if (typeof window.getFoodSaveSupabaseClient === 'function') {
+      return window.getFoodSaveSupabaseClient();
+    }
+
+    if (!window.foodsaveSupabase && window.supabase?.createClient) {
+      window.foodsaveSupabase = window.supabase.createClient(
+        'https://pggcbgtoxlhlgmwxupoc.supabase.co',
+        'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p'
+      );
+    }
+
+    if (!window.foodsaveSupabase) {
+      throw new Error('Supabase JS chưa sẵn sàng.');
+    }
+
+    return window.foodsaveSupabase;
+  }
+
+  window.sendSignupEmailOtp = async function() {
     const emailInput = document.getElementById('signup-email-entry');
     const nextButton = document.getElementById('signup-email-next-btn');
     const emailPanel = document.getElementById('signup-email-panel');
@@ -5642,7 +5639,7 @@ function updateReputationRules(){
     nextButton.textContent = 'Đang gửi...';
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await foodsaveSupabaseClient().auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true
@@ -5661,44 +5658,58 @@ function updateReputationRules(){
       alert('Không thể kết nối Supabase để gửi OTP. Vui lòng kiểm tra mạng hoặc thử lại sau.');
       return;
     }
-<script>
-// 1. Khởi tạo Supabase
-const supabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
-const supabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 2. Camera giám sát (Tự động vào trang chủ khi đăng nhập xong)
-supabase.auth.onAuthStateChange((event, session) => {
-  if (session) {
-    if (typeof navTo === "function") {
-      navTo('home'); 
-    } else {
-      document.getElementById('page-login').classList.remove('active');
-      document.getElementById('page-register').classList.remove('active');
-      document.getElementById('page-home').classList.add('active');
-    }
-  }
-});
+    signupEmailForOtp = email;
+    nextButton.disabled = false;
+    nextButton.textContent = 'NEXT';
+    if (emailPanel) emailPanel.style.display = 'none';
+    if (otpPanel) otpPanel.style.display = 'block';
+    if (otpInput) otpInput.focus();
+  };
 
-// 3. Hàm chạy Google (Đã gắn window để kết nối)
-window.loginSupabaseGoogle = async function() {
-  await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + '/FOODSAVE_USER.html'
-    }
-  });
-};
+  window.verifySignupEmailOtp = async function() {
+    const otpInput = document.getElementById('signup-email-otp-input');
+    const verifyButton = document.getElementById('signup-email-otp-verify-btn');
+    const token = otpInput?.value.trim();
 
-// 4. Hàm chạy Facebook (Đã gắn window để kết nối)
-window.loginSupabaseFacebook = async function() {
-  await supabase.auth.signInWithOAuth({
-    provider: 'facebook',
-    options: {
-      redirectTo: window.location.origin + '/FOODSAVE_USER.html'
+    if (!signupEmailForOtp) {
+      alert('Vui lòng nhập email để nhận OTP trước.');
+      return;
     }
-  });
-};
+
+    if (!/^\d{6}$/.test(token || '')) {
+      alert('Vui lòng nhập mã OTP 6 số.');
+      otpInput?.focus();
+      return;
+    }
+
+    verifyButton.disabled = true;
+    verifyButton.textContent = 'ĐANG XÁC NHẬN...';
+
+    try {
+      const { error } = await foodsaveSupabaseClient().auth.verifyOtp({
+        email: signupEmailForOtp,
+        token,
+        type: 'email'
+      });
+
+      if (error) {
+        verifyButton.disabled = false;
+        verifyButton.textContent = 'XÁC NHẬN';
+        alert('Xác thực OTP thất bại: ' + error.message);
+        return;
+      }
+    } catch (error) {
+      verifyButton.disabled = false;
+      verifyButton.textContent = 'XÁC NHẬN';
+      alert('Không thể kết nối Supabase để xác thực OTP. Vui lòng thử lại sau.');
+      return;
+    }
+
+    verifyButton.disabled = false;
+    verifyButton.textContent = 'XÁC NHẬN';
+    if (typeof navTo === 'function') navTo('home');
+  };
 </script>
 </body>
 </html>
