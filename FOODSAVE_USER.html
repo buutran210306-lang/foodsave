@@ -1356,16 +1356,17 @@
   var DECORATIVE_SELECTORS = [
     '.card-icon', '.pillar-icon', '.medal-icon', '.faq-cluster-icon',
     '.stat-icon', '.empty-state-ic', '.feature-icon', '.tile-icon',
-    '.badge-emo', '.auth-stat-icon', '.icon-circle', '.icon-tile',
-    '.brand-ic', '.tile-ic'
-  ];
-  onclick="event.preventDefault(); loginSupabaseFacebook()"
-  function getIconClass(el) {
-    if (!el || !el.classList) return null;
-    onclick="event.preventDefault(); loginSupabaseGoogle()"
-    for (var i = 0; i < el.classList.length; i++) {
-      var c = el.classList[i];
-      if (c.indexOf('ti-') === 0 && c !== 'ti-') return c;
+    <div style="display: flex; gap: 12px; margin-top: 10px;">
+  <a href="#" onclick="event.preventDefault(); event.stopPropagation(); loginSupabaseFacebook();" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; text-decoration: none; color: #0a0a0a; font-weight: 700; font-size: 14px;">
+    <img src="[https://cdn-icons-png.flaticon.com/512/124/124010.png](https://cdn-icons-png.flaticon.com/512/124/124010.png)" alt="Facebook" style="width: 20px; height: 20px; object-fit: contain;">
+    <span>Facebook</span>
+  </a>
+
+  <a href="#" onclick="event.preventDefault(); event.stopPropagation(); loginSupabaseGoogle();" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; text-decoration: none; color: #0a0a0a; font-weight: 700; font-size: 14px;">
+    <img src="[https://cdn-icons-png.flaticon.com/512/3002/300221.png](https://cdn-icons-png.flaticon.com/512/3002/300221.png)" alt="Google" style="width: 20px; height: 20px; object-fit: contain;">
+    <span>Google</span>
+  </a>
+</div>
     }
     return null;
   }
@@ -5660,88 +5661,43 @@ function updateReputationRules(){
       alert('Không thể kết nối Supabase để gửi OTP. Vui lòng kiểm tra mạng hoặc thử lại sau.');
       return;
     }
-
-    signupEmailForOtp = email;
-    emailPanel.style.display = 'none';
-    otpPanel.style.display = 'block';
-    alert('Đã gửi mã OTP về email ' + email + '. Vui lòng kiểm tra hộp thư.');
-    setTimeout(() => otpInput?.focus(), 100);
-  }
-
-  async function verifySignupEmailOtp() {
-    const otpInput = document.getElementById('signup-email-otp-input');
-    const verifyButton = document.getElementById('signup-email-otp-verify-btn');
-    const otpValue = otpInput?.value.replace(/\D/g, '').trim();
-
-    if (!signupEmailForOtp) {
-      alert('Phiên gửi OTP đã hết hạn. Vui lòng nhập email và bấm NEXT lại.');
-      return;
-    }
-
-    if (!/^\d{6}$/.test(otpValue)) {
-      alert('Vui lòng nhập đúng mã OTP 6 số.');
-      otpInput?.focus();
-      return;
-    }
-
-    verifyButton.disabled = true;
-    verifyButton.textContent = 'Đang xác nhận...';
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: signupEmailForOtp,
-        token: otpValue,
-        type: 'email'
-      });
-
-      if (error) {
-        verifyButton.disabled = false;
-        verifyButton.textContent = 'XÁC NHẬN';
-        alert('Xác nhận OTP thất bại: ' + error.message);
-        return;
-      }
-    } catch (error) {
-      verifyButton.disabled = false;
-      verifyButton.textContent = 'XÁC NHẬN';
-      alert('Không thể kết nối Supabase để xác nhận OTP. Vui lòng kiểm tra mạng hoặc thử lại sau.');
-      return;
-    }
-
-    alert('Chào mừng bạn đến với FoodSave!');
-    window.location.href = 'https://foodsave-vn.netlify.app/foodsave_user';
-  }
-
-  window.sendSignupEmailOtp = sendSignupEmailOtp;
-  window.verifySignupEmailOtp = verifySignupEmailOtp;
-
-  function loginWithGoogle() {
-    if (typeof window.socialLogin === 'function') {
-      window.socialLogin('google');
-      return;
-    }
-
-    alert('Đang tải kết nối Google OAuth. Vui lòng thử lại sau vài giây.');
-  }
-// 1. Khởi tạo Supabase (Đảm bảo bạn vẫn giữ nguyên URL và Key nhé)
+// 1. Khởi tạo Supabase
 const supabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
 const supabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 2. CAMERA GIÁM SÁT: Tự động chuyển trang khi phát hiện có người đăng nhập
+// 2. Camera giám sát (Đăng nhập xong tự động vào trang chủ)
 supabase.auth.onAuthStateChange((event, session) => {
   if (session) {
-    // Ngay khi có session (đăng nhập thành công), lập tức mở trang đặt hàng
-    // navTo('home') là hàm có sẵn của template FoodSave để mở trang mua sắm
     if (typeof navTo === "function") {
       navTo('home'); 
     } else {
-      // Đề phòng trường hợp lỗi hàm navTo, tự động ẩn trang login và hiện trang home
       document.getElementById('page-login').classList.remove('active');
       document.getElementById('page-register').classList.remove('active');
       document.getElementById('page-home').classList.add('active');
     }
   }
 });
+
+// 3. Hàm chạy Google (Mở thẳng màn hình lớn, KHÔNG OTP)
+async function loginSupabaseGoogle() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + '/FOODSAVE_USER.html'
+    }
+  });
+}
+
+// 4. Hàm chạy Facebook (Mở thẳng màn hình lớn, KHÔNG OTP)
+async function loginSupabaseFacebook() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'facebook',
+    options: {
+      redirectTo: window.location.origin + '/FOODSAVE_USER.html'
+    }
+  });
+}
 
 // 3. Nút Google: Chuyển hướng màn hình lớn (KHÔNG popup)
 async function loginWithGoogle() {
