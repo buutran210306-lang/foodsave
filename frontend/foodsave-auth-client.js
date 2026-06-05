@@ -1388,6 +1388,7 @@
     window.verifyOTP = verifyCustomerOtp;
     window.sendReset = function () { resetPassword(); };
     window.socialLogin = socialLogin;
+    window.loginWithGoogle = startGoogleLogin;
     window.loginWithFacebook = startFacebookLogin;
     window.beginPhoneSignup = beginPhoneSignup;
     window.backToRegisterMethods = backToRegisterMethods;
