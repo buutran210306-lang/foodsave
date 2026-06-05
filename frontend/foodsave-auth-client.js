@@ -373,6 +373,7 @@
     const metadata = user.user_metadata || {};
     const appMetadata = user.app_metadata || {};
     const fullName = metadata.full_name || metadata.name || metadata.display_name || user.email || user.phone || "bạn";
+    const provider = appMetadata.provider || (user.email ? "email" : user.phone ? "phone" : "supabase");
 
     return {
       id: user.id,
@@ -380,7 +381,7 @@
       phone: user.phone || "",
       full_name: fullName,
       avatar_url: metadata.avatar_url || metadata.picture || "",
-      provider: appMetadata.provider || "google"
+      provider
     };
   }
 
@@ -419,6 +420,11 @@
     return !activePage || ["page-landing", "page-login", "page-register"].includes(activePage.id);
   }
 
+  function shouldHoldEmailOtpNavigation() {
+    const flow = window.__foodsaveEmailOtpFlow;
+    return Boolean(flow && ["pending", "details"].includes(flow.phase));
+  }
+
   function initSupabaseCustomerAuth() {
     if (supabaseAuthInitialized) return;
     supabaseAuthInitialized = true;
@@ -433,7 +439,7 @@
     client.auth.onAuthStateChange((event, session) => {
       if (session) {
         syncSupabaseCustomerSession(session, {
-          navigateHome: event === "SIGNED_IN" || shouldNavigateHomeAfterSupabaseAuth()
+          navigateHome: !shouldHoldEmailOtpNavigation() && (event === "SIGNED_IN" || shouldNavigateHomeAfterSupabaseAuth())
         });
         return;
       }
@@ -446,7 +452,7 @@
     client.auth.getSession().then(({ data, error }) => {
       if (error || !data || !data.session) return;
       syncSupabaseCustomerSession(data.session, {
-        navigateHome: shouldNavigateHomeAfterSupabaseAuth()
+        navigateHome: !shouldHoldEmailOtpNavigation() && shouldNavigateHomeAfterSupabaseAuth()
       });
     }).catch(() => {
       // Supabase session hydration can fail when storage is blocked; login can still be retried.
@@ -458,26 +464,18 @@
     customerLoginPending = true;
     try {
       const emailTab = select("#login-email-tab");
-      const identifier = visible(emailTab)
-        ? requireValue("#login-email", "email")
-        : `${readValue("#login-country") || "+84"} ${requireValue("#login-phone", "số điện thoại")}`;
-      const password = requireValue("#login-password", "mật khẩu");
-
-      const data = await request("/auth/login", {
-        method: "POST",
-        body: {
-          identifier,
-          password,
-          expected_role: "customer"
+      if (emailTab && visible(emailTab)) {
+        if (typeof window.sendEmailLoginOtp === "function") {
+          await window.sendEmailLoginOtp();
+          return;
         }
-      });
+        notify("Đang tải OTP Email", "Vui lòng thử lại sau vài giây.", "warn");
+        return;
+      }
 
-      saveSession(data, "customer");
-      updateCustomerUiFromProfile(data.profile);
-      notify("Đăng nhập thành công", "Chào mừng bạn quay lại FoodSave.", "info");
-      if (typeof window.navTo === "function") window.navTo("home");
+      await startPhoneLoginOtp();
     } catch (error) {
-      notify("Đăng nhập thất bại", error.message, "error");
+      notify("Không thể gửi OTP", error.message, "error");
     } finally {
       customerLoginPending = false;
     }
@@ -516,7 +514,7 @@
     clearInterval(phoneOtpTimer);
     const timer = select("#phone-login-otp-timer");
     const resend = select("#phone-login-otp-resend");
-    let remaining = Math.max(0, Number(seconds || 0));
+    let remaining = Math.max(0, Number(seconds || 180));
 
     if (resend) {
       resend.disabled = true;
@@ -542,7 +540,8 @@
   }
 
   function showPhoneLoginOtpPanel(otpData) {
-    const expiresAt = new Date(Date.now() + Number(otpData.expires_in_seconds || 0) * 1000).toISOString();
+    const expiresInSeconds = Number(otpData.expires_in_seconds || 180);
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
     setPhoneOtpPending({
       phone: otpData.phone,
       expiresAt
@@ -562,7 +561,7 @@
     panel.style.display = "block";
     if (target) target.textContent = maskPhone(otpData.phone);
     clearPhoneLoginOtpInputs();
-    startPhoneOtpTimer(otpData.expires_in_seconds);
+    startPhoneOtpTimer(expiresInSeconds);
     window.setTimeout(() => document.querySelector(".phone-otp-input")?.focus(), 100);
   }
 
@@ -591,6 +590,7 @@
 
   async function startGoogleLogin() {
     if (googleLoginPending) return;
+    window.__foodsaveEmailOtpFlow = null;
     googleLoginPending = true;
     setOAuthButtonPending("google", true);
 
@@ -611,6 +611,7 @@
 
   async function startFacebookLogin() {
     if (facebookLoginPending) return;
+    window.__foodsaveEmailOtpFlow = null;
     facebookLoginPending = true;
     setOAuthButtonPending("facebook", true);
 
@@ -1018,6 +1019,7 @@
     loginCustomer,
     registerCustomer,
     getSupabaseClient: getFoodSaveSupabase,
+    syncSupabaseCustomerSession,
     startGoogleLogin,
     startFacebookLogin,
     startPhoneLoginOtp,
