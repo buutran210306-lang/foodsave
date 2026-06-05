@@ -5661,12 +5661,13 @@ function updateReputationRules(){
       alert('Không thể kết nối Supabase để gửi OTP. Vui lòng kiểm tra mạng hoặc thử lại sau.');
       return;
     }
+<script>
 // 1. Khởi tạo Supabase
 const supabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
 const supabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 2. Camera giám sát (Đăng nhập xong tự động vào trang chủ)
+// 2. Camera giám sát (Tự động vào trang chủ khi đăng nhập xong)
 supabase.auth.onAuthStateChange((event, session) => {
   if (session) {
     if (typeof navTo === "function") {
@@ -5679,45 +5680,25 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
-// 3. Hàm chạy Google (Mở thẳng màn hình lớn, KHÔNG OTP)
-async function loginSupabaseGoogle() {
+// 3. Hàm chạy Google (Đã gắn window để kết nối)
+window.loginSupabaseGoogle = async function() {
   await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: window.location.origin + '/FOODSAVE_USER.html'
     }
   });
-}
+};
 
-// 4. Hàm chạy Facebook (Mở thẳng màn hình lớn, KHÔNG OTP)
-async function loginSupabaseFacebook() {
+// 4. Hàm chạy Facebook (Đã gắn window để kết nối)
+window.loginSupabaseFacebook = async function() {
   await supabase.auth.signInWithOAuth({
     provider: 'facebook',
     options: {
       redirectTo: window.location.origin + '/FOODSAVE_USER.html'
     }
   });
-}
-
-// 3. Nút Google: Chuyển hướng màn hình lớn (KHÔNG popup)
-async function loginWithGoogle() {
-  await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      // Dùng window.location.href để nó quay về đúng trang hiện tại trên màn hình lớn
-      redirectTo: window.location.origin + '/FOODSAVE_USER.html' 
-    }
-  });
-}
-
-// 4. Nút Facebook: Chuyển hướng màn hình lớn
-async function loginWithFacebook() {
-  await supabase.auth.signInWithOAuth({
-    provider: 'facebook',
-    options: {
-      redirectTo: window.location.origin + '/FOODSAVE_USER.html'
-    }
-  });
-}
+};
+</script>
 </body>
 </html>
