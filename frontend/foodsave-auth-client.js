@@ -767,22 +767,29 @@
     window.setTimeout(() => document.querySelector(".otp-input")?.focus(), 100);
   }
 
+ // 1. Khởi tạo Supabase trực tiếp tại đây luôn!
+  const mySupabaseUrl = 'https://pggcbgtoxlhlgmwxupoc.supabase.co';
+  const mySupabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p';
+  const mySupabaseClient = window.supabase.createClient(mySupabaseUrl, mySupabaseKey);
+
+  // 2. Chạy thẳng Google
   async function startGoogleLogin() {
-    // Bay thẳng qua hàm Supabase ở màn hình lớn
-    if (typeof window.loginSupabaseGoogle === 'function') {
-      window.loginSupabaseGoogle();
-    } else {
-      alert("Đang tải dữ liệu Google. Vui lòng F5 lại trang.");
-    }
+    await mySupabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/FOODSAVE_USER.html'
+      }
+    });
   }
 
+  // 3. Chạy thẳng Facebook
   async function startFacebookLogin() {
-    // Bay thẳng qua hàm Supabase ở màn hình lớn
-    if (typeof window.loginSupabaseFacebook === 'function') {
-      window.loginSupabaseFacebook();
-    } else {
-      alert("Đang tải dữ liệu Facebook. Vui lòng F5 lại trang.");
-    }
+    await mySupabaseClient.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: window.location.origin + '/FOODSAVE_USER.html'
+      }
+    });
   }
 
   async function requestGoogleOtp(accessToken, options) {
