@@ -768,66 +768,20 @@
   }
 
   async function startGoogleLogin() {
-    if (googleLoginPending) return;
-    googleLoginPending = true;
-    setOAuthButtonPending("google", true);
-    let popup = null;
-    try {
-      setPendingOAuthProvider("google");
-      const redirectTo = oauthRedirectUrl("google");
-      popup = openOAuthPopup("google");
-      const data = await request("/auth/google/start", {
-        method: "POST",
-        body: {
-          redirect_to: redirectTo
-        }
-      });
-
-      notify("Đang mở Google", "Sau khi chọn Gmail, FoodSave sẽ gửi OTP xác thực về email đó.", "info");
-      if (popup && !popup.closed) {
-        popup.location.href = data.auth_url;
-        watchOAuthPopup("google", popup);
-        return;
-      }
-      window.location.assign(data.auth_url);
-    } catch (error) {
-      if (popup && !popup.closed) popup.close();
-      clearPendingOAuthProvider();
-      notify("Không thể đăng nhập Google", error.message, "error");
-      googleLoginPending = false;
-      setOAuthButtonPending("google", false);
+    // Bay thẳng qua hàm Supabase ở màn hình lớn
+    if (typeof window.loginSupabaseGoogle === 'function') {
+      window.loginSupabaseGoogle();
+    } else {
+      alert("Đang tải dữ liệu Google. Vui lòng F5 lại trang.");
     }
   }
 
   async function startFacebookLogin() {
-    if (facebookLoginPending) return;
-    facebookLoginPending = true;
-    setOAuthButtonPending("facebook", true);
-    let popup = null;
-    try {
-      setPendingOAuthProvider("facebook");
-      const redirectTo = oauthRedirectUrl("facebook");
-      popup = openOAuthPopup("facebook");
-      const data = await request("/auth/facebook/start", {
-        method: "POST",
-        body: {
-          redirect_to: redirectTo
-        }
-      });
-
-      notify("Đang mở Facebook", "Facebook sẽ hỏi bạn đồng ý liên kết FoodSave trước khi quay lại website.", "info");
-      if (popup && !popup.closed) {
-        popup.location.href = data.auth_url;
-        watchOAuthPopup("facebook", popup);
-        return;
-      }
-      window.location.assign(data.auth_url);
-    } catch (error) {
-      if (popup && !popup.closed) popup.close();
-      clearPendingOAuthProvider();
-      notify("Không thể đăng nhập Facebook", error.message, "error");
-      facebookLoginPending = false;
-      setOAuthButtonPending("facebook", false);
+    // Bay thẳng qua hàm Supabase ở màn hình lớn
+    if (typeof window.loginSupabaseFacebook === 'function') {
+      window.loginSupabaseFacebook();
+    } else {
+      alert("Đang tải dữ liệu Facebook. Vui lòng F5 lại trang.");
     }
   }
 
