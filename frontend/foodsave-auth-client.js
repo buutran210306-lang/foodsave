@@ -415,6 +415,61 @@
     return authSession;
   }
 
+  async function getCurrentSupabaseUser(client) {
+    if (client && client.auth && typeof client.auth.getUser === "function") {
+      const { data, error } = await client.auth.getUser();
+      if (error) throw error;
+      if (data && data.user) return data.user;
+    }
+
+    if (client && client.auth && typeof client.auth.user === "function") {
+      return client.auth.user();
+    }
+
+    return null;
+  }
+
+  async function upsertCustomerProfile(profileInput) {
+    const client = getFoodSaveSupabase();
+    const user = await getCurrentSupabaseUser(client);
+    const userId = user && user.id ? user.id : "";
+
+    if (!userId) {
+      throw new Error("Không tìm thấy phiên người dùng Supabase để cập nhật hồ sơ.");
+    }
+
+    const acceptedAt = profileInput.terms_accepted_at || new Date().toISOString();
+    const metadata = {
+      ...(profileInput.metadata || {}),
+      terms_accepted: true,
+      profile_completed_at: acceptedAt
+    };
+
+    const payload = {
+      id: userId,
+      role: "customer",
+      email: user.email ? String(user.email).toLowerCase() : undefined,
+      full_name: profileInput.full_name,
+      phone: profileInput.phone,
+      auth_provider: "email",
+      terms_accepted_at: acceptedAt,
+      metadata
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined || payload[key] === "") delete payload[key];
+    });
+
+    const { data, error } = await client
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" })
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   function shouldNavigateHomeAfterSupabaseAuth() {
     const activePage = document.querySelector(".page.active");
     return !activePage || ["page-landing", "page-login", "page-register"].includes(activePage.id);
@@ -1020,6 +1075,7 @@
     registerCustomer,
     getSupabaseClient: getFoodSaveSupabase,
     syncSupabaseCustomerSession,
+    upsertCustomerProfile,
     startGoogleLogin,
     startFacebookLogin,
     startPhoneLoginOtp,

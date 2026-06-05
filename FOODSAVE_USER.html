@@ -2019,6 +2019,12 @@
                 <label>Số điện thoại</label>
                 <div class="input-icon"><i class="ti ti-phone"></i><input class="inp" type="tel" id="signup-detail-phone" placeholder="0901234567" autocomplete="tel" inputmode="tel"></div>
               </div>
+              <div class="field">
+                <label style="display:flex;align-items:flex-start;gap:10px;line-height:1.5;color:var(--ink);font-weight:700">
+                  <input type="checkbox" id="signup-detail-terms" style="width:18px;min-height:18px;height:18px;padding:0;margin-top:2px;accent-color:var(--green-700);flex:0 0 auto">
+                  <span>Tôi đã đọc và đồng ý với chính sách và điều khoản sử dụng của FoodSave.</span>
+                </label>
+              </div>
               <div class="field-error" id="signup-detail-error"></div>
               <button class="btn btn-primary btn-block btn-lg" id="signup-detail-submit-btn" type="submit"><i class="ti ti-device-floppy"></i> Cập nhật</button>
             </form>
@@ -5963,9 +5969,11 @@ function updateReputationRules(){
     const nameInput = fsEl('signup-detail-name');
     const phoneInput = fsEl('signup-detail-phone');
     const passwordInput = fsEl('signup-detail-password');
+    const termsInput = fsEl('signup-detail-terms');
     if (nameInput) nameInput.value = fallbackName;
     if (phoneInput) phoneInput.value = user.phone || metadata.phone || '';
     if (passwordInput) passwordInput.value = '';
+    if (termsInput) termsInput.checked = false;
     setError('signup-detail-password-error', '');
     setError('signup-detail-error', '');
     window.setTimeout(() => nameInput?.focus(), 80);
@@ -5979,10 +5987,63 @@ function updateReputationRules(){
     return '+84' + compact;
   }
 
+  async function getCurrentSignupUser(client) {
+    if (client.auth && typeof client.auth.getUser === 'function') {
+      const { data, error } = await client.auth.getUser();
+      if (error) throw error;
+      if (data?.user) return data.user;
+    }
+
+    if (client.auth && typeof client.auth.user === 'function') {
+      return client.auth.user();
+    }
+
+    return emailOtpState.signup.session?.user || null;
+  }
+
+  async function upsertSignupProfile(client, profileInput) {
+    if (window.FoodSaveAuth?.upsertCustomerProfile) {
+      return window.FoodSaveAuth.upsertCustomerProfile(profileInput);
+    }
+
+    const user = await getCurrentSignupUser(client);
+    const userId = user?.id;
+    if (!userId) throw new Error('Không tìm thấy phiên người dùng Supabase để cập nhật hồ sơ.');
+
+    const acceptedAt = profileInput.terms_accepted_at || new Date().toISOString();
+    const payload = {
+      id: userId,
+      role: 'customer',
+      email: user.email ? String(user.email).toLowerCase() : undefined,
+      full_name: profileInput.full_name,
+      phone: profileInput.phone,
+      auth_provider: 'email',
+      terms_accepted_at: acceptedAt,
+      metadata: {
+        terms_accepted: true,
+        profile_completed_at: acceptedAt
+      }
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined || payload[key] === '') delete payload[key];
+    });
+
+    const { data, error } = await client
+      .from('profiles')
+      .upsert(payload, { onConflict: 'id' })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   window.completeSignupDetails = async function() {
     const nameInput = fsEl('signup-detail-name');
     const passwordInput = fsEl('signup-detail-password');
     const phoneInput = fsEl('signup-detail-phone');
+    const termsInput = fsEl('signup-detail-terms');
     const button = fsEl('signup-detail-submit-btn');
     const fullName = nameInput?.value.trim();
     const password = passwordInput?.value || '';
@@ -6010,25 +6071,37 @@ function updateReputationRules(){
       return;
     }
 
+    if (!termsInput?.checked) {
+      setError('signup-detail-error', 'Vui lòng đồng ý với các điều khoản sử dụng để tiếp tục.');
+      termsInput?.focus();
+      return;
+    }
+
     setButtonBusy(button, true, 'Đang cập nhật...', button?.innerHTML);
 
     try {
       const client = foodsaveSupabaseClient();
-      const { data, error } = await client.auth.updateUser({
-        password,
-        phone,
-        data: {
-          full_name: fullName,
-          name: fullName,
-          phone
-        }
-      });
+      const { error } = await client.auth.updateUser({ password });
 
       if (error) throw error;
 
+      const acceptedAt = new Date().toISOString();
+      await upsertSignupProfile(client, {
+        full_name: fullName,
+        phone,
+        terms_accepted_at: acceptedAt
+      });
+
       const sessionResult = await client.auth.getSession();
       const session = sessionResult?.data?.session || emailOtpState.signup.session;
-      if (session && data?.user) session.user = data.user;
+      if (session?.user) {
+        session.user.user_metadata = {
+          ...(session.user.user_metadata || {}),
+          full_name: fullName,
+          name: fullName,
+          phone
+        };
+      }
       syncSupabaseSession(session, false);
       setEmailOtpFlow(null, null);
       showSignupPanel('complete');
@@ -6115,6 +6188,13 @@ function updateReputationRules(){
   if (signupPhoneInput) {
     signupPhoneInput.addEventListener('input', () => {
       signupPhoneInput.value = signupPhoneInput.value.replace(/[^\d+]/g, '');
+    });
+  }
+
+  const signupTermsInput = fsEl('signup-detail-terms');
+  if (signupTermsInput) {
+    signupTermsInput.addEventListener('change', () => {
+      if (signupTermsInput.checked) setError('signup-detail-error', '');
     });
   }
 
