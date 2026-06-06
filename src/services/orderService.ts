@@ -182,21 +182,28 @@ export const orderService = {
     if (orderError) handleSupabaseError(orderError, "Failed to create order");
     const order = orderData as Order;
 
+   // Dọn dẹp lại việc mapping order items
     const orderItemsPayload = body.items.map((item) => {
-      const product = requireRecord(productById.get(item.product_id), "Checkout product was not found");
-      return {
-        order_id: order.id,
-        product_id: product.id,
-        product_name: product.name,
-        unit_price_cents: product.price_cents,
-        original_unit_price_cents: product.original_price_cents,
-        quantity: item.quantity,
-        product_metadata: {
-          category: product.category,
-          label: product.label,
-          emoji: product.emoji
+        const product = requireRecord(productById.get(item.product_id), "Checkout product was not found");
+        
+        // Kiểm tra chắc chắn order.id tồn tại trước khi dùng
+        if (!order || !order.id) {
+            throw new Error("Order creation failed: Order ID is missing");
         }
-      };
+
+        return {
+            order_id: order.id, // Bây giờ TypeScript sẽ hiểu order.id chắc chắn là string
+            product_id: product.id,
+            product_name: product.name,
+            unit_price_cents: product.price_cents,
+            original_unit_price_cents: product.original_unit_price_cents,
+            quantity: item.quantity,
+            product_metadata: {
+                category: product.category,
+                label: product.label,
+                emoji: product.emoji
+            }
+        };
     });
 
     const { data: itemData, error: itemError } = await supabaseAdmin
