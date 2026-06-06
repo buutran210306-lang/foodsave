@@ -5911,6 +5911,64 @@ function updateReputationRules(){
     return priceK.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + 'k';
   }
 
+  function hoursUntilProductDate(value) {
+    if (!value) return 24;
+    return Math.max(0, Math.round((new Date(value).getTime() - Date.now()) / 3600000));
+  }
+
+  function mapSupabaseProductForDetail(product) {
+    const productId = String(product.id ?? '');
+    const store = product.stores || product.store || {};
+    const imageUrl = escapeProductHtml(product.image_url || '');
+    const price = Number(product.price_cents) || 0;
+    const original = Number(product.original_price_cents) || price;
+
+    return {
+      id: productId,
+      emoji: imageUrl
+        ? `<img src="${imageUrl}" alt="${escapeProductHtml(product.name || 'Sản phẩm FoodSave')}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
+        : '🍽️',
+      name: product.name || 'Sản phẩm FoodSave',
+      store: store.name || product.store_name || 'FoodSave',
+      storeId: Number(product.store_id) || 0,
+      distance: Number(product.distance) || 0,
+      price,
+      original,
+      label: product.label || 'green',
+      expiresHrs: hoursUntilProductDate(product.expires_at),
+      stock: Number(product.stock_quantity ?? product.stock) || 0,
+      cat: product.category || 'other',
+      rating: Number(product.rating) || 0,
+      sold: Number(product.sold_count) || 0,
+      desc: String(product.description || '').trim() || 'Đang cập nhật',
+      donation: Boolean(product.is_donation)
+    };
+  }
+
+  function syncSupabaseProductsForDetail(products) {
+    if (typeof PRODUCTS === 'undefined' || !Array.isArray(PRODUCTS)) return;
+    const mappedProducts = (Array.isArray(products) ? products : [])
+      .filter(product => product && product.id !== undefined && product.id !== null)
+      .map(mapSupabaseProductForDetail);
+    PRODUCTS.splice(0, PRODUCTS.length, ...mappedProducts);
+  }
+
+  function bindSupabaseProductCardClicks(container) {
+    container.querySelectorAll('.product-card[data-product-id]').forEach((card) => {
+      card.addEventListener('click', () => {
+        const productId = card.dataset.productId;
+        if (productId && typeof openProduct === 'function') openProduct(productId);
+      });
+
+      card.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        const productId = card.dataset.productId;
+        if (productId && typeof openProduct === 'function') openProduct(productId);
+      });
+    });
+  }
+
   function renderSupabaseProductList(products) {
     const container = fsEl('product-container');
     const marketCount = fsEl('market-count');
@@ -5918,6 +5976,7 @@ function updateReputationRules(){
     const list = Array.isArray(products) ? products : [];
 
     if (!container) return;
+    syncSupabaseProductsForDetail(list);
 
     if (marketCount) marketCount.textContent = list.length + ' sản phẩm';
     if (marketEmpty) marketEmpty.style.display = list.length === 0 ? 'block' : 'none';
@@ -5929,13 +5988,14 @@ function updateReputationRules(){
     }
 
     container.innerHTML = list.map((product) => {
+      const productId = escapeProductHtml(product.id);
       const name = escapeProductHtml(product.name || 'Sản phẩm FoodSave');
       const price = formatProductPriceK(product.price_cents);
       const description = escapeProductHtml(String(product.description || '').trim() || 'Đang cập nhật');
       const imageUrl = escapeProductHtml(product.image_url || '');
 
       return `
-        <article class="product" style="cursor:default">
+        <article class="product product-card" data-product-id="${productId}" role="button" tabindex="0">
           <div class="product-art" style="background:var(--soft);padding:0">
             ${imageUrl
               ? `<img src="${imageUrl}" alt="${name}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
@@ -5948,6 +6008,8 @@ function updateReputationRules(){
           </div>
         </article>`;
     }).join('');
+
+    bindSupabaseProductCardClicks(container);
   }
 
   async function loadProducts() {
