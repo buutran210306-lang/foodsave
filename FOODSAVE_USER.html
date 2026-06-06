@@ -4049,7 +4049,8 @@ function cartProductSnapshot(product) {
     price_cents: product.price_cents ?? product.price,
     image_url: product.image_url || '',
     emoji: product.emoji,
-    store: product.store
+    store: product.store,
+    storeId: product.storeId ?? product.store_id ?? 0
   } : null;
 }
 
@@ -5044,12 +5045,16 @@ async function placeOrder() {
   const subtotal = cartSubtotal();
   const discount = voucherDiscount;
   const donation = donateAmount;
+  const platformFee = 2000;
   const total = Math.max(0, subtotal - voucherDiscount + 2000 + donateAmount);
   const id = '#FS-' + (2500 + Math.floor(Math.random() * 100));
   const qr = id.replace('#','') + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
   const firstCartProduct = productFromCartItem(cart[0]);
   const store = firstCartProduct?.store || 'FoodSave';
   const storeId = firstCartProduct?.storeId || 0;
+  const note = $('#co-note') ? $('#co-note').value.trim() : '';
+  const voucherCode = $('#voucher-input') ? $('#voucher-input').value.trim().toUpperCase() : '';
+  const email = $('#co-email') ? $('#co-email').value : '';
   let backendResult = null;
 
   if (pay === 'momo') {
@@ -5082,7 +5087,9 @@ async function placeOrder() {
     qr: pickupQr,
     paymentQr,
     payUrl: backendResult?.payment?.payUrl || '',
-    pickup:slotMap[slot], payment:payMap[pay], paymentMethod:pay, subtotal, discount
+    pickup:slotMap[slot], pickupWindow:slotMap[slot], slotKey:slot,
+    payment:payMap[pay], paymentMethod:pay, subtotal, discount, donation, platformFee,
+    voucherCode, note, email
   };
   orders.unshift(order);
   currentOrderId = order.id;
@@ -5092,11 +5099,32 @@ async function placeOrder() {
   updateCartUI();
 
   // Populate payment-confirm page (Step 3)
-  const note = $('#co-note') ? $('#co-note').value.trim() : '';
-  populatePaymentConfirm({id:order.id, items:order.items, store, slotText:slotMap[slot], payMethod:payMap[pay], payCode:pay, subtotal, discount, donation, total, note, qr:order.paymentQr, payUrl:order.payUrl});
+  populatePaymentConfirm({id:order.id, items:order.items, store, slotKey:slot, slotText:slotMap[slot], payMethod:payMap[pay], payCode:pay, subtotal, discount, donation, total, note, qr:order.paymentQr, payUrl:order.payUrl});
   
   // Store for success page (after confirmation)
-  window.__pendingOrder = {id:order.id, backendId:order.backendId, qr:order.qr, paymentQr:order.paymentQr, store, slotText:slotMap[slot], total, email:$('#co-email').value, paymentMethod:pay, payUrl:order.payUrl};
+  window.__pendingOrder = {
+    id:order.id,
+    backendId:order.backendId,
+    backendOrderNumber:order.momoOrderId,
+    items:order.items,
+    qr:order.qr,
+    paymentQr:order.paymentQr,
+    store,
+    storeId,
+    slotKey:slot,
+    slotText:slotMap[slot],
+    pickupWindow:slotMap[slot],
+    subtotal,
+    discount,
+    donation,
+    platformFee,
+    total,
+    voucherCode,
+    note,
+    email,
+    paymentMethod:pay,
+    payUrl:order.payUrl
+  };
 
   navTo('payment-confirm');
 }
@@ -5231,21 +5259,206 @@ async function regeneratePaymentQr() {
   toast('Đã tạo lại mã QR thanh toán', 'info');
 }
 
+function isValidUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
+
+function createMockUuid() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('').replace(
+    /^(.{8})(.{4})(.{4})(.{4})(.{12})$/,
+    '$1-$2-$3-$4-$5'
+  );
+}
+
+function moneyInt(value) {
+  return Math.max(0, Math.round(Number(value) || 0));
+}
+
+function readFoodSaveAuthSession() {
+  try {
+    const raw = localStorage.getItem('foodsave.auth.session');
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function currentCustomerUuidForOrder(client) {
+  try {
+    if (client?.auth?.getUser) {
+      const { data, error } = await client.auth.getUser();
+      if (!error && isValidUuid(data?.user?.id)) return data.user.id;
+    }
+  } catch (error) {
+    console.warn('[FoodSave] Không lấy được auth user, dùng customer_id mock:', error);
+  }
+
+  const savedSession = window.FoodSaveCurrentAuth || readFoodSaveAuthSession();
+  const savedId = savedSession?.profile?.id || savedSession?.user?.id;
+  return isValidUuid(savedId) ? savedId : createMockUuid();
+}
+
+function firstUuidFromOrderStore(o, localOrder) {
+  const candidates = [o?.storeId, o?.store_id, localOrder?.storeId, localOrder?.store_id];
+  const items = [...(Array.isArray(o?.items) ? o.items : []), ...(Array.isArray(localOrder?.items) ? localOrder.items : [])];
+
+  items.forEach(item => {
+    const product = productFromCartItem(item) || item?.product || {};
+    candidates.push(item?.storeId, item?.store_id, product.storeId, product.store_id);
+  });
+
+  const found = candidates.find(isValidUuid);
+  return found ? String(found) : '';
+}
+
+async function storeUuidForOrder(client, o, localOrder) {
+  const directStoreId = firstUuidFromOrderStore(o, localOrder);
+  if (directStoreId) return directStoreId;
+
+  const items = [...(Array.isArray(o?.items) ? o.items : []), ...(Array.isArray(localOrder?.items) ? localOrder.items : [])];
+  const productId = items.map(item => item?.id || item?.product_id || item?.product?.id).find(isValidUuid);
+  if (productId) {
+    try {
+      const { data, error } = await client.from('products').select('store_id').eq('id', productId).maybeSingle();
+      if (!error && isValidUuid(data?.store_id)) return data.store_id;
+    } catch (error) {
+      console.warn('[FoodSave] Không lấy được store_id từ products, dùng store_id mock:', error);
+    }
+  }
+
+  return createMockUuid();
+}
+
+function normalizeOrderNumber(o, localOrder) {
+  const raw = String(o?.backendOrderNumber || localOrder?.momoOrderId || o?.qr || localOrder?.qr || o?.id || '').replace(/^#/, '').trim();
+  return raw || `FS-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+}
+
+function normalizePaymentMethod(value) {
+  const method = String(value || '').toLowerCase();
+  const mapped = method === 'vietqr' ? 'vnpay' : method;
+  return ['momo', 'zalopay', 'vnpay', 'card', 'cash'].includes(mapped) ? mapped : 'cash';
+}
+
+function normalizeOrderStatus(value) {
+  return ['pending', 'confirmed', 'ready', 'completed', 'cancelled'].includes(value) ? value : 'pending';
+}
+
+function normalizePaymentStatus(value) {
+  return ['pending', 'paid', 'refunded', 'failed'].includes(value) ? value : 'pending';
+}
+
+function pickupSlotKeyForOrder(o, localOrder) {
+  const text = o?.slotText || o?.pickupWindow || localOrder?.pickup || '';
+  const byText = { 'Trong 30 phút': 'now', 'Trong 2 giờ': '2h', 'Tối nay 18-22h': 'tonight', 'Mai 9-12h': 'tomorrow' };
+  return o?.slotKey || localOrder?.slotKey || byText[text] || 'now';
+}
+
+async function buildSupabaseOrderData(client, o, localOrder, isCash) {
+  const orderNumber = normalizeOrderNumber(o, localOrder);
+  const nowIso = new Date().toISOString();
+  const subtotal = moneyInt(o?.subtotal ?? localOrder?.subtotal ?? 0);
+  const discount = moneyInt(o?.discount ?? localOrder?.discount ?? 0);
+  const platformFee = moneyInt(o?.platformFee ?? localOrder?.platformFee ?? 2000);
+  const donation = moneyInt(o?.donation ?? localOrder?.donation ?? 0);
+  const total = moneyInt(o?.total ?? localOrder?.total ?? Math.max(0, subtotal - discount + platformFee + donation));
+  const paymentMethod = normalizePaymentMethod(o?.paymentMethod || localOrder?.paymentMethod);
+
+  const orderData = {
+    id: isValidUuid(o?.backendId || localOrder?.backendId) ? (o?.backendId || localOrder?.backendId) : createMockUuid(),
+    order_number: orderNumber,
+    customer_id: await currentCustomerUuidForOrder(client),
+    store_id: await storeUuidForOrder(client, o, localOrder),
+    status: normalizeOrderStatus(o?.status || localOrder?.status || 'pending'),
+    pickup_slot_key: pickupSlotKeyForOrder(o, localOrder),
+    pickup_window: o?.pickupWindow || o?.slotText || localOrder?.pickup || 'Trong 30 phút',
+    payment_method: paymentMethod,
+    payment_status: normalizePaymentStatus(isCash ? 'pending' : 'paid'),
+    subtotal_cents: subtotal,
+    discount_cents: discount,
+    platform_fee_cents: platformFee,
+    donation_cents: donation,
+    total_cents: total,
+    voucher_code: o?.voucherCode || localOrder?.voucherCode || null,
+    qr_code: String(o?.qr || localOrder?.qr || `${orderNumber}-QR`),
+    customer_note: o?.note || localOrder?.note || null,
+    created_at: nowIso,
+    updated_at: nowIso
+  };
+
+  return orderData;
+}
+
+async function insertSupabaseOrderOnConfirm(o, localOrder, isCash) {
+  const supabase = foodsaveSupabaseClient();
+  const orderData = await buildSupabaseOrderData(supabase, o, localOrder, isCash);
+  const { data, error } = await supabase.from('orders').insert([orderData]).select('*').single();
+
+  if (error) {
+    console.error("Lỗi insert:", error);
+    throw error;
+  }
+
+  console.log("Thành công:", data);
+  return data;
+}
+
 async function confirmPaymentDone() {
   if (__pcTimerInterval) clearInterval(__pcTimerInterval);
   const o = window.__pendingOrder;
   if (!o) { navTo('home'); return; }
   const isCash = o.paymentMethod === 'cash';
   const localOrder = orders.find(x => x.id === o.id);
-  if (localOrder) {
-    localOrder.paymentStatus = isCash ? 'pending' : 'paid';
-    if (localOrder.status === 'pending') localOrder.status = 'confirmed';
+  const confirmBtn = $('#pc-confirm-btn');
+  const confirmBtnHtml = confirmBtn?.innerHTML;
+
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="ti ti-loader-2"></i> Đang lưu đơn...';
   }
-  if (o.backendId && !isCash && window.FS?.sync?.markOrderPaymentPaid) {
-    await window.FS.sync.markOrderPaymentPaid(o.backendId, o.paymentMethod).catch(error => {
-      console.warn('[FoodSave] Direct orders payment paid update skipped:', error);
-    });
+
+  try {
+    if (!o.backendId) {
+      const insertedOrder = await insertSupabaseOrderOnConfirm(o, localOrder, isCash);
+      o.backendId = insertedOrder?.id || o.backendId;
+      if (localOrder) {
+        localOrder.backendId = insertedOrder?.id || localOrder.backendId;
+        localOrder.momoOrderId = insertedOrder?.order_number || localOrder.momoOrderId;
+      }
+    } else {
+      console.log("Thành công:", { id: o.backendId, order_number: o.backendOrderNumber || localOrder?.momoOrderId || null });
+    }
+
+    if (localOrder) {
+      localOrder.paymentStatus = isCash ? 'pending' : 'paid';
+      if (localOrder.status === 'pending') localOrder.status = 'confirmed';
+    }
+
+    if (o.backendId && !isCash && window.FS?.sync?.markOrderPaymentPaid) {
+      await window.FS.sync.markOrderPaymentPaid(o.backendId, o.paymentMethod).catch(error => {
+        console.warn('[FoodSave] Direct orders payment paid update skipped:', error);
+      });
+    }
+  } catch (error) {
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = confirmBtnHtml || '<i class="ti ti-check"></i> Xác nhận đặt hàng';
+    }
+    toast('Không lưu được đơn hàng vào Supabase. Mở Console để xem chi tiết lỗi insert.', 'error');
+    return;
   }
+
   // Now actually go to success
   if ($('#success-title')) $('#success-title').textContent = isCash ? 'Đặt hàng thành công!' : 'Thanh toán thành công! 🎉';
   if ($('#success-message')) {
