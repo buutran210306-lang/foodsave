@@ -85,7 +85,7 @@ export const registerPartnerBodySchema = z.object({
   address: addressSchema,
   district: optionalShortTextSchema,
   city: shortTextSchema.default("TP.HCM"),
-  business_type: z.enum(["bakery", "restaurant", "convenience", "supermarket", "cafe", "other"]),
+  business_type: z.enum(["bakery", "restaurant", "convenience", "supermarket", "other"]),
   representative_name: shortTextSchema,
   business_license_number: optionalShortTextSchema,
   tax_code: optionalShortTextSchema,
