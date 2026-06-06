@@ -52,6 +52,26 @@
     return session && typeof session.accessToken === "string" ? session.accessToken : "";
   }
 
+  function directSupabaseClient() {
+    if (window.foodsaveSupabase) return window.foodsaveSupabase;
+    if (window.FoodSaveAuth && typeof window.FoodSaveAuth.getSupabaseClient === "function") {
+      return window.FoodSaveAuth.getSupabaseClient();
+    }
+    if (typeof window.getFoodSaveSupabaseClient === "function") {
+      return window.getFoodSaveSupabaseClient();
+    }
+    return null;
+  }
+
+  function normalizeOrderLookup(orderId) {
+    const raw = String(orderId || "").trim().replace(/^#/, "");
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return {
+      column: uuidPattern.test(raw) ? "id" : "order_number",
+      value: raw
+    };
+  }
+
   async function request(path, options) {
     const token = authToken();
     const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -70,6 +90,46 @@
     }
 
     return payload.data;
+  }
+
+  async function updateOrderPaymentDirect(orderId, patch) {
+    const client = directSupabaseClient();
+    if (!client) throw new Error("Supabase client is not ready for direct orders update.");
+
+    const lookup = normalizeOrderLookup(orderId);
+    const payload = {};
+    if (patch.payment_method) payload.payment_method = patch.payment_method;
+    if (patch.payment_status) payload.payment_status = patch.payment_status;
+    if (patch.status) payload.status = patch.status;
+
+    const { data, error } = await client
+      .from("orders")
+      .update(payload)
+      .eq(lookup.column, lookup.value)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async function updateOrderPayment(orderId, patch) {
+    try {
+      return await updateOrderPaymentDirect(orderId, patch);
+    } catch (directError) {
+      if (!patch.status && patch.payment_method) {
+        throw directError;
+      }
+      const data = await request(`/orders/${encodeURIComponent(orderId)}/status`, {
+        method: "PATCH",
+        body: {
+          status: patch.status || "confirmed",
+          ...(patch.payment_status ? { payment_status: patch.payment_status } : {})
+        }
+      });
+      if (patch.payment_method) data.payment_method = patch.payment_method;
+      return data;
+    }
   }
 
   function getGlobalArray(name) {
@@ -158,6 +218,17 @@
     };
   }
 
+  function paymentMethodLabel(method) {
+    return {
+      momo: "MoMo",
+      zalopay: "ZaloPay",
+      vnpay: "VNPay",
+      card: "Visa/Mastercard",
+      vietqr: "VietQR",
+      cash: "COD"
+    }[method] || method || "";
+  }
+
   function mapUserOrder(order) {
     const items = Array.isArray(order.order_items) ? order.order_items : [];
     return {
@@ -166,7 +237,12 @@
       status: order.status,
       store: order.stores && order.stores.name ? order.stores.name : "",
       total: centsToVnd(order.total_cents),
+      subtotal: centsToVnd(order.subtotal_cents),
+      discount: centsToVnd(order.discount_cents),
       pickup: order.pickup_window,
+      payment: paymentMethodLabel(order.payment_method),
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status,
       created: order.created_at,
       qr: order.qr_code,
       items: items.map((item) => ({
@@ -250,6 +326,31 @@
     hydratePage,
     pushOrder(orderPayload) {
       return request("/orders", { method: "POST", body: orderPayload });
+    },
+    createMomoPayment(orderPayload) {
+      return request("/orders/payments/momo", { method: "POST", body: orderPayload });
+    },
+    refreshMomoPayment(orderId) {
+      return request(`/orders/${encodeURIComponent(orderId)}/payments/momo/refresh`, { method: "POST" });
+    },
+    pollMomoPayment(orderId) {
+      return request(`/orders/${encodeURIComponent(orderId)}/payments/momo/status`, { method: "GET" });
+    },
+    updateOrderPayment(orderId, patch) {
+      return updateOrderPayment(orderId, patch);
+    },
+    markOrderPaymentPending(orderId, paymentMethod) {
+      return updateOrderPayment(orderId, {
+        payment_method: paymentMethod,
+        payment_status: "pending"
+      });
+    },
+    markOrderPaymentPaid(orderId, paymentMethod) {
+      return updateOrderPayment(orderId, {
+        payment_method: paymentMethod,
+        payment_status: "paid",
+        status: "confirmed"
+      });
     },
     getOrders() {
       return request("/orders?limit=100");

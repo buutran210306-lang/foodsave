@@ -2,8 +2,10 @@ import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/http";
 import type {
   CreateComplaintBody,
+  CreateMomoPaymentBody,
   CreateOrderBody,
   CreateReviewBody,
+  MomoWebhookMockBody,
   OrderListQuery,
   UpdateComplaintBody,
   UpdateOrderStatusBody
@@ -20,6 +22,33 @@ export const orderController = {
     const body = req.validated?.body as CreateOrderBody;
     const result = await orderService.createOrder(actor.userId, body);
     sendSuccess(res, result, HTTP_STATUS.CREATED);
+  },
+
+  async createMomoPayment(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const body = req.validated?.body as CreateMomoPaymentBody;
+    const result = await orderService.createMomoPayment(actor.userId, body);
+    sendSuccess(res, result, HTTP_STATUS.CREATED);
+  },
+
+  async refreshMomoPayment(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const params = req.validated?.params as UuidParams;
+    const result = await orderService.refreshMomoPayment(actor.userId, actor.role, params.id);
+    sendSuccess(res, result);
+  },
+
+  async pollMomoPayment(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const params = req.validated?.params as UuidParams;
+    const result = await orderService.pollMomoPayment(actor.userId, actor.role, params.id);
+    sendSuccess(res, result);
+  },
+
+  async mockMomoWebhook(req: Request, res: Response): Promise<void> {
+    const body = req.validated?.body as MomoWebhookMockBody;
+    const order = await orderService.applyMomoWebhookMock(body);
+    sendSuccess(res, order);
   },
 
   async listOrders(req: Request, res: Response): Promise<void> {

@@ -1,7 +1,9 @@
 import type {
   CreateComplaintBody,
+  CreateMomoPaymentBody,
   CreateOrderBody,
   CreateReviewBody,
+  MomoWebhookMockBody,
   OrderListQuery,
   UpdateComplaintBody,
   UpdateOrderStatusBody
@@ -13,6 +15,7 @@ import { AppError } from "../utils/appError";
 import { generateCode, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
 import type { PaginatedResponse } from "../types/api";
 import { sellerReputationService } from "./sellerReputationService";
+import { momoPaymentService } from "./momoPaymentService";
 
 interface ProductForCheckout {
   id: string;
@@ -20,6 +23,7 @@ interface ProductForCheckout {
   name: string;
   price_cents: number;
   original_price_cents: number;
+  original_unit_price_cents: number;
   stock_quantity: number;
   sold_count: number;
   is_active: boolean;
@@ -83,7 +87,13 @@ const loadCheckoutProducts = async (body: CreateOrderBody): Promise<ProductForCh
     .in("id", productIds);
 
   if (error) handleSupabaseError(error, "Failed to load checkout products");
-  const products = (data ?? []) as ProductForCheckout[];
+  const products = (data ?? []).map((product) => {
+    const checkoutProduct = product as ProductForCheckout;
+    return {
+      ...checkoutProduct,
+      original_unit_price_cents: checkoutProduct.original_price_cents
+    };
+  });
 
   if (products.length !== productIds.length) {
     throw new AppError("One or more products were not found", HTTP_STATUS.NOT_FOUND, ERROR_CODES.RESOURCE_NOT_FOUND);
@@ -178,22 +188,28 @@ export const orderService = {
 
     if (orderError) handleSupabaseError(orderError, "Failed to create order");
     const order = orderData as Order;
+    const orderId = order.id;
+    if (!orderId) {
+      throw new Error("Order creation failed: Order ID is missing");
+    }
 
+   // Dọn dẹp lại việc mapping order items
     const orderItemsPayload = body.items.map((item) => {
-      const product = requireRecord(productById.get(item.product_id), "Checkout product was not found");
-      return {
-        order_id: order.id,
-        product_id: product.id,
-        product_name: product.name,
-        unit_price_cents: product.price_cents,
-        original_unit_price_cents: product.original_price_cents,
-        quantity: item.quantity,
-        product_metadata: {
-          category: product.category,
-          label: product.label,
-          emoji: product.emoji
-        }
-      };
+        const product = requireRecord(productById.get(item.product_id), "Checkout product was not found");
+
+        return {
+            order_id: orderId,
+            product_id: product.id,
+            product_name: product.name,
+            unit_price_cents: product.price_cents,
+            original_unit_price_cents: product.original_unit_price_cents,
+            quantity: item.quantity,
+            product_metadata: {
+                category: product.category,
+                label: product.label,
+                emoji: product.emoji
+            }
+        };
     });
 
     const { data: itemData, error: itemError } = await supabaseAdmin
@@ -259,6 +275,39 @@ export const orderService = {
       items: (itemData ?? []) as OrderItem[]
     };
   },
+
+  async createMomoPayment(customerId: string, body: CreateMomoPaymentBody): Promise<{ order: Order; items: OrderItem[]; payment: unknown }> {
+    const created = await orderService.createOrder(customerId, {
+      ...body,
+      payment_method: "momo"
+    });
+    const payment = await momoPaymentService.createPayment(created.order);
+    return {
+      ...created,
+      payment
+    };
+  },
+
+  async refreshMomoPayment(actorId: string, actorRole: UserRole, orderId: string): Promise<{ order: Order; payment: unknown }> {
+    const order = await assertOrderAccess(orderId, actorId, actorRole);
+    const payment = await momoPaymentService.createPayment(order);
+    return { order, payment };
+  },
+
+  async pollMomoPayment(actorId: string, actorRole: UserRole, orderId: string): Promise<{ order: Order; payment: unknown }> {
+    const order = await assertOrderAccess(orderId, actorId, actorRole);
+    return momoPaymentService.queryPayment(order);
+  },
+
+  async applyMomoWebhookMock(body: MomoWebhookMockBody): Promise<Order> {
+        const result = await momoPaymentService.applyMockWebhook(body);
+        
+        if (!result) {
+            throw new Error("Không tìm thấy đơn hàng sau khi xử lý webhook");
+        }
+        
+        return result as Order;
+    },
 
   async listOrders(actorId: string, actorRole: UserRole, query: OrderListQuery): Promise<PaginatedResponse<unknown>> {
     const { from, to } = getRange(query);
