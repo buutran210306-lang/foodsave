@@ -677,7 +677,7 @@
     .side-link.danger { color: var(--red-500); }
     .side-link.danger i { color: var(--red-500); }
     .side-link.danger:hover { background: var(--red-100); }
-    .payment-profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .payment-profile-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (max-width: 1100px) { .payment-profile-grid { grid-template-columns: 1fr; } }
     .payment-profile-card { border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: #fff; transition: border-color .18s, box-shadow .18s, transform .18s; }
     .payment-profile-card:hover { border-color: var(--green-700); box-shadow: 0 12px 30px rgba(11,52,36,.08); transform: translateY(-1px); }
@@ -2731,12 +2731,6 @@
             <h3><span class="block-num">2</span> Phương thức thanh toán</h3>
             <div id="pay-list">
               <div class="pay-group">
-                <div class="pay-group-title"><i class="ti ti-credit-card"></i> Thẻ tín dụng/Ghi nợ</div>
-                <div class="pay-group-list">
-                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="card" style="display:none"><div class="pay-logo card"><i class="ti ti-credit-card" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Visa / Mastercard</div><div style="font-size:12px;color:var(--muted)">Thẻ tín dụng hoặc ghi nợ quốc tế</div></div></label>
-                </div>
-              </div>
-              <div class="pay-group">
                 <div class="pay-group-title"><i class="ti ti-wallet"></i> Ví điện tử</div>
                 <div class="pay-group-list">
                   <label class="pay-method selected" onclick="selectPay(this)"><input type="radio" name="pay" value="momo" checked style="display:none"><div class="pay-logo momo">MoMo</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Ví MoMo</div><div style="font-size:12px;color:var(--muted)">Quét QR hoặc xác nhận trên ứng dụng MoMo</div></div><i class="ti ti-circle-check-filled pay-check" style="color:var(--orange-500);font-size:22px"></i></label>
@@ -2745,9 +2739,14 @@
                 </div>
               </div>
               <div class="pay-group">
-                <div class="pay-group-title"><i class="ti ti-building-bank"></i> VietQR &amp; Tiền mặt</div>
+                <div class="pay-group-title"><i class="ti ti-credit-card"></i> Thẻ Tín dụng/Ghi nợ</div>
                 <div class="pay-group-list">
-                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="vietqr" style="display:none"><div class="pay-logo bank"><i class="ti ti-qrcode" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Chuyển khoản ngân hàng VietQR</div><div style="font-size:12px;color:var(--muted)">Tạo mã QR ngân hàng theo đúng số tiền</div></div></label>
+                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="card" style="display:none"><div class="pay-logo card"><i class="ti ti-credit-card" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Visa / Mastercard</div><div style="font-size:12px;color:var(--muted)">Thẻ tín dụng hoặc ghi nợ quốc tế</div></div></label>
+                </div>
+              </div>
+              <div class="pay-group">
+                <div class="pay-group-title"><i class="ti ti-cash"></i> Tiền mặt</div>
+                <div class="pay-group-list">
                   <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="cash" style="display:none"><div class="pay-logo cash"><i class="ti ti-cash"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Tiền mặt khi nhận hàng</div><div style="font-size:12px;color:var(--muted)">COD tại cửa hàng</div></div></label>
                 </div>
               </div>
@@ -3436,7 +3435,17 @@
               <div class="payment-profile-grid">
                 <section class="payment-profile-card">
                   <div class="payment-section-head">
-                    <div class="payment-section-title"><i class="ti ti-credit-card" style="color:var(--green-700)"></i> Thẻ</div>
+                    <div class="payment-section-title"><i class="ti ti-wallet" style="color:var(--green-700)"></i> Ví điện tử</div>
+                  </div>
+                  <div class="wallet-list">
+                    <div class="wallet-row"><div class="pay-logo momo">MoMo</div><div style="flex:1"><strong>MoMo</strong><div style="font-size:12px;color:var(--muted)">Ví thanh toán QR</div></div><span class="wallet-state">Đã liên kết</span></div>
+                    <div class="wallet-row"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><strong>ZaloPay</strong><div style="font-size:12px;color:var(--muted)">Ví điện tử</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
+                    <div class="wallet-row"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><strong>VNPay</strong><div style="font-size:12px;color:var(--muted)">Cổng thanh toán</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
+                  </div>
+                </section>
+                <section class="payment-profile-card">
+                  <div class="payment-section-head">
+                    <div class="payment-section-title"><i class="ti ti-credit-card" style="color:var(--green-700)"></i> Thẻ Tín dụng/Ghi nợ</div>
                     <button class="btn btn-ghost btn-sm" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm</button>
                   </div>
                   <div class="atm-card-preview">
@@ -3450,28 +3459,6 @@
                     <h3>Chưa có thẻ nào</h3>
                     <p>Thêm thẻ Visa/Mastercard để thanh toán nhanh hơn.</p>
                   </div>
-                </section>
-                <section class="payment-profile-card">
-                  <div class="payment-section-head">
-                    <div class="payment-section-title"><i class="ti ti-wallet" style="color:var(--green-700)"></i> Ví điện tử</div>
-                  </div>
-                  <div class="wallet-list">
-                    <div class="wallet-row"><div class="pay-logo momo">MoMo</div><div style="flex:1"><strong>MoMo</strong><div style="font-size:12px;color:var(--muted)">Ví thanh toán QR</div></div><span class="wallet-state">Đã liên kết</span></div>
-                    <div class="wallet-row"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><strong>ZaloPay</strong><div style="font-size:12px;color:var(--muted)">Ví điện tử</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
-                    <div class="wallet-row"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><strong>VNPay</strong><div style="font-size:12px;color:var(--muted)">Cổng thanh toán</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
-                  </div>
-                </section>
-                <section class="payment-profile-card">
-                  <div class="payment-section-head">
-                    <div class="payment-section-title"><i class="ti ti-building-bank" style="color:var(--green-700)"></i> VietQR/Khác</div>
-                  </div>
-                  <div class="refund-bank-box">
-                    <div style="font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Tài khoản nhận hoàn tiền</div>
-                    <div style="font-weight:900;color:var(--green-900)">Vietcombank •••• 879</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:4px">Người nhận: Tài khoản FoodSave của bạn</div>
-                  </div>
-                  <button class="btn btn-primary btn-block btn-sm"><i class="ti ti-settings"></i> Thiết lập tài khoản</button>
-                  <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px;border-radius:12px;background:var(--soft);font-size:12px;color:var(--muted);font-weight:700"><i class="ti ti-cash" style="font-size:22px;color:var(--green-700)"></i><span>COD được dùng khi cửa hàng cho phép thanh toán tại quầy.</span></div>
                 </section>
               </div>
             </div>
