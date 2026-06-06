@@ -286,7 +286,7 @@ export const orderService = {
     return momoPaymentService.queryPayment(order);
   },
 
-  async applyMomoWebhookMock(body: MomowebhookMockBody): Promise<Order> {
+  async applyMomoWebhookMock(body: MomoWebhookMockBody): Promise<Order> {
         const result = await momoPaymentService.applyMockWebhook(body);
         
         if (!result) {
