@@ -677,18 +677,21 @@
     .side-link.danger { color: var(--red-500); }
     .side-link.danger i { color: var(--red-500); }
     .side-link.danger:hover { background: var(--red-100); }
-    .payment-profile-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .payment-profile-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
     @media (max-width: 1100px) { .payment-profile-grid { grid-template-columns: 1fr; } }
-    .payment-profile-card { border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: #fff; transition: border-color .18s, box-shadow .18s, transform .18s; }
+    .payment-profile-card { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; transition: border-color .18s, box-shadow .18s, transform .18s; overflow: hidden; align-self: start; }
     .payment-profile-card:hover { border-color: var(--green-700); box-shadow: 0 12px 30px rgba(11,52,36,.08); transform: translateY(-1px); }
-    .payment-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .payment-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
     .payment-section-title { display: flex; align-items: center; gap: 8px; font-weight: 900; color: var(--green-950); }
-    .atm-card-preview { min-height: 150px; border-radius: 16px; padding: 18px; color: #fff; background: linear-gradient(135deg, var(--green-900), #123d2d 58%, var(--orange-500)); display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 16px 28px rgba(11,52,36,.18); margin-bottom: 14px; }
-    .atm-card-number { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 900; letter-spacing: .08em; }
     .wallet-list { display: flex; flex-direction: column; gap: 10px; }
-    .wallet-row { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); transition: background .18s, border-color .18s; }
+    .wallet-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); transition: background .18s, border-color .18s; }
     .wallet-row:hover { background: var(--green-50); border-color: var(--green-100); }
     .wallet-state { font-size: 12px; font-weight: 900; color: var(--green-700); white-space: nowrap; }
+    .wallet-row .btn { white-space: nowrap; }
+    @media (max-width: 520px) {
+      .wallet-row { grid-template-columns: 44px minmax(0, 1fr); }
+      .wallet-row .wallet-state, .wallet-row .btn { grid-column: 2; justify-self: start; }
+    }
     .refund-bank-box { padding: 14px; border-radius: 12px; background: var(--green-50); border: 1px dashed var(--green-700); margin-bottom: 12px; }
 
     /* ============ STORE CARDS ============ */
@@ -3431,27 +3434,22 @@
           <!-- Payment -->
           <div class="acc-tab" data-tab="payment" style="display:none">
             <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Phương thức thanh toán</h3><button class="btn btn-primary btn-sm" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm thẻ mới</button></div>
+              <div style="margin-bottom:14px"><h3 style="margin:0">Phương thức thanh toán</h3></div>
               <div class="payment-profile-grid">
                 <section class="payment-profile-card">
                   <div class="payment-section-head">
                     <div class="payment-section-title"><i class="ti ti-wallet" style="color:var(--green-700)"></i> Ví điện tử</div>
                   </div>
                   <div class="wallet-list">
-                    <div class="wallet-row"><div class="pay-logo momo">MoMo</div><div style="flex:1"><strong>MoMo</strong><div style="font-size:12px;color:var(--muted)">Ví thanh toán QR</div></div><span class="wallet-state">Đã liên kết</span></div>
-                    <div class="wallet-row"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><strong>ZaloPay</strong><div style="font-size:12px;color:var(--muted)">Ví điện tử</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
-                    <div class="wallet-row"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><strong>VNPay</strong><div style="font-size:12px;color:var(--muted)">Cổng thanh toán</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
+                    <div class="wallet-row"><div class="pay-logo momo">MoMo</div><strong>MoMo</strong><span class="wallet-state">Đã liên kết</span></div>
+                    <div class="wallet-row"><div class="pay-logo zalo">Zalo</div><strong>ZaloPay</strong><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
+                    <div class="wallet-row"><div class="pay-logo vnpay">VNP</div><strong>VNPay</strong><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
                   </div>
                 </section>
                 <section class="payment-profile-card">
                   <div class="payment-section-head">
                     <div class="payment-section-title"><i class="ti ti-credit-card" style="color:var(--green-700)"></i> Thẻ Tín dụng/Ghi nợ</div>
                     <button class="btn btn-ghost btn-sm" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm</button>
-                  </div>
-                  <div class="atm-card-preview">
-                    <div style="display:flex;justify-content:space-between;align-items:center"><strong>FOODSAVE</strong><i class="ti ti-credit-card" style="font-size:24px"></i></div>
-                    <div class="atm-card-number">•••• •••• •••• 2458</div>
-                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800"><span>VISA / MASTER</span><span>09/28</span></div>
                   </div>
                   <div id="cards-list" style="display:flex;flex-direction:column;gap:10px"></div>
                   <div id="cards-empty" class="empty" style="padding:24px 10px;display:none">
