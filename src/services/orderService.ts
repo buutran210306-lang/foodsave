@@ -286,9 +286,15 @@ export const orderService = {
     return momoPaymentService.queryPayment(order);
   },
 
-  async applyMomoWebhookMock(body: MomoWebhookMockBody): Promise<Order> {
-    return momoPaymentService.applyMockWebhook(body);
-  },
+  async applyMomoWebhookMock(body: MomowebhookMockBody): Promise<Order> {
+        const result = await momoPaymentService.applyMockWebhook(body);
+        
+        if (!result) {
+            throw new Error("Không tìm thấy đơn hàng sau khi xử lý webhook");
+        }
+        
+        return result as Order;
+    },
 
   async listOrders(actorId: string, actorRole: UserRole, query: OrderListQuery): Promise<PaginatedResponse<unknown>> {
     const { from, to } = getRange(query);
