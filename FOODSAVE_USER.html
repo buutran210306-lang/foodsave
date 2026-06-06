@@ -2521,7 +2521,7 @@
           <!-- Active filters chips -->
           <div id="active-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px"></div>
 
-          <div class="product-grid" id="market-grid"></div>
+          <div class="product-grid" id="product-container"></div>
 
           <div id="market-empty" class="empty" style="display:none">
             <div class="empty-emo">🔍</div>
@@ -4434,6 +4434,11 @@ function viewLatestPending() {
 
 // ============ MARKETPLACE ============
 function renderMarket() {
+  if (window.__foodsaveSupabaseProductsReady && typeof window.renderSupabaseProductList === 'function') {
+    window.renderSupabaseProductList(window.foodsaveSupabaseProducts || []);
+    return;
+  }
+
   let list = [...PRODUCTS];
   const s = $('#market-search')?.value.toLowerCase() || '';
   if (s) list = list.filter(p => p.name.toLowerCase().includes(s) || p.store.toLowerCase().includes(s));
@@ -4467,10 +4472,11 @@ function renderMarket() {
   else if (sort === 'price-high') list.sort((a,b) => b.price - a.price);
   else if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
 
-  $('#market-grid').innerHTML = list.map(renderProductCard).join('');
+  const productContainer = $('#product-container') || $('#market-grid');
+  if (productContainer) productContainer.innerHTML = list.map(renderProductCard).join('');
   $('#market-count').textContent = list.length + ' sản phẩm';
   $('#market-empty').style.display = list.length === 0 ? 'block' : 'none';
-  $('#market-grid').style.display = list.length === 0 ? 'none' : 'grid';
+  if (productContainer) productContainer.style.display = list.length === 0 ? 'none' : 'grid';
 
   // Active chips
   const chips = [];
@@ -5889,6 +5895,93 @@ function updateReputationRules(){
     }
 
     return window.foodsaveSupabase;
+  }
+
+  function escapeProductHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatProductPriceK(priceCents) {
+    const priceK = (Number(priceCents) || 0) / 1000;
+    return priceK.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + 'k';
+  }
+
+  function renderSupabaseProductList(products) {
+    const container = fsEl('product-container');
+    const marketCount = fsEl('market-count');
+    const marketEmpty = fsEl('market-empty');
+    const list = Array.isArray(products) ? products : [];
+
+    if (!container) return;
+
+    if (marketCount) marketCount.textContent = list.length + ' sản phẩm';
+    if (marketEmpty) marketEmpty.style.display = list.length === 0 ? 'block' : 'none';
+    container.style.display = list.length === 0 ? 'none' : 'grid';
+
+    if (list.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = list.map((product) => {
+      const name = escapeProductHtml(product.name || 'Sản phẩm FoodSave');
+      const price = formatProductPriceK(product.price_cents);
+      const description = escapeProductHtml(String(product.description || '').trim() || 'Đang cập nhật');
+      const imageUrl = escapeProductHtml(product.image_url || '');
+
+      return `
+        <article class="product" style="cursor:default">
+          <div class="product-art" style="background:var(--soft);padding:0">
+            ${imageUrl
+              ? `<img src="${imageUrl}" alt="${name}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
+              : `<div style="width:100%;height:100%;display:grid;place-items:center;background:linear-gradient(135deg,var(--green-100),var(--orange-100));color:var(--green-900);font-size:42px"><i class="ti ti-photo"></i></div>`}
+          </div>
+          <div class="product-body">
+            <div class="product-name">${name}</div>
+            <div class="price"><strong>${price}</strong></div>
+            <p class="text-muted" style="font-size:13px;line-height:1.5;margin:0">${description}</p>
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  async function loadProducts() {
+    const container = fsEl('product-container');
+    if (container) {
+      container.style.display = 'grid';
+      container.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-emo">⏳</div><h3>Đang tải sản phẩm</h3><p>FoodSave đang lấy dữ liệu mới nhất từ Supabase.</p></div>';
+    }
+
+    try {
+      const supabase = foodsaveSupabaseClient();
+      const { data, error } = await supabase.from('products').select('*');
+
+      if (error) throw error;
+
+      window.foodsaveSupabaseProducts = Array.isArray(data) ? data : [];
+      window.__foodsaveSupabaseProductsReady = true;
+      renderSupabaseProductList(window.foodsaveSupabaseProducts);
+    } catch (error) {
+      console.error('[FoodSave] Không thể tải products từ Supabase:', error);
+      if (container) {
+        container.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-emo">⚠️</div><h3>Không tải được sản phẩm</h3><p>Vui lòng kiểm tra kết nối Supabase hoặc quyền đọc bảng products.</p></div>';
+      }
+      if (typeof toast === 'function') toast('Không thể tải sản phẩm từ Supabase.', 'warn');
+    }
+  }
+
+  window.renderSupabaseProductList = renderSupabaseProductList;
+  window.loadProducts = loadProducts;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadProducts);
+  } else {
+    loadProducts();
   }
 
   function emailOtpConfig(mode) {
