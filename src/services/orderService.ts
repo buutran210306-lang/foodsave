@@ -23,6 +23,7 @@ interface ProductForCheckout {
   name: string;
   price_cents: number;
   original_price_cents: number;
+  original_unit_price_cents: number;
   stock_quantity: number;
   sold_count: number;
   is_active: boolean;
@@ -86,7 +87,13 @@ const loadCheckoutProducts = async (body: CreateOrderBody): Promise<ProductForCh
     .in("id", productIds);
 
   if (error) handleSupabaseError(error, "Failed to load checkout products");
-  const products = (data ?? []) as ProductForCheckout[];
+  const products = (data ?? []).map((product) => {
+    const checkoutProduct = product as ProductForCheckout;
+    return {
+      ...checkoutProduct,
+      original_unit_price_cents: checkoutProduct.original_price_cents
+    };
+  });
 
   if (products.length !== productIds.length) {
     throw new AppError("One or more products were not found", HTTP_STATUS.NOT_FOUND, ERROR_CODES.RESOURCE_NOT_FOUND);
@@ -181,18 +188,17 @@ export const orderService = {
 
     if (orderError) handleSupabaseError(orderError, "Failed to create order");
     const order = orderData as Order;
+    const orderId = order.id;
+    if (!orderId) {
+      throw new Error("Order creation failed: Order ID is missing");
+    }
 
    // Dọn dẹp lại việc mapping order items
     const orderItemsPayload = body.items.map((item) => {
         const product = requireRecord(productById.get(item.product_id), "Checkout product was not found");
-        
-        // Kiểm tra chắc chắn order.id tồn tại trước khi dùng
-        if (!order || !order.id) {
-            throw new Error("Order creation failed: Order ID is missing");
-        }
 
         return {
-            order_id: order.id, // Bây giờ TypeScript sẽ hiểu order.id chắc chắn là string
+            order_id: orderId,
             product_id: product.id,
             product_name: product.name,
             unit_price_cents: product.price_cents,
