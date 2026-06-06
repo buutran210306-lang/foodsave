@@ -3976,6 +3976,106 @@ const $ = sel => document.querySelector(sel);
 const $$ = sel => document.querySelectorAll(sel);
 const fmt = n => n === 0 ? 'Miễn phí' : n.toLocaleString('vi-VN') + '₫';
 const fmtPlain = n => n.toLocaleString('vi-VN') + '₫';
+const productIdKey = id => String(id ?? '');
+const jsArg = value => JSON.stringify(productIdKey(value));
+function htmlSafe(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function findProductById(id) {
+  const key = productIdKey(id);
+  return PRODUCTS.find(x => productIdKey(x.id) === key);
+}
+
+function fallbackProductFromInput(input) {
+  const price = Number(input.price ?? input.price_cents) || 0;
+  const imageUrl = htmlSafe(input.image_url || '');
+  const name = htmlSafe(input.name || 'Sản phẩm FoodSave');
+  return {
+    id: productIdKey(input.id),
+    name: input.name || 'Sản phẩm FoodSave',
+    price,
+    price_cents: Number(input.price_cents ?? price) || 0,
+    image_url: imageUrl,
+    emoji: imageUrl
+      ? `<img src="${imageUrl}" alt="${name}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
+      : (input.emoji || '🍽️'),
+    store: input.store || input.store_name || 'FoodSave',
+    storeId: input.store_id ?? input.storeId ?? 0,
+    distance: Number(input.distance) || 0,
+    original: Number(input.original ?? input.original_price_cents ?? price) || price,
+    label: input.label || 'green',
+    expiresHrs: Number(input.expiresHrs) || 24,
+    stock: Number(input.stock_quantity ?? input.stock) || 0,
+    cat: input.category || input.cat || 'other',
+    rating: Number(input.rating) || 0,
+    sold: Number(input.sold_count ?? input.sold) || 0,
+    desc: String(input.description ?? input.desc ?? '').trim() || 'Đang cập nhật',
+    donation: Boolean(input.is_donation ?? input.donation),
+    images: [imageUrl, ...(Array.isArray(input.images) ? input.images : [])].filter(Boolean)
+  };
+}
+
+function upsertProductForFlow(input) {
+  if (!input || typeof input !== 'object') return findProductById(input);
+  const mapped = typeof mapSupabaseProductForDetail === 'function'
+    ? mapSupabaseProductForDetail(input)
+    : fallbackProductFromInput(input);
+  const existingIndex = PRODUCTS.findIndex(x => productIdKey(x.id) === productIdKey(mapped.id));
+  if (existingIndex >= 0) PRODUCTS[existingIndex] = { ...PRODUCTS[existingIndex], ...mapped };
+  else PRODUCTS.push(mapped);
+  return findProductById(mapped.id);
+}
+
+function resolveProductForFlow(input) {
+  return input && typeof input === 'object' ? upsertProductForFlow(input) : findProductById(input);
+}
+
+function productFromCartItem(item) {
+  if (!item) return null;
+  return findProductById(item.id) || (item.product ? upsertProductForFlow(item.product) : null);
+}
+
+function cartProductSnapshot(product) {
+  return product ? {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    price_cents: product.price_cents ?? product.price,
+    image_url: product.image_url || '',
+    emoji: product.emoji,
+    store: product.store
+  } : null;
+}
+
+function productFlowPayload(id) {
+  const key = productIdKey(id);
+  const raw = Array.isArray(window.foodsaveSupabaseProducts)
+    ? window.foodsaveSupabaseProducts.find(product => productIdKey(product.id) === key)
+    : null;
+  if (raw) {
+    return {
+      ...raw,
+      id: raw.id,
+      name: raw.name,
+      price_cents: raw.price_cents,
+      image_url: raw.image_url
+    };
+  }
+  const p = findProductById(id);
+  return p ? {
+    ...p,
+    id: p.id,
+    name: p.name,
+    price_cents: p.price_cents ?? p.price,
+    image_url: p.image_url || ''
+  } : { id: key };
+}
 
 function toast(msg, type='info', key='') {
   const icons = { info: 'ti-circle-check', warn: 'ti-alert-triangle', error: 'ti-circle-x' };
@@ -4375,16 +4475,17 @@ function logout() {
 
 // ============ RENDER PRODUCT CARD ============
 function renderProductCard(p) {
+  const productArg = htmlSafe(jsArg(p.id));
   const discount = p.original ? Math.round((1 - p.price / p.original) * 100) : 0;
   const priceHtml = p.donation
     ? `<span class="free">MIỄN PHÍ</span>`
     : `<strong>${fmt(p.price)}</strong><del>${fmt(p.original)}</del>`;
-  const isFav = favorites.has(p.id);
+  const isFav = favorites.has(productIdKey(p.id));
   return `
-    <div class="product" onclick="openProduct(${p.id})">
+    <div class="product" onclick="openProduct(${productArg})">
       <div class="product-art">
         <span class="tag ${labelTag(p.label)}">${discount > 0 ? '-' + discount + '%' : 'Free'}</span>
-        <button class="product-fav ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav(${p.id},this)"><i class="ti ti-heart${isFav ? '-filled' : ''}"></i></button>
+        <button class="product-fav ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFav(${productArg},this)"><i class="ti ti-heart${isFav ? '-filled' : ''}"></i></button>
         ${p.emoji}
       </div>
       <div class="product-body">
@@ -4397,7 +4498,7 @@ function renderProductCard(p) {
         </div>
         <div class="price">${priceHtml}</div>
         <div class="product-actions">
-          <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(${p.id})"><i class="ti ti-plus"></i> Thêm</button>
+          <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(productFlowPayload(${productArg}))"><i class="ti ti-plus"></i> Thêm</button>
         </div>
       </div>
     </div>`;
@@ -4408,7 +4509,7 @@ function renderHome() {
   $('#home-flash').innerHTML = PRODUCTS.filter(p => p.label === 'red').slice(0,4).map(renderProductCard).join('');
   $('#home-recommended').innerHTML = PRODUCTS.slice(0,4).map(renderProductCard).join('');
   $('#home-stores').innerHTML = STORES.slice(0,3).map(s => `
-    <div class="store-card" onclick="openStore(${s.id})">
+    <div class="store-card" onclick="openStore(${htmlSafe(jsArg(s.id))})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
         <div style="display:flex;gap:10px;align-items:center"><div style="font-size:32px">${s.logo}</div><div><div class="store-name">${s.name}</div><div class="store-addr"><i class="ti ti-map-pin"></i> ${s.addr.split(',')[1]}</div></div></div>
         <span class="store-rating"><i class="ti ti-star-filled"></i> ${s.rating}</span>
@@ -4526,28 +4627,90 @@ function onSearch() {
 
 // ============ PRODUCT DETAIL ============
 function openProduct(id) {
-  currentProductId = id;
+  const product = resolveProductForFlow(id);
+  currentProductId = product ? product.id : id;
   navTo('product');
 }
 
-function renderProductDetail() {
-  const p = PRODUCTS.find(x => x.id === currentProductId);
+function productGalleryItems(p) {
+  const urls = [
+    p.image_url,
+    ...(Array.isArray(p.images) ? p.images : [])
+  ].filter(Boolean);
+  const uniqueUrls = [...new Set(urls.map(String))];
+  if (uniqueUrls.length) return uniqueUrls.map(url => ({ type: 'image', url }));
+  return [{ type: 'html', html: p.emoji || '🍽️' }];
+}
+
+function productGalleryMarkup(item, name) {
+  if (item.type === 'image') {
+    return `<img src="${htmlSafe(item.url)}" alt="${htmlSafe(name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
+  }
+  return item.html;
+}
+
+function selectProductImage(index, thumb) {
+  const p = findProductById(currentProductId);
   if (!p) return;
+  const items = productGalleryItems(p);
+  const item = items[index] || items[0];
+  const main = $('#product-main-image');
+  if (main) main.innerHTML = productGalleryMarkup(item, p.name);
+  $$('#product-gallery [data-product-image-index]').forEach(el => {
+    el.style.borderColor = 'var(--line)';
+    el.style.opacity = '.65';
+  });
+  if (thumb) {
+    thumb.style.borderColor = 'var(--orange-500)';
+    thumb.style.opacity = '1';
+  }
+}
+
+function initProductDetailUI() {
+  const page = $('#page-product');
+  if (page && !page.dataset.productFlowBound) {
+    page.dataset.productFlowBound = '1';
+    page.addEventListener('click', (event) => {
+      const actionButton = event.target.closest('[data-detail-product-action]');
+      if (!actionButton) return;
+      event.preventDefault();
+      const payload = productFlowPayload(actionButton.dataset.productId);
+      if (actionButton.dataset.detailProductAction === 'add') {
+        addToCart(payload);
+        openCart();
+      } else if (actionButton.dataset.detailProductAction === 'buy') {
+        buyNow(payload);
+      }
+    });
+  }
+
+  const activeTab = $('#page-product .tab-link.active');
+  if (activeTab) {
+    const match = activeTab.getAttribute('onclick')?.match(/switchTab\('([^']+)'/);
+    if (match) switchTab(match[1], activeTab);
+  }
+}
+
+function renderProductDetail() {
+  const p = findProductById(currentProductId);
+  if (!p) return;
+  const productArg = htmlSafe(jsArg(p.id));
+  const productIdAttr = htmlSafe(p.id);
+  const galleryItems = productGalleryItems(p);
   const discount = p.original ? Math.round((1 - p.price / p.original) * 100) : 0;
   const labelClass = labelTag(p.label);
-  const isFav = favorites.has(p.id);
+  const isFav = favorites.has(productIdKey(p.id));
 
   $('#product-gallery').innerHTML = `
     <div style="aspect-ratio:1;border-radius:24px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:200px;position:relative;overflow:hidden;margin-bottom:14px">
       <span class="tag ${labelClass}" style="position:absolute;top:20px;left:20px;font-size:13px;padding:8px 14px">${labelText(p.label)} ${discount > 0 ? '· -'+discount+'%' : ''}</span>
-      <button class="product-fav ${isFav ? 'active' : ''}" style="top:20px;right:20px;width:48px;height:48px;font-size:24px" onclick="toggleFav(${p.id},this)"><i class="ti ti-heart${isFav ? '-filled' : ''}"></i></button>
-      ${p.emoji}
+      <button class="product-fav ${isFav ? 'active' : ''}" style="top:20px;right:20px;width:48px;height:48px;font-size:24px" onclick="toggleFav(${productArg},this)"><i class="ti ti-heart${isFav ? '-filled' : ''}"></i></button>
+      <div id="product-main-image" style="width:100%;height:100%;display:grid;place-items:center">${productGalleryMarkup(galleryItems[0], p.name)}</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-      <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:50px;border:2px solid var(--orange-500);cursor:pointer">${p.emoji}</div>
-      <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:50px;opacity:.5;cursor:pointer">${p.emoji}</div>
-      <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:50px;opacity:.5;cursor:pointer">${p.emoji}</div>
-      <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:50px;opacity:.5;cursor:pointer">${p.emoji}</div>
+      ${galleryItems.slice(0, 4).map((item, index) => `
+        <button type="button" data-product-image-index="${index}" onclick="selectProductImage(${index},this)" style="aspect-ratio:1;border-radius:14px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:50px;border:2px solid ${index === 0 ? 'var(--orange-500)' : 'var(--line)'};opacity:${index === 0 ? '1' : '.65'};cursor:pointer;overflow:hidden;padding:0">${productGalleryMarkup(item, p.name)}</button>
+      `).join('')}
     </div>`;
 
   const priceHtml = p.donation
@@ -4563,15 +4726,15 @@ function renderProductDetail() {
     </div>
     ${priceHtml}
     <div class="card-tight" style="background:var(--soft);border:none;margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📍 Cửa hàng</span><a class="fw-800" onclick="openStore(${p.storeId})">${p.store}</a></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📍 Cửa hàng</span><a class="fw-800" onclick="openStore(${htmlSafe(jsArg(p.storeId))})">${p.store}</a></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📏 Khoảng cách</span><span class="fw-800">${p.distance} km</span></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">⏱ HSD còn lại</span><span class="fw-800 text-orange">${expiresText(p.expiresHrs)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📦 Số lượng còn</span><span class="fw-800">${p.stock} sản phẩm</span></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">🕒 Khung giờ nhận</span><span class="fw-800">9:00 – 22:00</span></div>
     </div>
     <div style="display:flex;gap:12px;margin-bottom:14px">
-      <button class="btn btn-ghost btn-lg" onclick="addToCart(${p.id});openCart()" style="flex:1"><i class="ti ti-shopping-cart-plus"></i> Thêm vào giỏ</button>
-      <button class="btn btn-accent btn-lg" onclick="buyNow(${p.id})" style="flex:1"><i class="ti ti-bolt"></i> Mua ngay</button>
+      <button class="btn btn-ghost btn-lg" type="button" data-detail-product-action="add" data-product-id="${productIdAttr}" style="flex:1"><i class="ti ti-shopping-cart-plus"></i> Thêm vào giỏ</button>
+      <button class="btn btn-accent btn-lg" type="button" data-detail-product-action="buy" data-product-id="${productIdAttr}" style="flex:1"><i class="ti ti-bolt"></i> Mua ngay</button>
     </div>
     <div class="card-tight" style="background:linear-gradient(135deg,var(--green-50),#fff);border:1px solid var(--green-700)">
       <div style="display:flex;gap:8px;margin-bottom:6px"><i class="ti ti-shield-check" style="color:var(--green-700)"></i><strong style="font-size:13px">Cam kết FoodSave</strong></div>
@@ -4595,7 +4758,7 @@ function renderProductDetail() {
             <span><i class="ti ti-package"></i> ${store.products} sản phẩm</span>
           </div>
         </div>
-        <button class="btn btn-ghost" onclick="openStore(${store.id})"><i class="ti ti-arrow-right"></i> Xem cửa hàng</button>
+        <button class="btn btn-ghost" onclick="openStore(${htmlSafe(jsArg(store.id))})"><i class="ti ti-arrow-right"></i> Xem cửa hàng</button>
       </div>`;
   }
 
@@ -4615,7 +4778,8 @@ function renderProductDetail() {
       <p style="font-size:14px;line-height:1.6">Sản phẩm ổn, cửa hàng gần nhà. Chỉ là có khi đến muộn thì hết hàng nhanh, nên đặt sớm hơn.</p>
     </div>`;
 
-  $('#similar-grid').innerHTML = PRODUCTS.filter(x => x.cat === p.cat && x.id !== p.id).slice(0,4).map(renderProductCard).join('');
+  $('#similar-grid').innerHTML = PRODUCTS.filter(x => x.cat === p.cat && productIdKey(x.id) !== productIdKey(p.id)).slice(0,4).map(renderProductCard).join('');
+  initProductDetailUI();
 }
 
 function switchTab(t, btn) {
@@ -4634,10 +4798,10 @@ function openStore(id) {
 
 let currentStoreId = null;
 function renderStoreDetail() {
-  const s = STORES.find(x => x.id === currentStoreId);
+  const s = STORES.find(x => productIdKey(x.id) === productIdKey(currentStoreId));
   if (!s) return;
-  const storeProducts = PRODUCTS.filter(p => p.storeId === s.id);
-  const isFav = favStores.has(s.id);
+  const storeProducts = PRODUCTS.filter(p => productIdKey(p.storeId) === productIdKey(s.id));
+  const isFav = favStores.has(productIdKey(s.id));
 
   $('#store-detail').innerHTML = `
     <div class="card" style="margin-bottom:24px">
@@ -4655,7 +4819,7 @@ function renderStoreDetail() {
         </div>
         <div style="display:flex;gap:8px;flex-direction:column">
           <button class="btn btn-primary"><i class="ti ti-route"></i> Chỉ đường</button>
-          <button class="btn btn-ghost" onclick="toggleFavStore(${s.id},this)"><i class="ti ti-heart${isFav?'-filled':''}" style="${isFav?'color:var(--red-500)':''}"></i> ${isFav?'Đã thích':'Yêu thích'}</button>
+          <button class="btn btn-ghost" onclick="toggleFavStore(${htmlSafe(jsArg(s.id))},this)"><i class="ti ti-heart${isFav?'-filled':''}" style="${isFav?'color:var(--red-500)':''}"></i> ${isFav?'Đã thích':'Yêu thích'}</button>
         </div>
       </div>
     </div>
@@ -4671,33 +4835,45 @@ function renderStoreDetail() {
 }
 
 function toggleFavStore(id, btn) {
-  if (favStores.has(id)) { favStores.delete(id); toast('Đã bỏ yêu thích cửa hàng', 'info'); }
-  else { favStores.add(id); toast('❤ Đã thêm vào yêu thích', 'info'); }
+  const key = productIdKey(id);
+  if (favStores.has(key)) { favStores.delete(key); toast('Đã bỏ yêu thích cửa hàng', 'info'); }
+  else { favStores.add(key); toast('❤ Đã thêm vào yêu thích', 'info'); }
   renderStoreDetail();
 }
 
 // ============ CART ============
-function addToCart(id) {
-  const existing = cart.find(c => c.id === id);
+function addToCart(productInput) {
+  const p = resolveProductForFlow(productInput);
+  if (!p) { toast('Không tìm thấy sản phẩm để thêm vào giỏ', 'warn'); return; }
+  const id = productIdKey(p.id);
+  const existing = cart.find(c => productIdKey(c.id) === id);
   if (existing) existing.qty++;
-  else cart.push({ id, qty: 1 });
+  else cart.push({ id, qty: 1, product: cartProductSnapshot(p) });
   updateCartUI();
-  const p = PRODUCTS.find(x => x.id === id);
   toast(`✓ Đã thêm "${p.name}"`, 'info');
 }
 
 function changeQty(id, d) {
-  const item = cart.find(c => c.id === id);
+  const key = productIdKey(id);
+  const item = cart.find(c => productIdKey(c.id) === key);
   if (!item) return;
   item.qty += d;
-  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+  if (item.qty <= 0) cart = cart.filter(c => productIdKey(c.id) !== key);
   updateCartUI();
 }
 
 function removeFromCart(id) {
-  cart = cart.filter(c => c.id !== id);
+  const key = productIdKey(id);
+  cart = cart.filter(c => productIdKey(c.id) !== key);
   updateCartUI();
   toast('Đã xóa khỏi giỏ', 'info');
+}
+
+function cartSubtotal() {
+  return cart.reduce((s, c) => {
+    const p = productFromCartItem(c);
+    return s + (p ? p.price * c.qty : 0);
+  }, 0);
 }
 
 function updateCartUI() {
@@ -4717,7 +4893,9 @@ function updateCartUI() {
   } else {
     $('#cart-checkout-btn').disabled = false;
     $('#cart-body').innerHTML = cart.map(c => {
-      const p = PRODUCTS.find(x => x.id === c.id);
+      const p = productFromCartItem(c);
+      if (!p) return '';
+      const itemArg = htmlSafe(jsArg(c.id));
       return `
         <div class="cart-item">
           <div class="cart-item-img">${p.emoji}</div>
@@ -4725,16 +4903,16 @@ function updateCartUI() {
             <div class="cart-item-name">${p.name}</div>
             <div class="cart-item-store">${p.store}</div>
             <div class="cart-item-row">
-              <div class="qty-control"><button onclick="changeQty(${c.id},-1)">−</button><span>${c.qty}</span><button onclick="changeQty(${c.id},1)">+</button></div>
+              <div class="qty-control"><button onclick="changeQty(${itemArg},-1)">−</button><span>${c.qty}</span><button onclick="changeQty(${itemArg},1)">+</button></div>
               <span class="fw-800" style="color:var(--green-900)">${fmt(p.price * c.qty)}</span>
             </div>
           </div>
-          <button class="cart-item-remove" onclick="removeFromCart(${c.id})"><i class="ti ti-trash"></i></button>
+          <button class="cart-item-remove" onclick="removeFromCart(${itemArg})"><i class="ti ti-trash"></i></button>
         </div>`;
     }).join('');
   }
 
-  const subtotal = cart.reduce((s, c) => s + PRODUCTS.find(x => x.id === c.id).price * c.qty, 0);
+  const subtotal = cartSubtotal();
   $('#cart-subtotal').textContent = fmt(subtotal);
   $('#cart-total').textContent = fmt(subtotal + (cart.length > 0 ? 2000 : 0));
 }
@@ -4743,8 +4921,10 @@ function openCart() { $('#cart-drawer').classList.add('active'); $('#drawer-bg')
 function openNotifs() { $('#notif-drawer').classList.add('active'); $('#drawer-bg').classList.add('active'); renderNotifs(); }
 function closeDrawers() { $('#cart-drawer').classList.remove('active'); $('#notif-drawer').classList.remove('active'); $('#drawer-bg').classList.remove('active'); }
 
-function buyNow(id) {
-  cart = [{ id, qty: 1 }];
+function buyNow(productInput) {
+  const p = resolveProductForFlow(productInput);
+  if (!p) { toast('Không tìm thấy sản phẩm để mua ngay', 'warn'); return; }
+  cart = [{ id: productIdKey(p.id), qty: 1, product: cartProductSnapshot(p) }];
   updateCartUI();
   goCheckout();
 }
@@ -4795,7 +4975,7 @@ function quickVoucher(code) { $('#voucher-input').value = code; applyVoucher(); 
 
 function applyVoucher() {
   const code = $('#voucher-input').value.trim().toUpperCase();
-  const subtotal = cart.reduce((s, c) => s + PRODUCTS.find(x => x.id === c.id).price * c.qty, 0);
+  const subtotal = cartSubtotal();
   const v = VOUCHERS.find(x => x.code === code);
   if (!v) { toast('Mã không hợp lệ hoặc đã hết hạn', 'error'); return; }
   if (v.min && subtotal < v.min) { toast(`Đơn tối thiểu ${fmt(v.min)} để dùng mã này`, 'warn'); return; }
@@ -4805,9 +4985,10 @@ function applyVoucher() {
 }
 
 function renderCheckout() {
-  const subtotal = cart.reduce((s, c) => s + PRODUCTS.find(x => x.id === c.id).price * c.qty, 0);
+  const subtotal = cartSubtotal();
   $('#co-items').innerHTML = cart.map(c => {
-    const p = PRODUCTS.find(x => x.id === c.id);
+    const p = productFromCartItem(c);
+    if (!p) return '';
     return `<div style="display:flex;gap:10px;align-items:center;padding:8px;background:var(--soft);border-radius:10px">
       <div style="width:42px;height:42px;border-radius:9px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:22px;flex-shrink:0">${p.emoji}</div>
       <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div><div style="font-size:11px;color:var(--muted)">${p.store} · SL ${c.qty}</div></div>
@@ -4860,14 +5041,15 @@ async function placeOrder() {
   const slotMap = { now:'Trong 30 phút', '2h':'Trong 2 giờ', tonight:'Tối nay 18-22h', tomorrow:'Mai 9-12h' };
   const pay = $('input[name="pay"]:checked').value;
   const payMap = { momo:'Ví MoMo', zalopay:'ZaloPay', vnpay:'VNPay', card:'Visa/Mastercard', vietqr:'VietQR ngân hàng', cash:'COD tiền mặt' };
-  const subtotal = cart.reduce((s, c) => s + PRODUCTS.find(x => x.id === c.id).price * c.qty, 0);
+  const subtotal = cartSubtotal();
   const discount = voucherDiscount;
   const donation = donateAmount;
   const total = Math.max(0, subtotal - voucherDiscount + 2000 + donateAmount);
   const id = '#FS-' + (2500 + Math.floor(Math.random() * 100));
   const qr = id.replace('#','') + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
-  const store = PRODUCTS.find(x => x.id === cart[0].id).store;
-  const storeId = PRODUCTS.find(x => x.id === cart[0].id).storeId;
+  const firstCartProduct = productFromCartItem(cart[0]);
+  const store = firstCartProduct?.store || 'FoodSave';
+  const storeId = firstCartProduct?.storeId || 0;
   let backendResult = null;
 
   if (pay === 'momo') {
@@ -4947,13 +5129,13 @@ function populatePaymentConfirm(d) {
       ? `Dùng app ${d.payMethod} quét QR bên dưới`
       : (d.payCode === 'cash' ? 'Đơn được giữ chỗ, bạn thanh toán tiền mặt tại cửa hàng khi nhận hàng.' : 'Cổng thanh toán sẽ xử lý giao dịch theo phương thức đã chọn.');
   }
-  $('#pc-original').textContent = fmt(d.items.reduce((s,it)=>{const p=PRODUCTS.find(x=>x.id===it.id);return s+p.original*it.qty;},0));
+  $('#pc-original').textContent = fmt(d.items.reduce((s,it)=>{const p=productFromCartItem(it);return s+(p?p.original*it.qty:0);},0));
   $('#pc-subtotal').textContent = fmt(d.subtotal);
   $('#pc-discount').textContent = '−' + fmt(d.discount);
   $('#pc-donate').textContent = '+' + fmt(d.donation || 0);
   $('#pc-total').textContent = fmt(d.total);
   $('#pc-qr-amount').textContent = fmt(d.total);
-  $('#pc-saved').textContent = fmt(d.items.reduce((s,it)=>{const p=PRODUCTS.find(x=>x.id===it.id);return s+(p.original-p.price)*it.qty;},0));
+  $('#pc-saved').textContent = fmt(d.items.reduce((s,it)=>{const p=productFromCartItem(it);return s+(p?(p.original-p.price)*it.qty:0);},0));
   renderPaymentQr('pc-qr-code', d.qr || `${d.payCode || 'pay'}-${d.id}-${d.total}`);
   $('#pc-qr-box')?.classList.remove('expired');
   $('#pc-expired-note')?.classList.remove('show');
@@ -4969,7 +5151,8 @@ function populatePaymentConfirm(d) {
   
   // Items list
   $('#pc-items-list').innerHTML = d.items.map(it=>{
-    const p = PRODUCTS.find(x=>x.id===it.id);
+    const p = productFromCartItem(it);
+    if (!p) return '';
     return `<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)">
       <div style="width:44px;height:44px;border-radius:11px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${p.emoji}</div>
       <div style="flex:1;min-width:0">
@@ -5106,7 +5289,7 @@ function renderOrders(filter='all') {
   $('#orders-list').innerHTML = list.map(o => {
     const statusClass = { pending:'tag-yellow', preparing:'tag-orange', completed:'tag-green', cancelled:'tag-red' }[o.status];
     const statusText = { pending:'Chờ nhận', preparing:'Đang chuẩn bị', completed:'Hoàn thành', cancelled:'Đã hủy' }[o.status];
-    const items = o.items.map(it => { const p = PRODUCTS.find(x => x.id === it.id); return p.emoji + ' ' + p.name + (it.qty > 1 ? ' ×' + it.qty : ''); }).join(', ');
+    const items = o.items.map(it => { const p = productFromCartItem(it); return p ? p.emoji + ' ' + p.name + (it.qty > 1 ? ' ×' + it.qty : '') : ''; }).join(', ');
     return `
       <div class="card" style="padding:18px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap" onclick="currentOrderId='${o.id}';navTo('order-detail')">
         <div style="flex:1;min-width:240px">
@@ -5168,7 +5351,8 @@ function renderOrderDetail() {
 
   // Items
   $('#od-items').innerHTML = o.items.map(it => {
-    const p = PRODUCTS.find(x => x.id === it.id);
+    const p = productFromCartItem(it);
+    if (!p) return '';
     return `<div style="display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)">
       <div style="width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--green-100),var(--orange-100));display:grid;place-items:center;font-size:28px;flex-shrink:0">${p.emoji}</div>
       <div style="flex:1"><div class="fw-800" style="font-size:14px">${p.name}</div><div class="text-muted" style="font-size:12px">${p.store} · SL ${it.qty}</div></div>
@@ -5234,11 +5418,12 @@ function doCancelOrder() {
 
 // ============ FAVORITES ============
 function toggleFav(id, btn) {
-  if (favorites.has(id)) {
-    favorites.delete(id);
+  const key = productIdKey(id);
+  if (favorites.has(key)) {
+    favorites.delete(key);
     toast('Đã bỏ yêu thích', 'info');
   } else {
-    favorites.add(id);
+    favorites.add(key);
     toast('❤ Đã thêm vào yêu thích', 'info');
   }
   if ($('#page-market').classList.contains('active')) renderMarket();
@@ -5248,7 +5433,7 @@ function toggleFav(id, btn) {
 }
 
 function renderFavorites() {
-  const favs = PRODUCTS.filter(p => favorites.has(p.id));
+  const favs = PRODUCTS.filter(p => favorites.has(productIdKey(p.id)));
   if (favs.length === 0) {
     $('#fav-grid').innerHTML = '';
     $('#fav-empty').style.display = 'block';
@@ -5258,9 +5443,9 @@ function renderFavorites() {
   }
 
   // Stores
-  const stores = STORES.filter(s => favStores.has(s.id));
+  const stores = STORES.filter(s => favStores.has(productIdKey(s.id)));
   $('#fav-stores').innerHTML = stores.length ? stores.map(s => `
-    <div class="store-card" onclick="openStore(${s.id})">
+    <div class="store-card" onclick="openStore(${htmlSafe(jsArg(s.id))})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="display:flex;gap:10px;align-items:center"><div style="font-size:32px">${s.logo}</div><div><div class="store-name">${s.name}</div><div class="store-addr"><i class="ti ti-map-pin"></i> ${s.addr.split(',')[1]}</div></div></div><span class="store-rating"><i class="ti ti-star-filled"></i> ${s.rating}</span></div>
       <div class="store-meta"><span class="text-muted">${s.distance}km · ${s.hours}</span><span class="tag tag-green">${s.products} sản phẩm</span></div>
     </div>`).join('') : `<div class="empty" style="grid-column:1/-1"><div class="empty-emo">🏪</div><h3>Chưa có cửa hàng yêu thích</h3><p>Lưu cửa hàng yêu thích để theo dõi sản phẩm mới</p></div>`;
@@ -5299,7 +5484,7 @@ function useVoucher(code) { navTo('market'); toast(`Đã lưu mã "${code}". Áp
 // ============ MAP ============
 function renderMap() {
   $('#map-store-list').innerHTML = STORES.map(s => `
-    <div class="store-card" onclick="openStore(${s.id})">
+    <div class="store-card" onclick="openStore(${htmlSafe(jsArg(s.id))})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="store-name" style="font-size:14px">${s.name}</div><span class="store-rating" style="font-size:12px"><i class="ti ti-star-filled"></i> ${s.rating}</span></div>
       <div class="store-addr" style="font-size:11px;margin-bottom:10px"><i class="ti ti-map-pin"></i> ${s.distance}km · ${s.products} sản phẩm</div>
       <button class="btn btn-ghost btn-sm btn-block"><i class="ti ti-arrow-right"></i> Xem chi tiết</button>
@@ -5543,7 +5728,7 @@ function openComplaint(){
   const o = orders.find(x=>x.id===currentOrderId) || orders[0];
   if(!o){toast('Không tìm thấy đơn hàng','info');return;}
   document.getElementById('cp-order-id').textContent = o.id;
-  document.getElementById('cp-products').textContent = o.items.map(it=>{const p=PRODUCTS.find(x=>x.id===it.id);return p.name;}).join(', ');
+  document.getElementById('cp-products').textContent = o.items.map(it=>{const p=productFromCartItem(it);return p ? p.name : '';}).join(', ');
   document.getElementById('cp-pay-time').textContent = o.date;
   document.getElementById('cp-pickup-time').textContent = o.pickup;
   document.getElementById('complaint-modal').classList.add('active');
@@ -5920,28 +6105,35 @@ function updateReputationRules(){
     const productId = String(product.id ?? '');
     const store = product.stores || product.store || {};
     const imageUrl = escapeProductHtml(product.image_url || '');
-    const price = Number(product.price_cents) || 0;
-    const original = Number(product.original_price_cents) || price;
+    const price = Number(product.price_cents ?? product.price) || 0;
+    const original = Number(product.original_price_cents ?? product.original) || price;
+    const images = [
+      product.image_url,
+      ...(Array.isArray(product.images) ? product.images : [])
+    ].filter(Boolean);
 
     return {
       id: productId,
+      price_cents: Number(product.price_cents ?? price) || 0,
+      image_url: product.image_url || '',
+      images,
       emoji: imageUrl
         ? `<img src="${imageUrl}" alt="${escapeProductHtml(product.name || 'Sản phẩm FoodSave')}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`
-        : '🍽️',
+        : (product.emoji || '🍽️'),
       name: product.name || 'Sản phẩm FoodSave',
-      store: store.name || product.store_name || 'FoodSave',
-      storeId: Number(product.store_id) || 0,
+      store: store.name || product.store_name || product.store || 'FoodSave',
+      storeId: product.store_id ?? product.storeId ?? store.id ?? 0,
       distance: Number(product.distance) || 0,
       price,
       original,
       label: product.label || 'green',
-      expiresHrs: hoursUntilProductDate(product.expires_at),
+      expiresHrs: Number(product.expiresHrs ?? hoursUntilProductDate(product.expires_at)) || 0,
       stock: Number(product.stock_quantity ?? product.stock) || 0,
-      cat: product.category || 'other',
+      cat: product.category || product.cat || 'other',
       rating: Number(product.rating) || 0,
-      sold: Number(product.sold_count) || 0,
-      desc: String(product.description || '').trim() || 'Đang cập nhật',
-      donation: Boolean(product.is_donation)
+      sold: Number(product.sold_count ?? product.sold) || 0,
+      desc: String(product.description ?? product.desc ?? '').trim() || 'Đang cập nhật',
+      donation: Boolean(product.is_donation ?? product.donation)
     };
   }
 
@@ -5955,12 +6147,21 @@ function updateReputationRules(){
 
   function bindSupabaseProductCardClicks(container) {
     container.querySelectorAll('.product-card[data-product-id]').forEach((card) => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (event) => {
         const productId = card.dataset.productId;
+        const actionButton = event.target.closest('[data-product-action]');
+        if (actionButton) {
+          event.stopPropagation();
+          const payload = productFlowPayload(productId);
+          if (actionButton.dataset.productAction === 'add') addToCart(payload);
+          if (actionButton.dataset.productAction === 'buy') buyNow(payload);
+          return;
+        }
         if (productId && typeof openProduct === 'function') openProduct(productId);
       });
 
       card.addEventListener('keydown', (event) => {
+        if (event.target.closest('[data-product-action]')) return;
         if (event.key !== 'Enter' && event.key !== ' ') return;
         event.preventDefault();
         const productId = card.dataset.productId;
@@ -6005,11 +6206,16 @@ function updateReputationRules(){
             <div class="product-name">${name}</div>
             <div class="price"><strong>${price}</strong></div>
             <p class="text-muted" style="font-size:13px;line-height:1.5;margin:0">${description}</p>
+            <div class="product-actions">
+              <button class="btn btn-primary" type="button" data-product-action="add"><i class="ti ti-plus"></i> Thêm</button>
+              <button class="btn btn-accent" type="button" data-product-action="buy"><i class="ti ti-bolt"></i> Mua</button>
+            </div>
           </div>
         </article>`;
     }).join('');
 
     bindSupabaseProductCardClicks(container);
+    if (typeof window.R === 'function') window.R();
   }
 
   async function loadProducts() {
