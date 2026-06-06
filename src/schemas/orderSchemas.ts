@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const paymentMethodSchema = z.enum(["momo", "zalopay", "vnpay", "card", "cash"]);
+export const paymentMethodSchema = z.enum(["momo", "zalopay", "vnpay", "card", "vietqr", "cash"]);
 export const orderStatusSchema = z.enum(["pending", "confirmed", "ready", "completed", "cancelled"]);
 
 export const createOrderBodySchema = z.object({
@@ -51,9 +51,25 @@ export const updateComplaintBodySchema = z.object({
   resolution: z.string().trim().min(3).max(3000).optional()
 }).strict();
 
+export const createMomoPaymentBodySchema = createOrderBodySchema.extend({
+  payment_method: z.literal("momo")
+});
+
+export const momoWebhookMockBodySchema = z.object({
+  order_id: z.string().uuid().optional(),
+  orderId: z.string().trim().min(1).max(200).optional(),
+  requestId: z.string().trim().max(200).optional(),
+  resultCode: z.number().int().default(0),
+  transId: z.union([z.string(), z.number()]).optional()
+}).strict().refine((body) => Boolean(body.order_id || body.orderId), {
+  message: "order_id or orderId is required"
+});
+
 export type CreateOrderBody = z.infer<typeof createOrderBodySchema>;
 export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
 export type UpdateOrderStatusBody = z.infer<typeof updateOrderStatusBodySchema>;
 export type CreateReviewBody = z.infer<typeof createReviewBodySchema>;
 export type CreateComplaintBody = z.infer<typeof createComplaintBodySchema>;
 export type UpdateComplaintBody = z.infer<typeof updateComplaintBodySchema>;
+export type CreateMomoPaymentBody = z.infer<typeof createMomoPaymentBodySchema>;
+export type MomoWebhookMockBody = z.infer<typeof momoWebhookMockBodySchema>;

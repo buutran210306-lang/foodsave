@@ -632,7 +632,16 @@
     .pay-logo.zalo { background: #0068FF; }
     .pay-logo.vnpay { background: #C7142A; }
     .pay-logo.card { background: linear-gradient(135deg, #1e3a8a, #6366f1); }
+    .pay-logo.bank { background: linear-gradient(135deg, var(--green-700), var(--green-900)); }
     .pay-logo.cash { background: linear-gradient(135deg, #059669, #14613d); font-size: 22px; }
+    .pay-group { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; }
+    .pay-group + .pay-group { margin-top: 12px; }
+    .pay-group-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; font-weight: 900; color: var(--green-900); text-transform: uppercase; letter-spacing: .04em; }
+    .pay-group-list { display: flex; flex-direction: column; gap: 10px; }
+    .payment-qr-box { width: 240px; height: 240px; margin: 0 auto 14px; background: #fff; border: 2.5px solid var(--green-700); border-radius: 18px; padding: 14px; display: flex; align-items: center; justify-content: center; transition: opacity .2s, filter .2s; }
+    .payment-qr-box.expired { opacity: .34; filter: grayscale(1); }
+    .payment-expired-note { display: none; margin: -4px 0 14px; padding: 12px; border-radius: 12px; background: var(--red-100); color: var(--red-500); border: 1px solid rgba(239,68,68,.18); font-size: 12px; font-weight: 800; }
+    .payment-expired-note.show { display: block; }
 
     /* ============ ORDER / TIMELINE ============ */
     .timeline { display: grid; gap: 18px; position: relative; }
@@ -668,6 +677,19 @@
     .side-link.danger { color: var(--red-500); }
     .side-link.danger i { color: var(--red-500); }
     .side-link.danger:hover { background: var(--red-100); }
+    .payment-profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 1100px) { .payment-profile-grid { grid-template-columns: 1fr; } }
+    .payment-profile-card { border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: #fff; transition: border-color .18s, box-shadow .18s, transform .18s; }
+    .payment-profile-card:hover { border-color: var(--green-700); box-shadow: 0 12px 30px rgba(11,52,36,.08); transform: translateY(-1px); }
+    .payment-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .payment-section-title { display: flex; align-items: center; gap: 8px; font-weight: 900; color: var(--green-950); }
+    .atm-card-preview { min-height: 150px; border-radius: 16px; padding: 18px; color: #fff; background: linear-gradient(135deg, var(--green-900), #123d2d 58%, var(--orange-500)); display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 16px 28px rgba(11,52,36,.18); margin-bottom: 14px; }
+    .atm-card-number { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 900; letter-spacing: .08em; }
+    .wallet-list { display: flex; flex-direction: column; gap: 10px; }
+    .wallet-row { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); transition: background .18s, border-color .18s; }
+    .wallet-row:hover { background: var(--green-50); border-color: var(--green-100); }
+    .wallet-state { font-size: 12px; font-weight: 900; color: var(--green-700); white-space: nowrap; }
+    .refund-bank-box { padding: 14px; border-radius: 12px; background: var(--green-50); border: 1px dashed var(--green-700); margin-bottom: 12px; }
 
     /* ============ STORE CARDS ============ */
     .store-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; cursor: pointer; transition: all .25s; }
@@ -2707,12 +2729,28 @@
           <!-- Payment -->
           <div class="checkout-block">
             <h3><span class="block-num">2</span> Phương thức thanh toán</h3>
-            <div style="display:flex;flex-direction:column;gap:10px" id="pay-list">
-              <label class="pay-method selected" onclick="selectPay(this)"><input type="radio" name="pay" value="momo" checked style="display:none"><div class="pay-logo momo">MoMo</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Ví MoMo</div><div style="font-size:12px;color:var(--muted)">Số dư: 2.450.000đ · Khuyến mãi: hoàn 5%</div></div><i class="ti ti-circle-check-filled" style="color:var(--orange-500);font-size:22px"></i></label>
-              <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="zalopay" style="display:none"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><div style="font-weight:800;font-size:14px">ZaloPay</div><div style="font-size:12px;color:var(--muted)">Liên kết tài khoản</div></div></label>
-              <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="vnpay" style="display:none"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><div style="font-weight:800;font-size:14px">VNPay QR</div><div style="font-size:12px;color:var(--muted)">Quét QR thanh toán</div></div></label>
-              <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="card" style="display:none"><div class="pay-logo card"><i class="ti ti-credit-card" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Thẻ tín dụng / ghi nợ</div><div style="font-size:12px;color:var(--muted)">Visa · Master · JCB · UnionPay</div></div></label>
-              <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="cash" style="display:none"><div class="pay-logo cash">💵</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Trả khi nhận hàng</div><div style="font-size:12px;color:var(--muted)">Tiền mặt tại cửa hàng</div></div></label>
+            <div id="pay-list">
+              <div class="pay-group">
+                <div class="pay-group-title"><i class="ti ti-credit-card"></i> Thẻ tín dụng/Ghi nợ</div>
+                <div class="pay-group-list">
+                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="card" style="display:none"><div class="pay-logo card"><i class="ti ti-credit-card" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Visa / Mastercard</div><div style="font-size:12px;color:var(--muted)">Thẻ tín dụng hoặc ghi nợ quốc tế</div></div></label>
+                </div>
+              </div>
+              <div class="pay-group">
+                <div class="pay-group-title"><i class="ti ti-wallet"></i> Ví điện tử</div>
+                <div class="pay-group-list">
+                  <label class="pay-method selected" onclick="selectPay(this)"><input type="radio" name="pay" value="momo" checked style="display:none"><div class="pay-logo momo">MoMo</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Ví MoMo</div><div style="font-size:12px;color:var(--muted)">Quét QR hoặc xác nhận trên ứng dụng MoMo</div></div><i class="ti ti-circle-check-filled pay-check" style="color:var(--orange-500);font-size:22px"></i></label>
+                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="zalopay" style="display:none"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><div style="font-weight:800;font-size:14px">ZaloPay</div><div style="font-size:12px;color:var(--muted)">Thanh toán bằng ví ZaloPay</div></div></label>
+                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="vnpay" style="display:none"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><div style="font-weight:800;font-size:14px">VNPay</div><div style="font-size:12px;color:var(--muted)">Thanh toán qua cổng VNPay</div></div></label>
+                </div>
+              </div>
+              <div class="pay-group">
+                <div class="pay-group-title"><i class="ti ti-building-bank"></i> VietQR &amp; Tiền mặt</div>
+                <div class="pay-group-list">
+                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="vietqr" style="display:none"><div class="pay-logo bank"><i class="ti ti-qrcode" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Chuyển khoản ngân hàng VietQR</div><div style="font-size:12px;color:var(--muted)">Tạo mã QR ngân hàng theo đúng số tiền</div></div></label>
+                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="cash" style="display:none"><div class="pay-logo cash"><i class="ti ti-cash"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Tiền mặt khi nhận hàng</div><div style="font-size:12px;color:var(--muted)">COD tại cửa hàng</div></div></label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2854,21 +2892,14 @@
             <span style="font-family:'Plus Jakarta Sans';font-size:14px;font-weight:900;color:var(--green-900)" id="pc-pay-method">Ví MoMo</span>
           </div>
 
-          <h3 style="margin:0 0 6px;font-size:18px">Quét mã để thanh toán</h3>
-          <p class="text-muted" style="font-size:12px;margin-bottom:18px">Dùng app <span id="pc-pay-method-2">MoMo</span> quét QR bên dưới</p>
+          <h3 id="pc-action-title" style="margin:0 0 6px;font-size:18px">Quét mã để thanh toán</h3>
+          <p id="pc-action-desc" class="text-muted" style="font-size:12px;margin-bottom:18px">Dùng app <span id="pc-pay-method-2">MoMo</span> quét QR bên dưới</p>
 
           <!-- QR -->
-          <div style="width:240px;height:240px;margin:0 auto 14px;background:#fff;border:2.5px solid var(--green-700);border-radius:18px;padding:14px;display:flex;align-items:center;justify-content:center">
-            <svg width="200" height="200" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="30" height="30" rx="3" fill="#0a0a0a"/><rect x="65" y="5" width="30" height="30" rx="3" fill="#0a0a0a"/><rect x="5" y="65" width="30" height="30" rx="3" fill="#0a0a0a"/>
-              <rect x="11" y="11" width="18" height="18" rx="2" fill="#fff"/><rect x="71" y="11" width="18" height="18" rx="2" fill="#fff"/><rect x="11" y="71" width="18" height="18" rx="2" fill="#fff"/>
-              <rect x="16" y="16" width="8" height="8" fill="#0a0a0a"/><rect x="76" y="16" width="8" height="8" fill="#0a0a0a"/><rect x="16" y="76" width="8" height="8" fill="#0a0a0a"/>
-              <!-- Mock data dots -->
-              <g fill="#0a0a0a"><rect x="40" y="10" width="3" height="3"/><rect x="45" y="15" width="3" height="3"/><rect x="50" y="10" width="3" height="3"/><rect x="55" y="20" width="3" height="3"/><rect x="60" y="10" width="3" height="3"/><rect x="40" y="25" width="3" height="3"/><rect x="50" y="30" width="3" height="3"/><rect x="42" y="40" width="3" height="3"/><rect x="50" y="42" width="3" height="3"/><rect x="58" y="45" width="3" height="3"/><rect x="66" y="42" width="3" height="3"/><rect x="74" y="44" width="3" height="3"/><rect x="82" y="46" width="3" height="3"/><rect x="40" y="50" width="3" height="3"/><rect x="48" y="55" width="3" height="3"/><rect x="56" y="52" width="3" height="3"/><rect x="64" y="58" width="3" height="3"/><rect x="72" y="55" width="3" height="3"/><rect x="80" y="60" width="3" height="3"/><rect x="40" y="65" width="3" height="3"/><rect x="50" y="70" width="3" height="3"/><rect x="42" y="78" width="3" height="3"/><rect x="50" y="82" width="3" height="3"/><rect x="58" y="78" width="3" height="3"/><rect x="66" y="80" width="3" height="3"/><rect x="74" y="85" width="3" height="3"/><rect x="82" y="80" width="3" height="3"/></g>
-              <rect x="35" y="35" width="30" height="30" rx="3" fill="none" stroke="#22c55e" stroke-width="1.5"/>
-              <text x="50" y="55" font-size="10" font-weight="900" fill="#22c55e" text-anchor="middle" font-family="Inter">FS</text>
-            </svg>
+          <div class="payment-qr-box" id="pc-qr-box">
+            <div id="pc-qr-code" class="qr-wrap" style="box-shadow:none;border:0;padding:0"></div>
           </div>
+          <div class="payment-expired-note" id="pc-expired-note"><i class="ti ti-alert-triangle"></i> Mã QR đã hết hạn. Tạo lại mã mới để tiếp tục thanh toán.</div>
 
           <!-- Amount -->
           <div style="padding:12px;background:var(--soft);border-radius:11px;margin-bottom:14px">
@@ -2883,10 +2914,13 @@
           </div>
 
           <!-- Actions -->
-          <button class="btn btn-accent btn-block btn-lg" onclick="confirmPaymentDone()" style="font-weight:900">
+          <button class="btn btn-accent btn-block btn-lg" id="pc-confirm-btn" onclick="confirmPaymentDone()" style="font-weight:900">
             <i class="ti ti-check"></i> Đã thanh toán
           </button>
-          <button class="btn btn-ghost btn-block" onclick="cancelPayment()" style="margin-top:8px;color:var(--red-500)">
+          <button class="btn btn-primary btn-block" id="pc-regenerate-btn" onclick="regeneratePaymentQr()" style="margin-top:8px;display:none">
+            <i class="ti ti-refresh"></i> Tạo lại mã
+          </button>
+          <button class="btn btn-ghost btn-block" id="pc-cancel-btn" onclick="cancelPayment()" style="margin-top:8px;color:var(--red-500)">
             <i class="ti ti-x"></i> Hủy thanh toán
           </button>
 
@@ -2908,9 +2942,9 @@
       </div>
       <style>@keyframes successPop { from { transform:scale(.3);opacity:0; } to { transform:scale(1);opacity:1; } }</style>
 
-      <h1 style="font-size:36px;margin-bottom:8px">Thanh toán thành công! 🎉</h1>
+      <h1 id="success-title" style="font-size:36px;margin-bottom:8px">Thanh toán thành công! 🎉</h1>
       <p class="text-muted" style="font-size:15px;margin-bottom:6px">Mã đơn hàng: <strong style="color:var(--orange-500);font-family:'Plus Jakarta Sans';font-size:18px" id="success-id">#FS-0000</strong></p>
-      <p class="text-muted" style="font-size:14px;margin-bottom:36px">Hóa đơn điện tử &amp; mã QR đã gửi tới <strong style="color:var(--green-900)" id="success-email">bt.buutran@gmail.com</strong></p>
+      <p class="text-muted" id="success-message" style="font-size:14px;margin-bottom:36px">Hóa đơn điện tử &amp; mã QR đã gửi tới <strong style="color:var(--green-900)" id="success-email">bt.buutran@gmail.com</strong></p>
 
       <div class="card" style="padding:32px;display:inline-block;margin-bottom:24px;text-align:center">
         <h3 style="margin-bottom:6px">Mã QR nhận hàng tại cửa hàng</h3>
@@ -3398,24 +3432,47 @@
           <!-- Payment -->
           <div class="acc-tab" data-tab="payment" style="display:none">
             <div class="card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><h3 style="margin:0">Phương thức thanh toán</h3><button class="btn btn-primary btn-sm" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm thẻ mới</button></div>
-              <div id="cards-list" style="display:flex;flex-direction:column;gap:10px"></div>
-              <div id="cards-empty" class="empty" style="padding:40px 20px;display:none">
-                <div class="empty-emo">💳</div>
-                <h3>Chưa có thẻ nào</h3>
-                <p>Thêm thẻ Visa/Master/JCB để thanh toán nhanh hơn ở lần sau</p>
-                <button class="btn btn-primary" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm thẻ đầu tiên</button>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top:18px">
-              <h3>Liên kết ví điện tử</h3>
-              <p class="text-muted" style="font-size:13px;margin-bottom:14px">Liên kết để thanh toán bằng 1 cú click, không cần nhập lại thông tin.</p>
-              <div style="display:flex;flex-direction:column;gap:10px">
-                <div class="pay-method"><div class="pay-logo momo">MoMo</div><div style="flex:1"><div style="font-weight:800">Ví MoMo</div><div style="font-size:12px;color:var(--green-700);font-weight:700"><i class="ti ti-check"></i> Sẵn sàng sử dụng</div></div></div>
-                <div class="pay-method"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><div style="font-weight:800">ZaloPay</div><div style="font-size:12px;color:var(--green-700);font-weight:700"><i class="ti ti-check"></i> Sẵn sàng sử dụng</div></div></div>
-                <div class="pay-method"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><div style="font-weight:800">VNPay</div><div style="font-size:12px;color:var(--green-700);font-weight:700"><i class="ti ti-check"></i> Sẵn sàng sử dụng</div></div></div>
-                <div class="pay-method"><div class="pay-logo" style="background:#000;color:#fff"><i class="ti ti-brand-apple" style="font-size:20px"></i></div><div style="flex:1"><div style="font-weight:800">Apple Pay</div><div style="font-size:12px;color:var(--muted)">Cần thiết bị Apple</div></div><button class="btn btn-ghost btn-sm" disabled>Sắp có</button></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Phương thức thanh toán</h3><button class="btn btn-primary btn-sm" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm thẻ mới</button></div>
+              <div class="payment-profile-grid">
+                <section class="payment-profile-card">
+                  <div class="payment-section-head">
+                    <div class="payment-section-title"><i class="ti ti-credit-card" style="color:var(--green-700)"></i> Thẻ</div>
+                    <button class="btn btn-ghost btn-sm" onclick="openCardModal()"><i class="ti ti-plus"></i> Thêm</button>
+                  </div>
+                  <div class="atm-card-preview">
+                    <div style="display:flex;justify-content:space-between;align-items:center"><strong>FOODSAVE</strong><i class="ti ti-credit-card" style="font-size:24px"></i></div>
+                    <div class="atm-card-number">•••• •••• •••• 2458</div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800"><span>VISA / MASTER</span><span>09/28</span></div>
+                  </div>
+                  <div id="cards-list" style="display:flex;flex-direction:column;gap:10px"></div>
+                  <div id="cards-empty" class="empty" style="padding:24px 10px;display:none">
+                    <div class="empty-emo"><i class="ti ti-credit-card"></i></div>
+                    <h3>Chưa có thẻ nào</h3>
+                    <p>Thêm thẻ Visa/Mastercard để thanh toán nhanh hơn.</p>
+                  </div>
+                </section>
+                <section class="payment-profile-card">
+                  <div class="payment-section-head">
+                    <div class="payment-section-title"><i class="ti ti-wallet" style="color:var(--green-700)"></i> Ví điện tử</div>
+                  </div>
+                  <div class="wallet-list">
+                    <div class="wallet-row"><div class="pay-logo momo">MoMo</div><div style="flex:1"><strong>MoMo</strong><div style="font-size:12px;color:var(--muted)">Ví thanh toán QR</div></div><span class="wallet-state">Đã liên kết</span></div>
+                    <div class="wallet-row"><div class="pay-logo zalo">Zalo</div><div style="flex:1"><strong>ZaloPay</strong><div style="font-size:12px;color:var(--muted)">Ví điện tử</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
+                    <div class="wallet-row"><div class="pay-logo vnpay">VNP</div><div style="flex:1"><strong>VNPay</strong><div style="font-size:12px;color:var(--muted)">Cổng thanh toán</div></div><button class="btn btn-primary btn-sm"><i class="ti ti-link"></i> Liên kết</button></div>
+                  </div>
+                </section>
+                <section class="payment-profile-card">
+                  <div class="payment-section-head">
+                    <div class="payment-section-title"><i class="ti ti-building-bank" style="color:var(--green-700)"></i> VietQR/Khác</div>
+                  </div>
+                  <div class="refund-bank-box">
+                    <div style="font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Tài khoản nhận hoàn tiền</div>
+                    <div style="font-weight:900;color:var(--green-900)">Vietcombank •••• 879</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:4px">Người nhận: Tài khoản FoodSave của bạn</div>
+                  </div>
+                  <button class="btn btn-primary btn-block btn-sm"><i class="ti ti-settings"></i> Thiết lập tài khoản</button>
+                  <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px;border-radius:12px;background:var(--soft);font-size:12px;color:var(--muted);font-weight:700"><i class="ti ti-cash" style="font-size:22px;color:var(--green-700)"></i><span>COD được dùng khi cửa hàng cho phép thanh toán tại quầy.</span></div>
+                </section>
               </div>
             </div>
 
@@ -3970,7 +4027,7 @@ function navTo(page) {
   if (target) target.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  const isAuth = ['home','market','product','store','map','checkout','success','order-detail','orders','favorites','impact','impact-report-apr2026','account','vouchers'].includes(page);
+  const isAuth = ['home','market','product','store','map','checkout','payment-confirm','success','order-detail','orders','favorites','impact','impact-report-apr2026','account','vouchers'].includes(page);
   $('#publicNav').classList.toggle('hidden', isAuth);
   $('#userNav').classList.toggle('hidden', !isAuth);
   $('#publicActions').classList.toggle('hidden', isAuth);
@@ -4724,7 +4781,17 @@ function renderNotifs() {
 
 // ============ CHECKOUT ============
 function selectSlot(el) { $$('.pickup-slot').forEach(s => s.classList.remove('selected')); el.classList.add('selected'); }
-function selectPay(el) { $$('.pay-method').forEach(p => p.classList.remove('selected')); el.classList.add('selected'); }
+function selectPay(el) {
+  $$('#pay-list .pay-method').forEach(p => {
+    p.classList.remove('selected');
+    const oldCheck = p.querySelector('.pay-check');
+    if (oldCheck) oldCheck.remove();
+  });
+  el.classList.add('selected');
+  const input = el.querySelector('input[name="pay"]');
+  if (input) input.checked = true;
+  el.insertAdjacentHTML('beforeend', '<i class="ti ti-circle-check-filled pay-check" style="color:var(--orange-500);font-size:22px"></i>');
+}
 
 function setDonate(amount, btn) {
   donateAmount = amount;
@@ -4762,24 +4829,90 @@ function renderCheckout() {
   $('#co-total').textContent = fmt(Math.max(0, subtotal - voucherDiscount + 2000 + donateAmount));
 }
 
-function placeOrder() {
+function canSyncCheckoutItems() {
+  return cart.length > 0 && cart.every(c => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(c.id)));
+}
+
+function checkoutApiPayload(slot, paymentMethod, donation) {
+  const code = $('#voucher-input') ? $('#voucher-input').value.trim().toUpperCase() : '';
+  const note = $('#co-note') ? $('#co-note').value.trim() : '';
+  return {
+    items: cart.map(item => ({ product_id: item.id, quantity: item.qty })),
+    pickup_slot_key: slot,
+    payment_method: paymentMethod,
+    donation_cents: Math.max(0, Math.round((donation || 0) * 100)),
+    ...(code ? { voucher_code: code } : {}),
+    ...(note ? { customer_note: note } : {})
+  };
+}
+
+async function createBackendMomoPayment(slot, donation) {
+  if (!canSyncCheckoutItems() || !window.FS?.sync?.createMomoPayment) {
+    throw new Error('Checkout items are not live Supabase UUIDs yet.');
+  }
+  return window.FS.sync.createMomoPayment(checkoutApiPayload(slot, 'momo', donation));
+}
+
+async function createBackendOrder(slot, paymentMethod, donation) {
+  if (!canSyncCheckoutItems() || !window.FS?.sync?.pushOrder) {
+    throw new Error('Checkout items are not live Supabase UUIDs yet.');
+  }
+  return window.FS.sync.pushOrder(checkoutApiPayload(slot, paymentMethod, donation));
+}
+
+function paymentUsesQr(payCode) {
+  return ['momo', 'zalopay', 'vnpay', 'vietqr'].includes(payCode);
+}
+
+async function placeOrder() {
   const slot = $('input[name="slot"]:checked').value;
   const slotMap = { now:'Trong 30 phút', '2h':'Trong 2 giờ', tonight:'Tối nay 18-22h', tomorrow:'Mai 9-12h' };
   const pay = $('input[name="pay"]:checked').value;
-  const payMap = { momo:'Ví MoMo', zalopay:'ZaloPay', vnpay:'VNPay QR', card:'Thẻ tín dụng', cash:'Tiền mặt' };
+  const payMap = { momo:'Ví MoMo', zalopay:'ZaloPay', vnpay:'VNPay', card:'Visa/Mastercard', vietqr:'VietQR ngân hàng', cash:'COD tiền mặt' };
   const subtotal = cart.reduce((s, c) => s + PRODUCTS.find(x => x.id === c.id).price * c.qty, 0);
+  const discount = voucherDiscount;
+  const donation = donateAmount;
   const total = Math.max(0, subtotal - voucherDiscount + 2000 + donateAmount);
   const id = '#FS-' + (2500 + Math.floor(Math.random() * 100));
   const qr = id.replace('#','') + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
   const store = PRODUCTS.find(x => x.id === cart[0].id).store;
   const storeId = PRODUCTS.find(x => x.id === cart[0].id).storeId;
+  let backendResult = null;
 
+  if (pay === 'momo') {
+    backendResult = await createBackendMomoPayment(slot, donation).catch(error => {
+      console.warn('[FoodSave] MoMo backend QR fallback:', error);
+      toast('Chưa kết nối được MoMo backend, dùng QR mô phỏng để tiếp tục trải nghiệm.', 'warn');
+      return null;
+    });
+  } else {
+    backendResult = await createBackendOrder(slot, pay, donation).catch(error => {
+      console.warn('[FoodSave] Order backend fallback:', error);
+      return null;
+    });
+  }
+
+  if (backendResult?.order?.id && window.FS?.sync?.markOrderPaymentPending) {
+    await window.FS.sync.markOrderPaymentPending(backendResult.order.id, pay).catch(error => {
+      console.warn('[FoodSave] Direct orders payment pending update skipped:', error);
+    });
+  }
+
+  const pickupQr = backendResult?.order?.qr_code || qr;
+  const paymentQr = backendResult?.payment?.qrCodeUrl || backendResult?.payment?.payUrl || pickupQr;
   const order = {
-    id, items:[...cart], status:'pending', date:'Vừa xong', total, store, storeId, qr,
-    pickup:slotMap[slot], payment:payMap[pay], subtotal, discount:voucherDiscount
+    id: backendResult?.order?.order_number ? '#' + backendResult.order.order_number : id,
+    backendId: backendResult?.order?.id || null,
+    momoOrderId: backendResult?.order?.order_number || null,
+    momoRequestId: backendResult?.payment?.requestId || null,
+    items:[...cart], status:'pending', paymentStatus:'pending', date:'Vừa xong', total, store, storeId,
+    qr: pickupQr,
+    paymentQr,
+    payUrl: backendResult?.payment?.payUrl || '',
+    pickup:slotMap[slot], payment:payMap[pay], paymentMethod:pay, subtotal, discount
   };
   orders.unshift(order);
-  currentOrderId = id;
+  currentOrderId = order.id;
   cart = [];
   voucherDiscount = 0;
   donateAmount = 1000;
@@ -4787,29 +4920,61 @@ function placeOrder() {
 
   // Populate payment-confirm page (Step 3)
   const note = $('#co-note') ? $('#co-note').value.trim() : '';
-  populatePaymentConfirm({id, items:order.items, store, slotText:slotMap[slot], payMethod:payMap[pay], subtotal, discount:voucherDiscount, total, note});
+  populatePaymentConfirm({id:order.id, items:order.items, store, slotText:slotMap[slot], payMethod:payMap[pay], payCode:pay, subtotal, discount, donation, total, note, qr:order.paymentQr, payUrl:order.payUrl});
   
   // Store for success page (after confirmation)
-  window.__pendingOrder = {id, qr, store, slotText:slotMap[slot], total, email:$('#co-email').value};
+  window.__pendingOrder = {id:order.id, backendId:order.backendId, qr:order.qr, paymentQr:order.paymentQr, store, slotText:slotMap[slot], total, email:$('#co-email').value, paymentMethod:pay, payUrl:order.payUrl};
 
   navTo('payment-confirm');
 }
 
 // ============ PAYMENT CONFIRMATION (Step 3) ============
 let __pcTimerInterval = null;
+function renderPaymentQr(containerId, value) {
+  const el = $('#' + containerId);
+  if (!el) return;
+  const text = String(value || '');
+  if (/^(https?:\/\/|data:image\/)/i.test(text)) {
+    const safeSrc = text.replace(/"/g, '&quot;');
+    el.innerHTML = `<img src="${safeSrc}" alt="Mã QR thanh toán" style="width:100%;height:100%;object-fit:contain;border-radius:8px">`;
+    return;
+  }
+  drawQR(containerId, text);
+}
+
 function populatePaymentConfirm(d) {
+  window.__paymentConfirmData = { ...d };
+  const usesQr = paymentUsesQr(d.payCode);
   $('#pc-order-id').textContent = d.id;
   $('#pc-store').textContent = d.store;
   $('#pc-slot').textContent = d.slotText;
   $('#pc-pay-method').textContent = d.payMethod;
-  $('#pc-pay-method-2').textContent = d.payMethod;
+  if ($('#pc-pay-method-2')) $('#pc-pay-method-2').textContent = d.payMethod;
+  if ($('#pc-action-title')) $('#pc-action-title').textContent = usesQr ? 'Quét mã để thanh toán' : (d.payCode === 'cash' ? 'Xác nhận đặt hàng COD' : 'Xác nhận thanh toán');
+  if ($('#pc-action-desc')) {
+    $('#pc-action-desc').textContent = usesQr
+      ? `Dùng app ${d.payMethod} quét QR bên dưới`
+      : (d.payCode === 'cash' ? 'Đơn được giữ chỗ, bạn thanh toán tiền mặt tại cửa hàng khi nhận hàng.' : 'Cổng thanh toán sẽ xử lý giao dịch theo phương thức đã chọn.');
+  }
   $('#pc-original').textContent = fmt(d.items.reduce((s,it)=>{const p=PRODUCTS.find(x=>x.id===it.id);return s+p.original*it.qty;},0));
   $('#pc-subtotal').textContent = fmt(d.subtotal);
   $('#pc-discount').textContent = '−' + fmt(d.discount);
-  $('#pc-donate').textContent = '+' + fmt(donateAmount || 1000);
+  $('#pc-donate').textContent = '+' + fmt(d.donation || 0);
   $('#pc-total').textContent = fmt(d.total);
   $('#pc-qr-amount').textContent = fmt(d.total);
   $('#pc-saved').textContent = fmt(d.items.reduce((s,it)=>{const p=PRODUCTS.find(x=>x.id===it.id);return s+(p.original-p.price)*it.qty;},0));
+  renderPaymentQr('pc-qr-code', d.qr || `${d.payCode || 'pay'}-${d.id}-${d.total}`);
+  $('#pc-qr-box')?.classList.remove('expired');
+  $('#pc-expired-note')?.classList.remove('show');
+  if ($('#pc-regenerate-btn')) $('#pc-regenerate-btn').style.display = 'none';
+  if ($('#pc-qr-box')) $('#pc-qr-box').style.display = usesQr ? 'flex' : 'none';
+  if ($('#pc-expired-note')) $('#pc-expired-note').style.display = usesQr ? '' : 'none';
+  if ($('#pc-timer-wrap')) {
+    $('#pc-timer-wrap').style.display = usesQr ? 'block' : 'none';
+    $('#pc-timer-wrap').style.background = 'linear-gradient(135deg,var(--orange-500),#d97706)';
+  }
+  if ($('#pc-confirm-btn')) $('#pc-confirm-btn').innerHTML = d.payCode === 'cash' ? '<i class="ti ti-check"></i> Xác nhận đặt hàng' : '<i class="ti ti-check"></i> Đã thanh toán';
+  if ($('#pc-cancel-btn')) $('#pc-cancel-btn').innerHTML = d.payCode === 'cash' ? '<i class="ti ti-x"></i> Hủy đặt hàng' : '<i class="ti ti-x"></i> Hủy thanh toán';
   
   // Items list
   $('#pc-items-list').innerHTML = d.items.map(it=>{
@@ -4835,8 +5000,8 @@ function populatePaymentConfirm(d) {
     $('#pc-note-wrap').style.display = 'none';
   }
 
-  // Start 10-minute countdown
-  startPaymentTimer();
+  if (usesQr) startPaymentTimer();
+  else if (__pcTimerInterval) clearInterval(__pcTimerInterval);
 }
 
 function startPaymentTimer() {
@@ -4851,7 +5016,7 @@ function startPaymentTimer() {
     if (secs <= 60 && wrap) wrap.style.background = 'linear-gradient(135deg,var(--red-500),#991b1b)';
     if (secs <= 0) {
       clearInterval(__pcTimerInterval);
-      cancelPayment(true);
+      expirePaymentQr();
       return;
     }
     secs--;
@@ -4860,20 +5025,69 @@ function startPaymentTimer() {
   __pcTimerInterval = setInterval(tick, 1000);
 }
 
-function confirmPaymentDone() {
+function expirePaymentQr() {
+  $('#pc-qr-box')?.classList.add('expired');
+  $('#pc-expired-note')?.classList.add('show');
+  if ($('#pc-regenerate-btn')) $('#pc-regenerate-btn').style.display = 'block';
+  toast('Mã QR thanh toán đã hết hạn. Vui lòng tạo lại mã mới.', 'warn');
+}
+
+async function regeneratePaymentQr() {
+  const d = window.__paymentConfirmData;
+  if (!d) return;
+  let nextQr = '';
+  if (d.payCode === 'momo' && window.__pendingOrder?.backendId && window.FS?.sync?.refreshMomoPayment) {
+    await window.FS.sync.refreshMomoPayment(window.__pendingOrder.backendId).then(result => {
+      nextQr = result?.payment?.qrCodeUrl || result?.payment?.payUrl || '';
+    }).catch(error => {
+      console.warn('[FoodSave] MoMo QR refresh failed, falling back to local QR:', error);
+    });
+  }
+  const seed = `${d.payCode || 'pay'}-${d.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  d.qr = nextQr || seed.toUpperCase();
+  if (window.__pendingOrder) window.__pendingOrder.paymentQr = d.qr;
+  const order = orders.find(x => x.id === d.id);
+  if (order) order.paymentQr = d.qr;
+  renderPaymentQr('pc-qr-code', d.qr);
+  $('#pc-qr-box')?.classList.remove('expired');
+  $('#pc-expired-note')?.classList.remove('show');
+  if ($('#pc-regenerate-btn')) $('#pc-regenerate-btn').style.display = 'none';
+  if ($('#pc-timer-wrap')) $('#pc-timer-wrap').style.background = 'linear-gradient(135deg,var(--orange-500),#d97706)';
+  startPaymentTimer();
+  toast('Đã tạo lại mã QR thanh toán', 'info');
+}
+
+async function confirmPaymentDone() {
   if (__pcTimerInterval) clearInterval(__pcTimerInterval);
   const o = window.__pendingOrder;
   if (!o) { navTo('home'); return; }
+  const isCash = o.paymentMethod === 'cash';
+  const localOrder = orders.find(x => x.id === o.id);
+  if (localOrder) {
+    localOrder.paymentStatus = isCash ? 'pending' : 'paid';
+    if (localOrder.status === 'pending') localOrder.status = 'confirmed';
+  }
+  if (o.backendId && !isCash && window.FS?.sync?.markOrderPaymentPaid) {
+    await window.FS.sync.markOrderPaymentPaid(o.backendId, o.paymentMethod).catch(error => {
+      console.warn('[FoodSave] Direct orders payment paid update skipped:', error);
+    });
+  }
   // Now actually go to success
+  if ($('#success-title')) $('#success-title').textContent = isCash ? 'Đặt hàng thành công!' : 'Thanh toán thành công! 🎉';
+  if ($('#success-message')) {
+    $('#success-message').innerHTML = isCash
+      ? 'Thông tin giữ đơn và mã QR nhận hàng đã gửi tới <strong style="color:var(--green-900)" id="success-email"></strong>'
+      : 'Hóa đơn điện tử &amp; mã QR đã gửi tới <strong style="color:var(--green-900)" id="success-email"></strong>';
+  }
   $('#success-id').textContent = o.id;
-  $('#success-email').textContent = o.email;
+  if ($('#success-email')) $('#success-email').textContent = o.email;
   $('#success-store').textContent = o.store;
   $('#success-time').textContent = o.slotText;
   $('#success-total').textContent = fmt(o.total);
   drawQR('qr-success', o.qr);
   $('#qr-success-code').textContent = o.qr;
   navTo('success');
-  toast('Thanh toán thành công · Đơn đã được xác nhận', 'info');
+  toast(isCash ? 'Đặt hàng COD thành công · Đơn đã được giữ chỗ' : 'Thanh toán thành công · Đơn đã được xác nhận', 'info');
 }
 
 function cancelPayment(expired) {
@@ -6183,7 +6397,6 @@ function updateReputationRules(){
       input.value = input.value.replace(/\D/g, '').slice(0, 6);
     });
   });
-
   const signupPhoneInput = fsEl('signup-detail-phone');
   if (signupPhoneInput) {
     signupPhoneInput.addEventListener('input', () => {

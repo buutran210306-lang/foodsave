@@ -1,7 +1,9 @@
 import type {
   CreateComplaintBody,
+  CreateMomoPaymentBody,
   CreateOrderBody,
   CreateReviewBody,
+  MomoWebhookMockBody,
   OrderListQuery,
   UpdateComplaintBody,
   UpdateOrderStatusBody
@@ -13,6 +15,7 @@ import { AppError } from "../utils/appError";
 import { generateCode, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
 import type { PaginatedResponse } from "../types/api";
 import { sellerReputationService } from "./sellerReputationService";
+import { momoPaymentService } from "./momoPaymentService";
 
 interface ProductForCheckout {
   id: string;
@@ -258,6 +261,33 @@ export const orderService = {
       order,
       items: (itemData ?? []) as OrderItem[]
     };
+  },
+
+  async createMomoPayment(customerId: string, body: CreateMomoPaymentBody): Promise<{ order: Order; items: OrderItem[]; payment: unknown }> {
+    const created = await orderService.createOrder(customerId, {
+      ...body,
+      payment_method: "momo"
+    });
+    const payment = await momoPaymentService.createPayment(created.order);
+    return {
+      ...created,
+      payment
+    };
+  },
+
+  async refreshMomoPayment(actorId: string, actorRole: UserRole, orderId: string): Promise<{ order: Order; payment: unknown }> {
+    const order = await assertOrderAccess(orderId, actorId, actorRole);
+    const payment = await momoPaymentService.createPayment(order);
+    return { order, payment };
+  },
+
+  async pollMomoPayment(actorId: string, actorRole: UserRole, orderId: string): Promise<{ order: Order; payment: unknown }> {
+    const order = await assertOrderAccess(orderId, actorId, actorRole);
+    return momoPaymentService.queryPayment(order);
+  },
+
+  async applyMomoWebhookMock(body: MomoWebhookMockBody): Promise<Order> {
+    return momoPaymentService.applyMockWebhook(body);
   },
 
   async listOrders(actorId: string, actorRole: UserRole, query: OrderListQuery): Promise<PaginatedResponse<unknown>> {
