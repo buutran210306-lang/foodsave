@@ -1337,6 +1337,47 @@ const urgC=u=>u==="green"?"var(--green-700)":u==="yellow"?"var(--yellow)":"var(-
 const urgB=u=>u==="green"?"var(--green-100)":u==="yellow"?"var(--yellow-100)":"var(--red-100)";
 const urgN=u=>u==="green"?"Còn ≥1 ngày":u==="yellow"?"Cần lấy trong ngày":"GẤP! Cần lấy ngay";
 const urgT=u=>u==="green"?"tg-g":u==="yellow"?"tg-y":"tg-r";
+function impactTotals(scope){
+  const source=window.ECO_IMPACT&&window.ECO_IMPACT[scope];
+  return source&&source.totals?source.totals:null;
+}
+function impactKg(value){
+  const n=Number(value)||0;
+  return `${n.toLocaleString('vi-VN',{maximumFractionDigits:1})}kg`;
+}
+function impactNumber(value){
+  return Math.round(Number(value)||0).toLocaleString('vi-VN');
+}
+function charityReportCards(){
+  const totals=impactTotals('charity');
+  if(!totals)return [
+    {l:"Tổng bữa ăn",v:"1,752",i:"ti-bowl",c:"var(--rose)",bg:"var(--rose-100)"},
+    {l:"Tổng kg",v:"495.3kg",i:"ti-package",c:"var(--green-700)",bg:"var(--green-100)"},
+    {l:"CO₂ giảm",v:"191kg",i:"ti-cloud-off",c:"var(--blue)",bg:"var(--blue-100)"},
+    {l:"Nhà tài trợ",v:"3",i:"ti-heart",c:"var(--purple)",bg:"var(--purple-100)"}
+  ];
+  return [
+    {l:"Tổng bữa ăn",v:impactNumber(totals.meals_equivalent),i:"ti-bowl",c:"var(--rose)",bg:"var(--rose-100)"},
+    {l:"Tổng kg",v:impactKg(totals.food_saved_kg),i:"ti-package",c:"var(--green-700)",bg:"var(--green-100)"},
+    {l:"CO₂ giảm",v:impactKg(totals.co2_avoided_kg),i:"ti-cloud-off",c:"var(--blue)",bg:"var(--blue-100)"},
+    {l:"Donation",v:impactNumber(totals.completed_donations),i:"ti-heart",c:"var(--purple)",bg:"var(--purple-100)"}
+  ];
+}
+function charityImpactCards(){
+  const totals=impactTotals('charity');
+  if(!totals)return [
+    {l:"Bữa ăn cộng dồn",v:"1,752",su:"12 tháng",i:"ti-bowl",c:"var(--rose)",bg:"var(--rose-100)"},
+    {l:"Thực phẩm cứu",v:"495.3kg",su:"Quy đổi 1,752 bữa",i:"ti-package",c:"var(--green-700)",bg:"var(--green-100)"},
+    {l:"CO₂ tránh phát thải",v:"191kg",su:"≈ 7 cây xanh/năm",i:"ti-cloud-off",c:"var(--blue)",bg:"var(--blue-100)"},
+    {l:"Nước tiết kiệm",v:"3,420L",su:"Sản xuất thực phẩm",i:"ti-droplet",c:"var(--blue)",bg:"var(--blue-100)"}
+  ];
+  return [
+    {l:"Bữa ăn cộng dồn",v:impactNumber(totals.meals_equivalent),su:`Từ ${impactKg(totals.food_saved_kg)}`,i:"ti-bowl",c:"var(--rose)",bg:"var(--rose-100)"},
+    {l:"Thực phẩm cứu",v:impactKg(totals.food_saved_kg),su:`${impactNumber(totals.completed_donations)} donation hoàn thành`,i:"ti-package",c:"var(--green-700)",bg:"var(--green-100)"},
+    {l:"CO₂ tránh phát thải",v:impactKg(totals.co2_avoided_kg),su:"Tính theo hệ số nền tảng",i:"ti-cloud-off",c:"var(--blue)",bg:"var(--blue-100)"},
+    {l:"Nước tiết kiệm",v:`${impactNumber(totals.water_saved_liters)}L`,su:"Sản xuất thực phẩm",i:"ti-droplet",c:"var(--blue)",bg:"var(--blue-100)"}
+  ];
+}
 const stM={new:"Chờ duyệt",accepted:"Đã chấp nhận","in-route":"Đang trên đường","received":"Đã nhận",completed:"Hoàn thành",rejected:"Đã từ chối"};
 const stC={new:"tg-y",accepted:"tg-b","in-route":"tg-p","received":"tg-g",completed:"tg-g",rejected:"tg-r"};
 const BTYPE=[{id:"orphan",l:"Mái ấm trẻ em",e:"🧒",i:"ti-mood-kid"},{id:"kitchen",l:"Bếp ăn từ thiện",e:"🍲",i:"ti-tools-kitchen-2"},{id:"shelter",l:"Nhà mở / Tạm lánh",e:"🏠",i:"ti-home-heart"},{id:"elderly",l:"Viện dưỡng lão",e:"👵",i:"ti-old"},{id:"disabled",l:"TT khuyết tật",e:"♿",i:"ti-wheelchair"},{id:"religious",l:"Cộng đồng tôn giáo",e:"🕊️",i:"ti-cross"}];
@@ -1559,8 +1600,9 @@ function pDash(){
   const newD=DONATIONS.filter(d=>d.status==='new');
   const active=DONATIONS.filter(d=>['accepted','in-route'].includes(d.status));
   const completed=DONATIONS.filter(d=>d.status==='completed');
-  const totalMeals=REPORTS[0].meals;
-  const totalKg=REPORTS[0]?.kg || "0kg";
+  const totals=impactTotals('charity');
+  const totalMeals=totals?impactNumber(totals.meals_equivalent):(REPORTS[0]?.meals||0);
+  const totalKg=totals?impactKg(totals.food_saved_kg):(REPORTS[0]?.kg || "0kg");
   const urgentNew=newD.filter(d=>d.urgency==='red');
   return`
   <div class="grid-4 m16">${[
@@ -1594,7 +1636,7 @@ function pDash(){
   <div class="grid-2 m12">
   <div class="card gradient-card"><div style="position:relative;z-index:1">
   <div class="st" style="color:#fff"><i class="ti ti-heart" style="color:var(--yellow)"></i> Tác động tháng này</div>
-  <div class="grid-3 m12">${[{i:"ti-bowl",l:"Bữa ăn",v:`${totalMeals}`},{i:"ti-package",l:"Thực phẩm",v:totalKg},{i:"ti-cloud-off",l:"CO₂ giảm",v:REPORTS[0]?.co2 || "0kg"}].map(m=>`<div style="text-align:center;padding:14px 8px;background:rgba(255,255,255,.14);border-radius:13px;backdrop-filter:blur(10px)"><i class="ti ${m.i}" style="font-size:24px;color:var(--yellow);margin-bottom:6px;display:block"></i><div style="font-size:10px;opacity:.8;font-weight:800;text-transform:uppercase;letter-spacing:.04em">${m.l}</div><div style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:900;color:#fff;margin-top:3px">${m.v}</div></div>`).join('')}</div>
+  <div class="grid-3 m12">${[{i:"ti-bowl",l:"Bữa ăn",v:`${totalMeals}`},{i:"ti-package",l:"Thực phẩm",v:totalKg},{i:"ti-cloud-off",l:"CO₂ giảm",v:totals?impactKg(totals.co2_avoided_kg):(REPORTS[0]?.co2 || "0kg")}].map(m=>`<div style="text-align:center;padding:14px 8px;background:rgba(255,255,255,.14);border-radius:13px;backdrop-filter:blur(10px)"><i class="ti ${m.i}" style="font-size:24px;color:var(--yellow);margin-bottom:6px;display:block"></i><div style="font-size:10px;opacity:.8;font-weight:800;text-transform:uppercase;letter-spacing:.04em">${m.l}</div><div style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:900;color:#fff;margin-top:3px">${m.v}</div></div>`).join('')}</div>
   <div style="padding:12px 16px;background:rgba(255,255,255,.16);border-radius:12px;backdrop-filter:blur(10px)"><div style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--yellow)">Báo cáo ESG T5/2026 đang hoàn thiện</div><div style="font-size:11px;opacity:.85;font-weight:500;margin-top:3px">Sẽ tự động gửi 3 nhà tài trợ vào ngày 5/6</div></div></div></div>
 
   <div class="card"><div class="st"><i class="ti ti-chart-line"></i> Tăng trưởng 5 tháng</div>
@@ -1852,12 +1894,7 @@ function pReports(){
   return`
   <div class="card gradient-card-g m14"><div style="position:relative;z-index:1"><div class="f ac jb"><div><div style="font-family:'Plus Jakarta Sans';font-size:24px;font-weight:900;color:#fff;letter-spacing:-.025em"><i class="ti ti-file-analytics" style="color:var(--yellow)"></i> Báo cáo ESG tự động</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);margin-top:5px;font-weight:500">Tạo PDF tự động mỗi tháng · Tự gửi cho nhà tài trợ vào ngày 5</div></div><button class="btn btn-accent"><i class="ti ti-download"></i> Tải báo cáo T5</button></div></div></div>
 
-  <div class="grid-4 m14">${[
-  {l:"Tổng bữa ăn",v:"1,752",i:"ti-bowl",c:"var(--rose)",bg:"var(--rose-100)"},
-  {l:"Tổng kg",v:"495.3kg",i:"ti-package",c:"var(--green-700)",bg:"var(--green-100)"},
-  {l:"CO₂ giảm",v:"191kg",i:"ti-cloud-off",c:"var(--blue)",bg:"var(--blue-100)"},
-  {l:"Nhà tài trợ",v:"3",i:"ti-heart",c:"var(--purple)",bg:"var(--purple-100)"}
-  ].map(m=>`<div class="metric"><div class="f ac jb"><span class="metric-l">${m.l}</span><div class="metric-ic" style="background:${m.bg};color:${m.c}"><i class="ti ${m.i}"></i></div></div><div class="metric-v" style="color:${m.c}">${m.v}</div></div>`).join('')}</div>
+  <div class="grid-4 m14">${charityReportCards().map(m=>`<div class="metric"><div class="f ac jb"><span class="metric-l">${m.l}</span><div class="metric-ic" style="background:${m.bg};color:${m.c}"><i class="ti ${m.i}"></i></div></div><div class="metric-v" style="color:${m.c}">${m.v}</div></div>`).join('')}</div>
 
   <div class="card-h"><table class="tbl"><thead><tr><th>Tháng</th><th>Bữa ăn</th><th>Khối lượng</th><th>CO₂ giảm</th><th>Đối tác</th><th>Nhà tài trợ</th><th>Người hỗ trợ</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>${REPORTS.map(r=>`<tr><td style="font-family:'Plus Jakarta Sans';font-weight:900;font-size:13px">${r.month}</td><td style="font-weight:700">${r.meals}</td><td style="font-family:'Plus Jakarta Sans';font-weight:900;color:var(--rose)">${r.kg}</td><td style="font-family:'Plus Jakarta Sans';font-weight:900;color:var(--green-700)">${r.co2}</td><td>${r.partners}</td><td>${r.donors}</td><td style="font-weight:700">${r.beneficiaries}</td><td><span class="tg ${r.status==='published'?'tg-g':'tg-y'}">${r.status==='published'?'Đã publish':'Đang tổng hợp'}</span></td><td><div class="f g6"><button class="btn btn-sm btn-o"><i class="ti ti-eye"></i></button><button class="btn btn-sm btn-o"><i class="ti ti-download"></i></button>${r.status==='published'?'<button class="btn btn-sm btn-o"><i class="ti ti-share"></i></button>':''}</div></td></tr>`).join('')}</tbody></table></div>
 
@@ -1896,12 +1933,7 @@ function pImpact(){return`
   <div class="card gradient-card m14"><div style="position:relative;z-index:1">
   <div class="f ac jb"><div><div style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:900;color:#fff;letter-spacing:-.025em"><i class="ti ti-leaf" style="color:var(--yellow)"></i> Tác động cộng đồng & môi trường</div><div style="font-size:12.5px;color:rgba(255,255,255,.85);margin-top:5px;font-weight:500">Đo lường ESG theo chuẩn IPCC 2021 + GRI Standards</div></div><div style="text-align:center"><div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:900;color:var(--yellow)">A+</div><div style="font-size:10.5px;color:rgba(255,255,255,.7);font-weight:800;text-transform:uppercase;letter-spacing:.06em">Hạng ESG</div></div></div></div></div>
 
-  <div class="grid-4 m14">${[
-  {l:"Bữa ăn cộng dồn",v:"1,752",su:"12 tháng",i:"ti-bowl",c:"var(--rose)",bg:"var(--rose-100)"},
-  {l:"Thực phẩm cứu",v:"495.3kg",su:"Quy đổi 1,752 bữa",i:"ti-package",c:"var(--green-700)",bg:"var(--green-100)"},
-  {l:"CO₂ tránh phát thải",v:"191kg",su:"≈ 7 cây xanh/năm",i:"ti-cloud-off",c:"var(--blue)",bg:"var(--blue-100)"},
-  {l:"Nước tiết kiệm",v:"3,420L",su:"Sản xuất thực phẩm",i:"ti-droplet",c:"var(--blue)",bg:"var(--blue-100)"}
-  ].map(m=>`<div class="metric"><div class="f ac jb"><span class="metric-l">${m.l}</span><div class="metric-ic" style="background:${m.bg};color:${m.c}"><i class="ti ${m.i}"></i></div></div><div class="metric-v" style="color:${m.c}">${m.v}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:700">${m.su}</div></div>`).join('')}</div>
+  <div class="grid-4 m14">${charityImpactCards().map(m=>`<div class="metric"><div class="f ac jb"><span class="metric-l">${m.l}</span><div class="metric-ic" style="background:${m.bg};color:${m.c}"><i class="ti ${m.i}"></i></div></div><div class="metric-v" style="color:${m.c}">${m.v}</div><div style="font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:700">${m.su}</div></div>`).join('')}</div>
 
   <div class="grid-2 m14">
   <div class="card"><div class="st"><i class="ti ti-chart-line"></i> Tăng trưởng 12 tháng</div>

@@ -4,6 +4,9 @@
   const LOCAL_API_BASE_URL = "http://localhost:8080/api/v1";
   const API_PATH = "/api/v1";
   const AUTH_STORAGE_KEY = "foodsave.auth.session";
+  const NEARBY_LOCATION_STORAGE_KEY = "foodsave.nearby.location";
+  const NEARBY_NOTIFICATION_STORAGE_KEY = "foodsave.nearby.notified";
+  const DEFAULT_NEARBY_RADIUS_KM = 5;
 
   function trimTrailingSlash(value) {
     return String(value || "").replace(/\/+$/, "");
@@ -37,6 +40,80 @@
   }
 
   const API_BASE_URL = resolveApiBaseUrl();
+
+  function normalizeDistanceKm(value) {
+    const distance = Number(value);
+    if (!Number.isFinite(distance) || distance < 0) return 0;
+    return Math.round(distance * 100) / 100;
+  }
+
+  function distanceLabel(value) {
+    const distance = normalizeDistanceKm(value);
+    if (!distance) return "";
+    if (distance < 1) return `${Math.round(distance * 1000)}m`;
+    return `${distance}km`;
+  }
+
+  function normalizeRadiusKm(value) {
+    const radius = Number(value);
+    if (!Number.isFinite(radius) || radius <= 0) return DEFAULT_NEARBY_RADIUS_KM;
+    return Math.min(radius, 50);
+  }
+
+  function readNearbyLocation() {
+    try {
+      const raw = localStorage.getItem(NEARBY_LOCATION_STORAGE_KEY);
+      const value = raw ? JSON.parse(raw) : null;
+      const latitude = Number(value && value.latitude);
+      const longitude = Number(value && value.longitude);
+      const radiusKm = normalizeRadiusKm(value && value.radiusKm);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+      return { latitude, longitude, radiusKm };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveNearbyLocation(location) {
+    localStorage.setItem(NEARBY_LOCATION_STORAGE_KEY, JSON.stringify(location));
+    window.FOODSAVE_NEARBY_LOCATION = location;
+  }
+
+  function clearStoredNearbyLocation() {
+    localStorage.removeItem(NEARBY_LOCATION_STORAGE_KEY);
+    window.FOODSAVE_NEARBY_LOCATION = null;
+  }
+
+  function catalogPath(basePath, location, options) {
+    if (!location) return `${basePath}?limit=100`;
+    const params = new URLSearchParams({
+      limit: "100",
+      lat: String(location.latitude),
+      lng: String(location.longitude),
+      radius_km: String(location.radiusKm || DEFAULT_NEARBY_RADIUS_KM)
+    });
+    if (options && options.sortNearest) params.set("sort", "nearest");
+    return `${basePath}?${params.toString()}`;
+  }
+
+  function browserLocation() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Trình duyệt chưa hỗ trợ GPS."));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          radiusKm: normalizeRadiusKm(DEFAULT_NEARBY_RADIUS_KM)
+        }),
+        () => reject(new Error("Không lấy được vị trí. Hãy cho phép FoodSave truy cập GPS.")),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      );
+    });
+  }
 
   function readAuthSession() {
     try {
@@ -153,7 +230,17 @@
 
   function hoursUntil(value) {
     if (!value) return 0;
-    return Math.max(0, Math.round((new Date(value).getTime() - Date.now()) / 3600000));
+    const expiryTime = new Date(value).getTime();
+    if (!Number.isFinite(expiryTime)) return 0;
+    return Math.max(0, Math.round((expiryTime - Date.now()) / 3600000));
+  }
+
+  function productLabelFromExpiry(expiresAt, fallback) {
+    if (!expiresAt) return fallback || "green";
+    const hours = hoursUntil(expiresAt);
+    if (hours <= 12) return "red";
+    if (hours <= 24) return "yellow";
+    return "green";
   }
 
   function mapProduct(product) {
@@ -164,16 +251,19 @@
       name: product.name,
       store: store.name || "",
       storeId: product.store_id,
-      distance: 0,
+      distance: normalizeDistanceKm(product.distance_km ?? product.distance),
+      distanceText: product.distance_text || distanceLabel(product.distance_km ?? product.distance),
       price: centsToVnd(product.price_cents),
       original: centsToVnd(product.original_price_cents),
-      label: product.label || "green",
+      label: productLabelFromExpiry(product.expires_at, product.label),
       expiresHrs: hoursUntil(product.expires_at),
       stock: Number(product.stock_quantity) || 0,
       cat: product.category || "other",
       rating: Number(product.rating) || 0,
       sold: Number(product.sold_count) || 0,
       desc: product.description || "",
+      estimatedWeightKg: Number(product.estimated_weight_kg) || null,
+      servingsCount: Number(product.servings_count) || null,
       donation: Boolean(product.is_donation)
     };
   }
@@ -184,7 +274,8 @@
       name: store.name,
       logo: store.emoji || "🏪",
       addr: store.address || "",
-      distance: 0,
+      distance: normalizeDistanceKm(store.distance_km ?? store.distance),
+      distanceText: store.distance_text || distanceLabel(store.distance_km ?? store.distance),
       rating: Number(store.rating) || 0,
       products: 0,
       hours: store.opening_hours || "",
@@ -280,26 +371,87 @@
     };
   }
 
-  async function loadCatalogData() {
+  function pushNearbyDealNotification(products, location) {
+    const deals = (products || [])
+      .filter((product) => Number.isFinite(Number(product.distance)) && product.distance <= (location.radiusKm || DEFAULT_NEARBY_RADIUS_KM))
+      .filter((product) => product.label === "red" || product.label === "yellow" || (product.original && (1 - product.price / product.original) >= 0.3))
+      .slice(0, 3);
+
+    if (!deals.length) return;
+
+    const signature = `${new Date().toISOString().slice(0, 10)}:${deals.map((deal) => deal.id).join(",")}`;
+    if (localStorage.getItem(NEARBY_NOTIFICATION_STORAGE_KEY) === signature) return;
+    localStorage.setItem(NEARBY_NOTIFICATION_STORAGE_KEY, signature);
+
+    const firstDeal = deals[0];
+    const title = `${deals.length} deal FoodSave gần bạn`;
+    const body = `${firstDeal.name} tại ${firstDeal.store} · ${firstDeal.distanceText || distanceLabel(firstDeal.distance)} · còn ${firstDeal.expiresHrs} giờ`;
+
+    if (Array.isArray(window.USER_NOTIFS)) {
+      window.USER_NOTIFS.unshift({
+        id: Date.now(),
+        type: "promo",
+        icon: "ti-map-pin",
+        iconBg: "#dcfce7",
+        iconColor: "#16a34a",
+        title,
+        desc: body,
+        time: "Vừa xong",
+        unread: true
+      });
+      if (typeof window.updateNotifBadge === "function") window.updateNotifBadge();
+      if (typeof window.renderNotifs === "function") window.renderNotifs("all");
+    }
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, {
+        body,
+        tag: "foodsave-nearby-deal",
+        icon: "/favicon.ico"
+      });
+    }
+  }
+
+  async function loadCatalogData(options) {
+    const hasLocationOption = options && Object.prototype.hasOwnProperty.call(options, "location");
+    const location = hasLocationOption ? options.location : readNearbyLocation();
     const [products, stores, vouchers] = await Promise.all([
-      request("/catalog/products?limit=100").catch(() => ({ items: [] })),
-      request("/catalog/stores?limit=100").catch(() => ({ items: [] })),
+      request(catalogPath("/catalog/products", location, { sortNearest: true })).catch(() => ({ items: [] })),
+      request(catalogPath("/catalog/stores", location)).catch(() => ({ items: [] })),
       request("/catalog/vouchers").catch(() => [])
     ]);
 
-    replaceArray("PRODUCTS", (products.items || []).map(mapProduct));
-    replaceArray("STORES", (stores.items || []).map(mapStore));
+    const mappedProducts = (products.items || []).map(mapProduct);
+    const mappedStores = (stores.items || []).map(mapStore);
+    replaceArray("PRODUCTS", mappedProducts);
+    replaceArray("STORES", mappedStores);
     replaceArray("VOUCHERS", (Array.isArray(vouchers) ? vouchers : []).map(mapVoucher));
+    window.FOODSAVE_NEARBY_LOCATION = location || null;
+    window.dispatchEvent(new CustomEvent("foodsave:nearby-location", {
+      detail: { location, products: mappedProducts, stores: mappedStores }
+    }));
+    if (location) pushNearbyDealNotification(mappedProducts, location);
+
+    return {
+      products: mappedProducts,
+      stores: mappedStores,
+      vouchers: Array.isArray(vouchers) ? vouchers : []
+    };
   }
 
   async function loadAuthenticatedData() {
     if (!authToken()) return;
 
-    const [orders, donations, notifications, complaints] = await Promise.all([
+    const [orders, donations, notifications, complaints, impactMe, impactPartner, impactCharity, impactPlatform, leaderboard] = await Promise.all([
       request("/orders?limit=100").catch(() => ({ items: [] })),
       request("/donations?limit=100").catch(() => ({ items: [] })),
       request("/notifications?limit=100").catch(() => ({ items: [] })),
-      request("/orders/complaints/list").catch(() => [])
+      request("/orders/complaints/list").catch(() => []),
+      request("/eco-impact/me?period=all&months=6").catch(() => null),
+      request("/eco-impact/partner?period=all&months=6").catch(() => null),
+      request("/eco-impact/charity?period=all&months=6").catch(() => null),
+      request("/eco-impact/platform?period=all&months=6").catch(() => null),
+      request("/eco-impact/leaderboard?period=month&limit=10").catch(() => [])
     ]);
 
     replaceArray("orders", (orders.items || []).map(mapUserOrder));
@@ -307,6 +459,13 @@
     replaceArray("DONATIONS", (donations.items || []).map(mapDonation));
     replaceArray("NOTIFS", (notifications.items || []).map(mapNotification));
     replaceArray("COMPLAINTS", Array.isArray(complaints) ? complaints : []);
+    window.ECO_IMPACT = {
+      me: impactMe,
+      partner: impactPartner,
+      charity: impactCharity,
+      platform: impactPlatform,
+      leaderboard: Array.isArray(leaderboard) ? leaderboard : []
+    };
   }
 
   async function hydratePage() {
@@ -324,6 +483,32 @@
     source: "backend",
     request,
     hydratePage,
+    getNearbyLocation() {
+      return readNearbyLocation();
+    },
+    clearNearbyLocation() {
+      clearStoredNearbyLocation();
+      return loadCatalogData({ location: null }).then((data) => {
+        if (typeof window.renderHome === "function" && document.querySelector("#page-home.active")) window.renderHome();
+        if (typeof window.renderMarket === "function" && document.querySelector("#page-market.active")) window.renderMarket();
+        if (typeof window.renderMap === "function" && document.querySelector("#page-map.active")) window.renderMap();
+        return data;
+      });
+    },
+    async enableNearbyDeals() {
+      const location = await browserLocation();
+      saveNearbyLocation(location);
+
+      if ("Notification" in window && Notification.permission === "default") {
+        await Notification.requestPermission().catch(() => "denied");
+      }
+
+      const data = await loadCatalogData({ location });
+      if (typeof window.renderHome === "function" && document.querySelector("#page-home.active")) window.renderHome();
+      if (typeof window.renderMarket === "function" && document.querySelector("#page-market.active")) window.renderMarket();
+      if (typeof window.renderMap === "function" && document.querySelector("#page-map.active")) window.renderMap();
+      return data;
+    },
     pushOrder(orderPayload) {
       return request("/orders", { method: "POST", body: orderPayload });
     },
@@ -381,6 +566,21 @@
     },
     getNotifications() {
       return request("/notifications?limit=100");
+    },
+    getEcoImpactMe(params) {
+      return request(`/eco-impact/me${params ? `?${params}` : ""}`);
+    },
+    getEcoImpactPartner(params) {
+      return request(`/eco-impact/partner${params ? `?${params}` : ""}`);
+    },
+    getEcoImpactCharity(params) {
+      return request(`/eco-impact/charity${params ? `?${params}` : ""}`);
+    },
+    getEcoImpactPlatform(params) {
+      return request(`/eco-impact/platform${params ? `?${params}` : ""}`);
+    },
+    getEcoImpactLeaderboard(params) {
+      return request(`/eco-impact/leaderboard${params ? `?${params}` : ""}`);
     },
     markNotifRead(notificationId) {
       return request(`/notifications/${encodeURIComponent(notificationId)}/read`, { method: "PATCH" });

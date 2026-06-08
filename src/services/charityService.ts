@@ -30,6 +30,46 @@ const assertCharityOwner = async (charityId: string, actorId: string, actorRole:
   }
 };
 
+const monthBounds = (monthStartValue: string): { start: string; end: string; date: string } => {
+  const parsed = new Date(monthStartValue);
+  const start = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth() + 1, 1, 0, 0, 0, 0));
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+    date: start.toISOString().slice(0, 10)
+  };
+};
+
+const withAutoImpactMetrics = async (body: CreateImpactReportBody): Promise<CreateImpactReportBody> => {
+  const bounds = monthBounds(body.month_start);
+  const { data, error } = await supabaseAdmin
+    .from("eco_impact_events")
+    .select("store_id,source_type,food_saved_kg,co2_avoided_kg,meals_equivalent")
+    .eq("charity_id", body.charity_id)
+    .gte("occurred_at", bounds.start)
+    .lt("occurred_at", bounds.end);
+
+  if (error) handleSupabaseError(error, "Failed to load eco impact data for report");
+
+  const events = data ?? [];
+  const kgSaved = events.reduce((sum, event) => sum + Number((event as { food_saved_kg: number }).food_saved_kg ?? 0), 0);
+  const co2Kg = events.reduce((sum, event) => sum + Number((event as { co2_avoided_kg: number }).co2_avoided_kg ?? 0), 0);
+  const meals = events.reduce((sum, event) => sum + Number((event as { meals_equivalent: number }).meals_equivalent ?? 0), 0);
+  const partnerIds = new Set(events.map((event) => (event as { store_id: string | null }).store_id).filter(Boolean));
+  const donationCount = events.filter((event) => (event as { source_type: string }).source_type === "donation").length;
+
+  return {
+    ...body,
+    month_start: bounds.date,
+    meals: body.meals || Math.round(meals),
+    kg_saved: body.kg_saved || Math.round(kgSaved * 100) / 100,
+    co2_kg: body.co2_kg || Math.round(co2Kg * 100) / 100,
+    partners_count: body.partners_count || partnerIds.size,
+    donors_count: body.donors_count || donationCount
+  };
+};
+
 export const charityService = {
   async listMyCharities(ownerId: string): Promise<unknown[]> {
     const { data, error } = await supabaseAdmin
@@ -142,9 +182,10 @@ export const charityService = {
 
   async createImpactReport(actorId: string, actorRole: UserRole, body: CreateImpactReportBody): Promise<unknown> {
     await assertCharityOwner(body.charity_id, actorId, actorRole);
+    const payload = await withAutoImpactMetrics(body);
     const { data, error } = await supabaseAdmin
       .from("impact_reports")
-      .insert(body)
+      .insert(payload)
       .select("*")
       .single();
 

@@ -1640,28 +1640,28 @@
       <div class="section-head">
         <div>
           <div class="eyebrow mb-4"><i class="ti ti-tag"></i> Hệ thống nhãn</div>
-          <h2>3 mức ưu tiên, 3 mức giá</h2>
+          <h2>3 mức cảnh báo hạn sử dụng</h2>
         </div>
         <p>Hệ thống tự động phân loại theo thời hạn sử dụng. Càng cận hạn, giá càng tốt cho bạn.</p>
       </div>
       <div class="grid-3">
         <div class="card">
           <div class="card-icon" style="background:#d1fae5;color:#065f46"><i class="ti ti-circle-filled"></i></div>
-          <span class="tag tag-green">🟢 Còn dài hạn</span>
+          <span class="tag tag-green">🟢 3-5 ngày</span>
           <h3 style="margin-top:12px">Nhãn xanh</h3>
-          <p>HSD còn lại trên 30 ngày. Giảm giá 0–15%. Sản phẩm thường, ưu tiên thấp.</p>
+          <p>HSD còn trên 24 giờ, vùng an toàn điển hình 3-5 ngày. Mức cảnh báo thấp, phù hợp mua dự trữ ngắn ngày.</p>
         </div>
         <div class="card">
           <div class="card-icon" style="background:var(--yellow-100);color:var(--yellow-500)"><i class="ti ti-circle-filled"></i></div>
-          <span class="tag tag-yellow">🟡 Cận hạn</span>
+          <span class="tag tag-yellow">🟡 Còn 24 giờ</span>
           <h3 style="margin-top:12px">Nhãn vàng</h3>
-          <p>HSD còn 3–30 ngày. Giảm sâu 30–60%. Khuyến mãi tích cực để thúc đẩy tiêu thụ.</p>
+          <p>HSD còn dưới 24 giờ. Giá giảm sâu, nên nhận và dùng trong ngày.</p>
         </div>
         <div class="card">
           <div class="card-icon" style="background:var(--red-100);color:var(--red-500)"><i class="ti ti-circle-filled"></i></div>
-          <span class="tag tag-red">🔴 Khẩn cấp</span>
+          <span class="tag tag-red">🔴 Còn 12 giờ</span>
           <h3 style="margin-top:12px">Nhãn đỏ</h3>
-          <p>HSD dưới 72 giờ. Giảm 70–100% hoặc miễn phí. Cần xử lý nhanh trước khi hết hạn.</p>
+          <p>HSD còn dưới 12 giờ. Mức khẩn cấp, giá tốt nhất và cần xử lý ngay.</p>
         </div>
       </div>
     </div>
@@ -2404,7 +2404,7 @@
         <div class="section-head">
           <div>
             <h2 style="font-size:22px;display:flex;align-items:center;gap:8px"><i class="ti ti-bolt" style="color:var(--orange-500)"></i> Flash Deals <span class="tag tag-red">Khẩn cấp</span></h2>
-            <p class="text-muted" style="font-size:13px;margin-top:4px">Nhãn đỏ – giá thấp nhất trong ngày</p>
+            <p class="text-muted" style="font-size:13px;margin-top:4px">Nhãn đỏ – còn dưới 12 giờ, giá thấp nhất trong ngày</p>
           </div>
           <button class="btn-link" onclick="navTo('market')">Xem thêm <i class="ti ti-arrow-right"></i></button>
         </div>
@@ -2463,9 +2463,9 @@
           </div>
           <div class="filter-section">
             <h4>Nhãn sản phẩm</h4>
-            <label class="check-row"><input type="checkbox" class="flt-label" value="green" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#10b981"></span> Còn dài hạn</span></label>
-            <label class="check-row"><input type="checkbox" class="flt-label" value="yellow" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></span> Cận hạn</span></label>
-            <label class="check-row"><input type="checkbox" class="flt-label" value="red" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span> Khẩn cấp</span></label>
+            <label class="check-row"><input type="checkbox" class="flt-label" value="green" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#10b981"></span> Xanh 3-5 ngày</span></label>
+            <label class="check-row"><input type="checkbox" class="flt-label" value="yellow" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></span> Vàng ≤24 giờ</span></label>
+            <label class="check-row"><input type="checkbox" class="flt-label" value="red" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span> Đỏ ≤12 giờ</span></label>
           </div>
           <div class="filter-section">
             <h4>Danh mục</h4>
@@ -2505,8 +2505,13 @@
 
         <main>
           <div class="market-head">
-            <div class="count" id="market-count">12 sản phẩm</div>
+            <div>
+              <div class="count" id="market-count">12 sản phẩm</div>
+              <div id="nearby-status" style="font-size:12px;color:var(--muted);font-weight:700;margin-top:4px">GPS chưa bật</div>
+            </div>
             <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn btn-ghost btn-sm" id="nearby-gps-btn" onclick="enableNearbyDeals()"><i class="ti ti-current-location"></i> Dùng GPS</button>
+              <button class="btn btn-soft btn-sm" id="nearby-clear-btn" style="display:none" onclick="clearNearbyDeals()"><i class="ti ti-location-off"></i> Tắt</button>
               <select class="sort-select" id="sort-select" onchange="renderMarket()">
                 <option value="nearest">📍 Gần nhất</option>
                 <option value="urgent">⏰ Cận hạn nhất</option>
@@ -3159,19 +3164,19 @@
       <div class="grid-3" style="margin-bottom:32px">
         <div class="card" style="background:linear-gradient(135deg,var(--green-100),#fff);border-color:var(--green-700)">
           <div class="card-icon"><i class="ti ti-leaf"></i></div>
-          <div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:var(--green-900);line-height:1;margin-bottom:6px">38.4 <span style="font-size:20px">kg</span></div>
+          <div id="impact-food-saved" style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:var(--green-900);line-height:1;margin-bottom:6px">38.4 <span style="font-size:20px">kg</span></div>
           <h3>Thực phẩm đã cứu</h3>
-          <p class="text-muted" style="font-size:13px">Tương đương 76 bữa ăn được cứu khỏi lãng phí</p>
+          <p id="impact-meals-note" class="text-muted" style="font-size:13px">Tương đương 76 bữa ăn được cứu khỏi lãng phí</p>
         </div>
         <div class="card" style="background:linear-gradient(135deg,#ede9fe,#fff);border-color:#8b5cf6">
           <div class="card-icon" style="background:#ede9fe;color:#6d28d9"><i class="ti ti-cloud-fog"></i></div>
-          <div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:#6d28d9;line-height:1;margin-bottom:6px">94 <span style="font-size:20px">kg</span></div>
+          <div id="impact-co2-saved" style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:#6d28d9;line-height:1;margin-bottom:6px">94 <span style="font-size:20px">kg</span></div>
           <h3>CO₂ đã giảm</h3>
           <p class="text-muted" style="font-size:13px">Bằng việc trồng 4 cây xanh trưởng thành</p>
         </div>
         <div class="card" style="background:linear-gradient(135deg,#fef3c7,#fff);border-color:var(--orange-500)">
           <div class="card-icon" style="background:#fef3c7;color:var(--orange-600)"><i class="ti ti-droplet"></i></div>
-          <div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:var(--orange-600);line-height:1;margin-bottom:6px">1,250 <span style="font-size:20px">L</span></div>
+          <div id="impact-water-saved" style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:var(--orange-600);line-height:1;margin-bottom:6px">1,250 <span style="font-size:20px">L</span></div>
           <h3>Nước tiết kiệm</h3>
           <p class="text-muted" style="font-size:13px">Tương đương 25 ngày sinh hoạt</p>
         </div>
@@ -3187,7 +3192,7 @@
             <button class="chip" style="font-size:12px;padding:6px 12px">Tất cả</button>
           </div>
         </div>
-        <div class="chart-bars">
+        <div class="chart-bars" id="impact-monthly-chart">
           <div class="chart-bar"><div class="chart-bar-fill" style="height:50%" data-val="4.5kg"></div><div class="chart-bar-label">T12</div></div>
           <div class="chart-bar"><div class="chart-bar-fill" style="height:62%" data-val="5.8kg"></div><div class="chart-bar-label">T1</div></div>
           <div class="chart-bar"><div class="chart-bar-fill" style="height:75%" data-val="7.2kg"></div><div class="chart-bar-label">T2</div></div>
@@ -3218,7 +3223,7 @@
       <div class="grid-2" style="gap:24px">
         <div class="card">
           <h3 style="margin-bottom:18px"><i class="ti ti-trophy" style="color:var(--orange-500)"></i> Huy hiệu đạt được</h3>
-          <div class="badge-grid">
+          <div class="badge-grid" id="impact-badge-grid">
             <div class="badge-tile"><div class="badge-emo">🌱</div><div class="badge-name">Người mới</div></div>
             <div class="badge-tile"><div class="badge-emo">🌳</div><div class="badge-name">10kg cứu</div></div>
             <div class="badge-tile"><div class="badge-emo">🌿</div><div class="badge-name">25kg cứu</div></div>
@@ -3231,7 +3236,7 @@
         </div>
         <div class="card">
           <h3 style="margin-bottom:18px"><i class="ti ti-medal" style="color:var(--orange-500)"></i> Bảng xếp hạng tuần</h3>
-          <div style="display:flex;flex-direction:column;gap:10px">
+          <div id="impact-leaderboard" style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:var(--soft)"><span style="font-size:24px">🥇</span><div class="avatar" style="background:linear-gradient(135deg,#ec4899,#be123c)">LH</div><span style="flex:1;font-weight:700">Lê Hằng</span><span style="font-weight:800;color:var(--green-800)">12.4kg</span></div>
             <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:var(--soft)"><span style="font-size:24px">🥈</span><div class="avatar" style="background:linear-gradient(135deg,#3b82f6,#4338ca)">TM</div><span style="flex:1;font-weight:700">Trần Minh</span><span style="font-weight:800;color:var(--green-800)">9.8kg</span></div>
             <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:var(--soft)"><span style="font-size:24px">🥉</span><div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706)">NA</div><span style="flex:1;font-weight:700">Ngọc Ánh</span><span style="font-weight:800;color:var(--green-800)">7.2kg</span></div>
@@ -3245,11 +3250,11 @@
       <div class="card" style="margin-top:24px">
         <h3 style="margin-bottom:18px"><i class="ti ti-target" style="color:var(--orange-500)"></i> Mục tiêu tháng 5</h3>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span class="text-muted" style="font-size:13px">Cứu 10kg thực phẩm</span>
-          <span class="fw-800" style="color:var(--green-800)">6.8 / 10 kg (68%)</span>
+          <span id="impact-goal-label" class="text-muted" style="font-size:13px">Cứu 10kg thực phẩm</span>
+          <span id="impact-goal-progress" class="fw-800" style="color:var(--green-800)">6.8 / 10 kg (68%)</span>
         </div>
-        <div style="height:12px;background:var(--soft);border-radius:6px;overflow:hidden"><div style="width:68%;height:100%;background:linear-gradient(90deg,var(--green-700),var(--orange-500))"></div></div>
-        <p class="text-muted" style="font-size:13px;margin-top:14px">Còn <strong style="color:var(--orange-500)">3.2kg</strong> nữa là hoàn thành mục tiêu! Bạn sẽ nhận huy hiệu <strong>🏆 50kg cứu</strong> nếu duy trì tiến độ này.</p>
+        <div style="height:12px;background:var(--soft);border-radius:6px;overflow:hidden"><div id="impact-goal-bar" style="width:68%;height:100%;background:linear-gradient(90deg,var(--green-700),var(--orange-500))"></div></div>
+        <p id="impact-goal-note" class="text-muted" style="font-size:13px;margin-top:14px">Còn <strong style="color:var(--orange-500)">3.2kg</strong> nữa là hoàn thành mục tiêu! Bạn sẽ nhận huy hiệu <strong>🏆 50kg cứu</strong> nếu duy trì tiến độ này.</p>
       </div>
     </div>
   </section>
@@ -3341,8 +3346,8 @@
         </div>
         <div style="display:flex;gap:18px;flex-wrap:wrap">
           <div style="text-align:center"><div style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:#fff" id="acc-stat-orders">0</div><div style="font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em">Đơn hàng</div></div>
-          <div style="text-align:center"><div style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:var(--orange-500)">0₫</div><div style="font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em">Đã tiết kiệm</div></div>
-          <div style="text-align:center"><div style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:#fff">0kg</div><div style="font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em">Cứu được</div></div>
+          <div style="text-align:center"><div id="acc-stat-saved-money" style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:var(--orange-500)">0₫</div><div style="font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em">Đã tiết kiệm</div></div>
+          <div style="text-align:center"><div id="acc-stat-food-saved" style="font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:#fff">0kg</div><div style="font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em">Cứu được</div></div>
         </div>
       </div>
     </div>
@@ -3996,6 +4001,8 @@ function fallbackProductFromInput(input) {
   const price = Number(input.price ?? input.price_cents) || 0;
   const imageUrl = htmlSafe(input.image_url || '');
   const name = htmlSafe(input.name || 'Sản phẩm FoodSave');
+  const rawExpiresHrs = Number(input.expiresHrs);
+  const expiresHrs = Number.isFinite(rawExpiresHrs) ? rawExpiresHrs : 24;
   return {
     id: productIdKey(input.id),
     name: input.name || 'Sản phẩm FoodSave',
@@ -4007,10 +4014,11 @@ function fallbackProductFromInput(input) {
       : (input.emoji || '🍽️'),
     store: input.store || input.store_name || 'FoodSave',
     storeId: input.store_id ?? input.storeId ?? 0,
-    distance: Number(input.distance) || 0,
+    distance: Number(input.distance_km ?? input.distance) || 0,
+    distanceText: input.distance_text || input.distanceText || '',
     original: Number(input.original ?? input.original_price_cents ?? price) || price,
-    label: input.label || 'green',
-    expiresHrs: Number(input.expiresHrs) || 24,
+    label: labelFromExpiresHrs(expiresHrs, input.label || 'green'),
+    expiresHrs,
     stock: Number(input.stock_quantity ?? input.stock) || 0,
     cat: input.category || input.cat || 'other',
     rating: Number(input.rating) || 0,
@@ -4098,12 +4106,28 @@ function expiresText(hrs) {
   return Math.floor(hrs/24) + ' ngày';
 }
 
+function labelFromExpiresHrs(hrs, fallback='green') {
+  const value = Number(hrs);
+  if (!Number.isFinite(value)) return fallback;
+  if (value <= 12) return 'red';
+  if (value <= 24) return 'yellow';
+  return 'green';
+}
+
 function labelText(label) {
-  return { green: '🟢 Còn dài', yellow: '🟡 Cận hạn', red: '🔴 Khẩn cấp' }[label];
+  return { green: '🟢 3-5 ngày', yellow: '🟡 ≤24 giờ', red: '🔴 ≤12 giờ' }[label];
 }
 
 function labelTag(label) {
   return { green: 'tag-green', yellow: 'tag-yellow', red: 'tag-red' }[label];
+}
+
+function formatDistanceDisplay(distance, distanceText='') {
+  if (distanceText) return distanceText;
+  const value = Number(distance);
+  if (!Number.isFinite(value) || value <= 0) return 'Bật GPS';
+  if (value < 1) return Math.round(value * 1000) + 'm';
+  return value.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + 'km';
 }
 
 // ============ NAV ============
@@ -4482,6 +4506,7 @@ function renderProductCard(p) {
     ? `<span class="free">MIỄN PHÍ</span>`
     : `<strong>${fmt(p.price)}</strong><del>${fmt(p.original)}</del>`;
   const isFav = favorites.has(productIdKey(p.id));
+  const distance = formatDistanceDisplay(p.distance, p.distanceText);
   return `
     <div class="product" onclick="openProduct(${productArg})">
       <div class="product-art">
@@ -4493,7 +4518,7 @@ function renderProductCard(p) {
         <div class="product-store"><i class="ti ti-building-store"></i> ${p.store}</div>
         <div class="product-name">${p.name}</div>
         <div class="product-meta">
-          <span><i class="ti ti-map-pin"></i> ${p.distance}km</span>
+          <span><i class="ti ti-map-pin"></i> ${distance}</span>
           <span><i class="ti ti-clock"></i> ${expiresText(p.expiresHrs)}</span>
           <span><i class="ti ti-star-filled" style="color:var(--orange-500)"></i> ${p.rating}</span>
         </div>
@@ -4515,7 +4540,7 @@ function renderHome() {
         <div style="display:flex;gap:10px;align-items:center"><div style="font-size:32px">${s.logo}</div><div><div class="store-name">${s.name}</div><div class="store-addr"><i class="ti ti-map-pin"></i> ${s.addr.split(',')[1]}</div></div></div>
         <span class="store-rating"><i class="ti ti-star-filled"></i> ${s.rating}</span>
       </div>
-      <div class="store-meta"><span class="text-muted">${s.distance}km · ${s.hours}</span><span class="tag tag-green">${s.products} sản phẩm</span></div>
+      <div class="store-meta"><span class="text-muted">${formatDistanceDisplay(s.distance, s.distanceText)} · ${s.hours}</span><span class="tag tag-green">${s.products} sản phẩm</span></div>
     </div>
   `).join('');
 
@@ -4536,7 +4561,10 @@ function viewLatestPending() {
 
 // ============ MARKETPLACE ============
 function renderMarket() {
-  if (window.__foodsaveSupabaseProductsReady && typeof window.renderSupabaseProductList === 'function') {
+  const nearbyLocation = window.FS && window.FS.sync && typeof window.FS.sync.getNearbyLocation === 'function'
+    ? window.FS.sync.getNearbyLocation()
+    : null;
+  if (!nearbyLocation && window.__foodsaveSupabaseProductsReady && typeof window.renderSupabaseProductList === 'function') {
     window.renderSupabaseProductList(window.foodsaveSupabaseProducts || []);
     return;
   }
@@ -4558,7 +4586,7 @@ function renderMarket() {
   else if (price === 'gt50') list = list.filter(p => p.price > 50000);
 
   const dist = $('.flt-dist:checked')?.value;
-  if (dist !== 'all') list = list.filter(p => p.distance * 1000 <= parseInt(dist));
+  if (dist !== 'all') list = list.filter(p => (p.distanceText || Number(p.distance) > 0) && p.distance * 1000 <= parseInt(dist));
 
   const disc = $('.flt-disc:checked')?.value;
   if (disc !== 'all') {
@@ -4596,6 +4624,61 @@ function clearFilters() {
   if ($('#market-search')) $('#market-search').value = '';
   renderMarket();
 }
+
+function syncNearbyStatus(location) {
+  const status = $('#nearby-status');
+  const clearBtn = $('#nearby-clear-btn');
+  const gpsBtn = $('#nearby-gps-btn');
+  if (!status) return;
+  if (location && Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
+    status.textContent = `Đang ưu tiên deal trong ${location.radiusKm || 5}km gần bạn`;
+    status.style.color = 'var(--green-800)';
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+    if (gpsBtn) gpsBtn.innerHTML = '<i class="ti ti-current-location"></i> Cập nhật GPS';
+  } else {
+    status.textContent = 'GPS chưa bật';
+    status.style.color = 'var(--muted)';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (gpsBtn) gpsBtn.innerHTML = '<i class="ti ti-current-location"></i> Dùng GPS';
+  }
+}
+
+async function enableNearbyDeals() {
+  if (!window.FS || !window.FS.sync || typeof window.FS.sync.enableNearbyDeals !== 'function') {
+    toast('Tính năng GPS chưa sẵn sàng', 'warn');
+    return;
+  }
+  try {
+    toast('Đang lấy vị trí của bạn...', 'info');
+    const data = await window.FS.sync.enableNearbyDeals();
+    syncNearbyStatus(window.FOODSAVE_NEARBY_LOCATION);
+    if ($('#sort-select')) $('#sort-select').value = 'nearest';
+    renderMarket();
+    renderHome();
+    toast(`Đã ưu tiên ${data.products.length} deal gần bạn`, 'info');
+  } catch (error) {
+    toast(error.message || 'Không lấy được vị trí GPS', 'warn');
+  }
+}
+
+async function clearNearbyDeals() {
+  if (!window.FS || !window.FS.sync || typeof window.FS.sync.clearNearbyLocation !== 'function') return;
+  await window.FS.sync.clearNearbyLocation();
+  syncNearbyStatus(null);
+  renderMarket();
+  renderHome();
+  toast('Đã tắt ưu tiên theo GPS', 'info');
+}
+
+window.addEventListener('foodsave:nearby-location', (event) => {
+  syncNearbyStatus(event.detail && event.detail.location);
+});
+
+setTimeout(() => {
+  if (window.FS && window.FS.sync && typeof window.FS.sync.getNearbyLocation === 'function') {
+    syncNearbyStatus(window.FS.sync.getNearbyLocation());
+  }
+}, 800);
 
 function toggleLabelFilter(label) {
   const cb = document.querySelector(`.flt-label[value="${label}"]`);
@@ -4728,7 +4811,7 @@ function renderProductDetail() {
     ${priceHtml}
     <div class="card-tight" style="background:var(--soft);border:none;margin-bottom:18px">
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📍 Cửa hàng</span><a class="fw-800" onclick="openStore(${htmlSafe(jsArg(p.storeId))})">${p.store}</a></div>
-      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📏 Khoảng cách</span><span class="fw-800">${p.distance} km</span></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📏 Khoảng cách</span><span class="fw-800">${formatDistanceDisplay(p.distance, p.distanceText)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">⏱ HSD còn lại</span><span class="fw-800 text-orange">${expiresText(p.expiresHrs)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">📦 Số lượng còn</span><span class="fw-800">${p.stock} sản phẩm</span></div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span class="text-muted">🕒 Khung giờ nhận</span><span class="fw-800">9:00 – 22:00</span></div>
@@ -4815,7 +4898,7 @@ function renderStoreDetail() {
             <span><i class="ti ti-star-filled" style="color:var(--orange-500)"></i> <strong>${s.rating}</strong> (231 đánh giá)</span>
             <span><i class="ti ti-clock"></i> ${s.hours} ${s.opening ? '<span class="tag tag-green" style="margin-left:6px">Đang mở</span>' : ''}</span>
             <span><i class="ti ti-package"></i> ${storeProducts.length} sản phẩm cứu</span>
-            <span><i class="ti ti-map"></i> ${s.distance} km</span>
+            <span><i class="ti ti-map"></i> ${formatDistanceDisplay(s.distance, s.distanceText)}</span>
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-direction:column">
@@ -5579,7 +5662,7 @@ function renderOrderDetail() {
     $('#od-store').innerHTML = `
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px"><div style="font-size:42px">${store.logo}</div><div><div class="fw-800" style="font-size:15px">${store.name}</div><div class="text-muted" style="font-size:12px"><i class="ti ti-map-pin"></i> ${store.addr}</div></div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
-        <div><span class="text-muted">📏 Khoảng cách:</span> <strong>${store.distance} km</strong></div>
+        <div><span class="text-muted">📏 Khoảng cách:</span> <strong>${formatDistanceDisplay(store.distance, store.distanceText)}</strong></div>
         <div><span class="text-muted">🕒 Giờ mở:</span> <strong>${store.hours}</strong></div>
         <div><span class="text-muted">⏰ Khung nhận:</span> <strong>${o.pickup}</strong></div>
         <div><span class="text-muted">📞 Hotline:</span> <strong>1900 1545</strong></div>
@@ -5660,7 +5743,7 @@ function renderFavorites() {
   $('#fav-stores').innerHTML = stores.length ? stores.map(s => `
     <div class="store-card" onclick="openStore(${htmlSafe(jsArg(s.id))})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="display:flex;gap:10px;align-items:center"><div style="font-size:32px">${s.logo}</div><div><div class="store-name">${s.name}</div><div class="store-addr"><i class="ti ti-map-pin"></i> ${s.addr.split(',')[1]}</div></div></div><span class="store-rating"><i class="ti ti-star-filled"></i> ${s.rating}</span></div>
-      <div class="store-meta"><span class="text-muted">${s.distance}km · ${s.hours}</span><span class="tag tag-green">${s.products} sản phẩm</span></div>
+      <div class="store-meta"><span class="text-muted">${formatDistanceDisplay(s.distance, s.distanceText)} · ${s.hours}</span><span class="tag tag-green">${s.products} sản phẩm</span></div>
     </div>`).join('') : `<div class="empty" style="grid-column:1/-1"><div class="empty-emo">🏪</div><h3>Chưa có cửa hàng yêu thích</h3><p>Lưu cửa hàng yêu thích để theo dõi sản phẩm mới</p></div>`;
 }
 
@@ -5699,7 +5782,7 @@ function renderMap() {
   $('#map-store-list').innerHTML = STORES.map(s => `
     <div class="store-card" onclick="openStore(${htmlSafe(jsArg(s.id))})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="store-name" style="font-size:14px">${s.name}</div><span class="store-rating" style="font-size:12px"><i class="ti ti-star-filled"></i> ${s.rating}</span></div>
-      <div class="store-addr" style="font-size:11px;margin-bottom:10px"><i class="ti ti-map-pin"></i> ${s.distance}km · ${s.products} sản phẩm</div>
+      <div class="store-addr" style="font-size:11px;margin-bottom:10px"><i class="ti ti-map-pin"></i> ${formatDistanceDisplay(s.distance, s.distanceText)} · ${s.products} sản phẩm</div>
       <button class="btn btn-ghost btn-sm btn-block"><i class="ti ti-arrow-right"></i> Xem chi tiết</button>
     </div>`).join('');
 }
@@ -6324,6 +6407,7 @@ function updateReputationRules(){
       product.image_url,
       ...(Array.isArray(product.images) ? product.images : [])
     ].filter(Boolean);
+    const expiresHrs = Number(product.expiresHrs ?? hoursUntilProductDate(product.expires_at)) || 0;
 
     return {
       id: productId,
@@ -6336,11 +6420,12 @@ function updateReputationRules(){
       name: product.name || 'Sản phẩm FoodSave',
       store: store.name || product.store_name || product.store || 'FoodSave',
       storeId: product.store_id ?? product.storeId ?? store.id ?? 0,
-      distance: Number(product.distance) || 0,
+      distance: Number(product.distance_km ?? product.distance) || 0,
+      distanceText: product.distance_text || product.distanceText || '',
       price,
       original,
-      label: product.label || 'green',
-      expiresHrs: Number(product.expiresHrs ?? hoursUntilProductDate(product.expires_at)) || 0,
+      label: labelFromExpiresHrs(expiresHrs, product.label || 'green'),
+      expiresHrs,
       stock: Number(product.stock_quantity ?? product.stock) || 0,
       cat: product.category || product.cat || 'other',
       rating: Number(product.rating) || 0,
@@ -6407,6 +6492,11 @@ function updateReputationRules(){
       const price = formatProductPriceK(product.price_cents);
       const description = escapeProductHtml(String(product.description || '').trim() || 'Đang cập nhật');
       const imageUrl = escapeProductHtml(product.image_url || '');
+      const store = product.stores || product.store || {};
+      const storeName = escapeProductHtml(store.name || product.store_name || product.store || 'FoodSave');
+      const distance = formatDistanceDisplay(product.distance_km ?? product.distance, product.distance_text || '');
+      const expiresHrs = Number(product.expiresHrs ?? hoursUntilProductDate(product.expires_at)) || 0;
+      const label = labelFromExpiresHrs(expiresHrs, product.label || 'green');
 
       return `
         <article class="product product-card" data-product-id="${productId}" role="button" tabindex="0">
@@ -6416,7 +6506,13 @@ function updateReputationRules(){
               : `<div style="width:100%;height:100%;display:grid;place-items:center;background:linear-gradient(135deg,var(--green-100),var(--orange-100));color:var(--green-900);font-size:42px"><i class="ti ti-photo"></i></div>`}
           </div>
           <div class="product-body">
+            <div class="product-store"><i class="ti ti-building-store"></i> ${storeName}</div>
             <div class="product-name">${name}</div>
+            <div class="product-meta">
+              <span><i class="ti ti-map-pin"></i> ${distance}</span>
+              <span><i class="ti ti-clock"></i> ${expiresText(expiresHrs)}</span>
+            </div>
+            <span class="tag ${labelTag(label)}" style="width:max-content">${labelText(label)}</span>
             <div class="price"><strong>${price}</strong></div>
             <p class="text-muted" style="font-size:13px;line-height:1.5;margin:0">${description}</p>
             <div class="product-actions">
@@ -6446,10 +6542,17 @@ function updateReputationRules(){
 
       window.foodsaveSupabaseProducts = Array.isArray(data) ? data : [];
       window.__foodsaveSupabaseProductsReady = true;
-      renderSupabaseProductList(window.foodsaveSupabaseProducts);
+      const nearbyLocation = window.FS && window.FS.sync && typeof window.FS.sync.getNearbyLocation === 'function'
+        ? window.FS.sync.getNearbyLocation()
+        : null;
+      if (!nearbyLocation) renderSupabaseProductList(window.foodsaveSupabaseProducts);
+      else if (typeof renderMarket === 'function') renderMarket();
     } catch (error) {
       console.error('[FoodSave] Không thể tải products từ Supabase:', error);
-      if (container) {
+      const nearbyLocation = window.FS && window.FS.sync && typeof window.FS.sync.getNearbyLocation === 'function'
+        ? window.FS.sync.getNearbyLocation()
+        : null;
+      if (container && !nearbyLocation) {
         container.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-emo">⚠️</div><h3>Không tải được sản phẩm</h3><p>Vui lòng kiểm tra kết nối Supabase hoặc quyền đọc bảng products.</p></div>';
       }
       if (typeof toast === 'function') toast('Không thể tải sản phẩm từ Supabase.', 'warn');
@@ -6969,6 +7072,88 @@ function updateReputationRules(){
       if (signupTermsInput.checked) setError('signup-detail-error', '');
     });
   }
+
+  (function(){
+    function ecoSummary(){
+      return window.ECO_IMPACT&&window.ECO_IMPACT.me?window.ECO_IMPACT.me:null;
+    }
+    function fmtNumber(value,digits){
+      return (Number(value)||0).toLocaleString('vi-VN',{maximumFractionDigits:digits});
+    }
+    function fmtKg(value){
+      return `${fmtNumber(value,1)} <span style="font-size:20px">kg</span>`;
+    }
+    function fmtMoney(cents){
+      return `${Math.round((Number(cents)||0)/100).toLocaleString('vi-VN')}₫`;
+    }
+    function initials(name){
+      return String(name||'FS').split(/\s+/).filter(Boolean).map(part=>part[0]).join('').slice(0,2).toUpperCase()||'FS';
+    }
+    function badgeIcon(id){
+      return ({'food-5':'🌱','food-25':'🌿','food-100':'🏆','orders-10':'⭐'}[id]||'🌱');
+    }
+    function escapeHtml(value){
+      return String(value||'').replace(/[&<>"']/g,function(ch){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);});
+    }
+    function medal(rank){
+      return rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':String(rank);
+    }
+    function setHtml(id,html){
+      const el=document.getElementById(id);
+      if(el)el.innerHTML=html;
+    }
+    function renderEcoImpact(){
+      const summary=ecoSummary();
+      if(!summary||!summary.totals)return;
+      const totals=summary.totals;
+      setHtml('impact-food-saved',fmtKg(totals.food_saved_kg));
+      setHtml('impact-co2-saved',fmtKg(totals.co2_avoided_kg));
+      setHtml('impact-water-saved',`${fmtNumber(totals.water_saved_liters,0)} <span style="font-size:20px">L</span>`);
+      setHtml('impact-meals-note',`Tương đương ${fmtNumber(totals.meals_equivalent,0)} bữa ăn được cứu khỏi lãng phí`);
+      setHtml('acc-stat-saved-money',fmtMoney(totals.money_saved_cents));
+      setHtml('acc-stat-food-saved',`${fmtNumber(totals.food_saved_kg,1)}kg`);
+
+      const chart=document.getElementById('impact-monthly-chart');
+      const series=Array.isArray(summary.monthly_series)?summary.monthly_series:[];
+      if(chart&&series.length){
+        const max=Math.max(1,...series.map(point=>Number(point.food_saved_kg)||0));
+        chart.innerHTML=series.map(point=>{
+          const value=Number(point.food_saved_kg)||0;
+          const height=Math.max(4,Math.round(value/max*95));
+          return `<div class="chart-bar"><div class="chart-bar-fill" style="height:${height}%" data-val="${fmtNumber(value,1)}kg"></div><div class="chart-bar-label">${point.label||point.month}</div></div>`;
+        }).join('');
+      }
+
+      const badgeGrid=document.getElementById('impact-badge-grid');
+      if(badgeGrid&&Array.isArray(summary.badges)){
+        badgeGrid.innerHTML=summary.badges.map(badge=>`<div class="badge-tile${badge.earned?'':' locked'}"><div class="badge-emo">${badgeIcon(badge.id)}</div><div class="badge-name">${escapeHtml(badge.name)}</div></div>`).join('');
+      }
+
+      const leaderboard=document.getElementById('impact-leaderboard');
+      const rows=window.ECO_IMPACT&&Array.isArray(window.ECO_IMPACT.leaderboard)?window.ECO_IMPACT.leaderboard:[];
+      if(leaderboard&&rows.length){
+        leaderboard.innerHTML=rows.slice(0,5).map(entry=>`<div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:var(--soft)"><span style="width:32px;text-align:center;font-size:${entry.rank<=3?'24px':'13px'};font-weight:900;color:var(--green-800)">${medal(entry.rank)}</span><div class="avatar">${initials(entry.display_name)}</div><span style="flex:1;font-weight:700">${escapeHtml(entry.display_name)}</span><span style="font-weight:800;color:var(--green-800)">${fmtNumber(entry.food_saved_kg,1)}kg</span></div>`).join('');
+      }
+
+      if(summary.goal){
+        setHtml('impact-goal-label',`Cứu ${fmtNumber(summary.goal.target_kg,1)}kg thực phẩm`);
+        setHtml('impact-goal-progress',`${fmtNumber(summary.goal.current_kg,1)} / ${fmtNumber(summary.goal.target_kg,1)} kg (${fmtNumber(summary.goal.percent,1)}%)`);
+        const bar=document.getElementById('impact-goal-bar');
+        if(bar)bar.style.width=`${Math.min(100,Number(summary.goal.percent)||0)}%`;
+        setHtml('impact-goal-note',`Còn <strong style="color:var(--orange-500)">${fmtNumber(summary.goal.remaining_kg,1)}kg</strong> nữa là hoàn thành mục tiêu tháng này.`);
+      }
+    }
+    window.renderEcoImpact=renderEcoImpact;
+    const originalNavTo=window.navTo;
+    if(typeof originalNavTo==='function'){
+      window.navTo=function(){
+        const result=originalNavTo.apply(this,arguments);
+        setTimeout(renderEcoImpact,0);
+        return result;
+      };
+    }
+    [200,800,1600,3000].forEach(delay=>setTimeout(renderEcoImpact,delay));
+  })();
 
   configureOtpLoginUi();
 </script>

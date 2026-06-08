@@ -10,6 +10,11 @@ export const productListQuerySchema = z.object({
   label: productLabelSchema.optional(),
   store_id: z.string().uuid().optional(),
   donation: z.coerce.boolean().optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
+  radius_km: z.coerce.number().positive().max(50).default(5),
   min_price_cents: z.coerce.number().int().min(0).optional(),
   max_price_cents: z.coerce.number().int().min(0).optional(),
   sort: z.enum(["nearest", "urgent", "discount", "price_low", "price_high", "rating", "newest"]).default("newest")
@@ -26,6 +31,11 @@ export const storeListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().trim().min(1).max(120).optional(),
   district: z.string().trim().min(1).max(80).optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
+  radius_km: z.coerce.number().positive().max(50).default(5),
   verified: z.coerce.boolean().optional(),
   open: z.coerce.boolean().optional()
 }).strict();
@@ -62,9 +72,11 @@ const createProductBodyBaseSchema = z.object({
   category: z.string().trim().min(2).max(80),
   price_cents: z.number().int().min(0),
   original_price_cents: z.number().int().min(0),
-  label: productLabelSchema,
+  label: productLabelSchema.optional(),
   expires_at: z.string().datetime(),
   stock_quantity: z.number().int().min(0),
+  estimated_weight_kg: z.number().positive().max(1000).nullable().optional(),
+  servings_count: z.number().int().positive().max(10000).nullable().optional(),
   is_donation: z.boolean().default(false),
   is_active: z.boolean().default(true)
 }).strict();

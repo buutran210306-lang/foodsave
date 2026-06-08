@@ -1,4 +1,5 @@
 import { handleSupabaseError, supabaseAdmin } from "./supabaseService";
+import { productExpiryLabelService } from "./productExpiryLabelService";
 
 export const partnerService = {
   async getDashboard(ownerId: string): Promise<unknown> {
@@ -10,10 +11,13 @@ export const partnerService = {
     if (storeError) handleSupabaseError(storeError, "Failed to load stores");
     const storeIds = (stores ?? []).map((store) => (store as { id: string }).id);
     const emptyStoreId = "00000000-0000-0000-0000-000000000000";
+    const nowIso = new Date().toISOString();
+
+    await productExpiryLabelService.syncProductExpiryLabels();
 
     const [{ data: orders, error: orderError }, { data: products, error: productError }, { data: complaints, error: complaintError }, { data: donations, error: donationError }] = await Promise.all([
       supabaseAdmin.from("orders").select("id,status,total_cents,created_at").in("store_id", storeIds.length > 0 ? storeIds : [emptyStoreId]),
-      supabaseAdmin.from("products").select("id,label,stock_quantity,is_active").in("store_id", storeIds.length > 0 ? storeIds : [emptyStoreId]),
+      supabaseAdmin.from("products").select("id,label,stock_quantity,is_active,expires_at").in("store_id", storeIds.length > 0 ? storeIds : [emptyStoreId]).gte("expires_at", nowIso),
       supabaseAdmin.from("complaints").select("id,status,priority").in("store_id", storeIds.length > 0 ? storeIds : [emptyStoreId]),
       supabaseAdmin.from("donations").select("id,status,weight_kg").in("store_id", storeIds.length > 0 ? storeIds : [emptyStoreId])
     ]);
@@ -24,6 +28,7 @@ export const partnerService = {
     if (donationError) handleSupabaseError(donationError, "Failed to load partner donations");
 
     const completedOrders = (orders ?? []).filter((order) => (order as { status: string }).status === "completed");
+    const completedDonations = (donations ?? []).filter((donation) => (donation as { status: string }).status === "completed");
     const totalRevenue = completedOrders.reduce((sum, order) => sum + ((order as { total_cents: number }).total_cents ?? 0), 0);
 
     return {
@@ -36,8 +41,8 @@ export const partnerService = {
         active_product_count: (products ?? []).filter((product) => (product as { is_active: boolean }).is_active).length,
         red_label_product_count: (products ?? []).filter((product) => (product as { label: string }).label === "red").length,
         open_complaint_count: (complaints ?? []).filter((complaint) => (complaint as { status: string }).status === "open").length,
-        donation_count: (donations ?? []).length,
-        donated_weight_kg: (donations ?? []).reduce((sum, donation) => sum + Number((donation as { weight_kg: number }).weight_kg ?? 0), 0)
+        donation_count: completedDonations.length,
+        donated_weight_kg: completedDonations.reduce((sum, donation) => sum + Number((donation as { weight_kg: number }).weight_kg ?? 0), 0)
       }
     };
   }

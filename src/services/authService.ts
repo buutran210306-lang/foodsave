@@ -1099,6 +1099,8 @@ export const authService = {
           address: body.address,
           district: body.district ?? null,
           city: body.city,
+          latitude: body.latitude ?? null,
+          longitude: body.longitude ?? null,
           status: "pending",
           service_tier: "Starter",
           opening_hours: "06:00-21:00"
@@ -1131,6 +1133,8 @@ export const authService = {
           address: body.address,
           district: body.district,
           city: body.city,
+          latitude: body.latitude,
+          longitude: body.longitude,
           representative_name: body.representative_name,
           business_license_number: body.business_license_number,
           tax_code: body.tax_code,

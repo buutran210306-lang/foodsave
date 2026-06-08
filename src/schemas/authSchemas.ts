@@ -92,6 +92,8 @@ export const registerPartnerBodySchema = z.object({
   bank_name: optionalShortTextSchema,
   bank_account_number: optionalShortTextSchema,
   bank_account_holder: optionalShortTextSchema,
+  latitude: z.coerce.number().min(-90).max(90).nullable().optional(),
+  longitude: z.coerce.number().min(-180).max(180).nullable().optional(),
   terms_accepted: z.literal(true)
 }).strict();
 

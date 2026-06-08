@@ -22,11 +22,13 @@ Production-oriented Node.js + TypeScript + Express backend for the FoodSave user
 5. Run the auth flow migration at `database/003_auth_flow.sql`.
 6. Run the OAuth auth migration at `database/004_oauth_auth_flow.sql`.
 7. Run the phone OTP auth migration at `database/005_phone_otp_auth_flow.sql`.
-8. In Supabase Auth, enable email/password sign-in and phone sign-in. Configure an SMS provider so Supabase can send OTP to real phone numbers.
-9. In Supabase Auth Providers, enable Google. In Google Cloud authorized redirect URIs, add the Supabase callback URL, for example `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`. Add the frontend URL, for example `https://YOUR_FRONTEND_DOMAIN/FOODSAVE_USER.html`, to Supabase Auth redirect URLs.
-10. In Supabase Auth Providers, enable Facebook with your Facebook App ID/secret and request `email,public_profile`. In Facebook Login valid OAuth redirect URIs, add the Supabase callback URL, for example `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`. Add the frontend URL, for example `https://YOUR_FRONTEND_DOMAIN/FOODSAVE_USER.html`, to Supabase Auth redirect URLs.
-11. In Supabase Auth Email Templates, make sure the OTP email includes the 6-digit token, usually via the template variable `{{ .Token }}`.
-12. Create manual users only when needed. Normal registration should call the backend auth endpoints with one of:
+8. Run the eco impact tracker migration at `database/006_eco_impact_tracker.sql`.
+9. Run the nearby GPS deals indexes at `database/007_store_geo_nearby_deals.sql`.
+10. In Supabase Auth, enable email/password sign-in and phone sign-in. Configure an SMS provider so Supabase can send OTP to real phone numbers.
+11. In Supabase Auth Providers, enable Google. In Google Cloud authorized redirect URIs, add the Supabase callback URL, for example `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`. Add the frontend URL, for example `https://YOUR_FRONTEND_DOMAIN/FOODSAVE_USER.html`, to Supabase Auth redirect URLs.
+12. In Supabase Auth Providers, enable Facebook with your Facebook App ID/secret and request `email,public_profile`. In Facebook Login valid OAuth redirect URIs, add the Supabase callback URL, for example `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`. Add the frontend URL, for example `https://YOUR_FRONTEND_DOMAIN/FOODSAVE_USER.html`, to Supabase Auth redirect URLs.
+13. In Supabase Auth Email Templates, make sure the OTP email includes the 6-digit token, usually via the template variable `{{ .Token }}`.
+14. Create manual users only when needed. Normal registration should call the backend auth endpoints with one of:
    - `customer`
    - `partner`
    - `charity`
@@ -192,6 +194,11 @@ or:
 - `POST /donations` partner/admin
 - `PATCH /donations/:id/accept` charity/admin
 - `PATCH /donations/:id/status`
+- `GET /eco-impact/me`
+- `GET /eco-impact/partner` partner/admin
+- `GET /eco-impact/charity` charity/admin
+- `GET /eco-impact/platform` admin
+- `GET /eco-impact/leaderboard`
 - `GET /charity/gallery`
 - `GET /charity/profiles`
 - `POST /charity/profiles`
@@ -256,6 +263,33 @@ Replace the existing localStorage sync methods with HTTP calls:
 - `FS.sync.getComplaints` -> `GET /orders/complaints/list`
 - `FS.sync.getNotifs` -> `GET /notifications`
 - `FS.sync.markNotifRead` -> `PATCH /notifications/:id/read`
+- `FS.sync.getEcoImpactMe` -> `GET /eco-impact/me`
+- `FS.sync.getEcoImpactPartner` -> `GET /eco-impact/partner`
+- `FS.sync.getEcoImpactCharity` -> `GET /eco-impact/charity`
+- `FS.sync.getEcoImpactPlatform` -> `GET /eco-impact/platform`
+- `FS.sync.getEcoImpactLeaderboard` -> `GET /eco-impact/leaderboard`
+
+## Eco Impact Tracker
+
+- Completed orders and completed donations create idempotent rows in `eco_impact_events`.
+- Orders use `products.estimated_weight_kg` when available and snapshot it into `order_items.product_metadata`; otherwise the service falls back to category estimates.
+- Donations use the existing `donations.weight_kg`.
+- Default factors live in `eco_impact_factors`: `2.5kg CO2/kg food`, `890L water/kg food`, and `0.35kg food/meal`.
+- User, partner, charity, and admin dashboards read from the `/eco-impact/*` endpoints through `frontend/foodsave-live-data.js` or the admin standalone fetch helper.
+
+## Product Expiry Labels
+
+- Product labels are derived from `products.expires_at`: green for the 3-5 day safe window and other products above 24 hours, yellow for 24 hours or less, and red for 12 hours or less.
+- Catalog reads sync active product labels before listing and hide expired products from customer-facing results.
+- Product create/update accepts `expires_at` as the source of truth and recalculates `label`; manual label values are ignored.
+- Checkout rejects expired products and snapshots the derived label into `order_items.product_metadata`.
+
+## Nearby GPS Deals
+
+- `GET /catalog/products` and `GET /catalog/stores` accept `lat`, `lng`, and `radius_km` query params. `latitude`/`longitude` aliases are also accepted.
+- Product results include `distance_km` and `distance_text` when a user location is provided, and `sort=nearest` orders by distance after a precise Haversine calculation.
+- The customer frontend stores the user's temporary GPS location in `localStorage["foodsave.nearby.location"]`, reloads nearby catalog data, and uses Browser Notification plus in-app notifications for nearby red/yellow or high-discount deals.
+- Partner registration now stores `latitude` and `longitude` from the address picker so new stores can participate in nearby deal discovery.
 
 ## Deployment
 

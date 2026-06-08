@@ -9,11 +9,66 @@ import type {
   VoucherListQuery
 } from "../schemas/catalogSchemas";
 import type { PaginatedResponse } from "../types/api";
-import type { Product, Store, UserRole, Voucher } from "../types/domain";
+import type { Product, ProductLabel, Store, UserRole, Voucher } from "../types/domain";
+import type { Coordinates } from "../utils/geoDistance";
+import { distanceKmBetween, formatDistanceText, geoBoundingBox, isValidCoordinates, roundDistanceKm } from "../utils/geoDistance";
+import { deriveProductLabel } from "../utils/productExpiryLabel";
+import { productExpiryLabelService } from "./productExpiryLabelService";
 import { assertOwnerOrAdmin, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
 
-const productSelect = "*, stores!inner(id,name,slug,owner_id,emoji,logo_url,address,district,city,rating,is_verified,is_open,status)";
+const productSelect = "*, stores!inner(id,name,slug,owner_id,emoji,logo_url,address,district,city,latitude,longitude,rating,is_verified,is_open,opening_hours,status)";
 const storeSelect = "*";
+const proximityCandidateLimit = 1000;
+
+const applyDerivedProductLabel = <T extends { expires_at: string; label: ProductLabel }>(product: T): T => ({
+  ...product,
+  label: deriveProductLabel(product.expires_at)
+});
+
+const queryLocation = (query: ProductListQuery | StoreListQuery): Coordinates | null => {
+  const latitude = query.latitude ?? query.lat;
+  const longitude = query.longitude ?? query.lng;
+  const coordinates = { latitude, longitude };
+  return isValidCoordinates(coordinates) ? coordinates : null;
+};
+
+const productDistance = (product: Product, userLocation: Coordinates): Product => {
+  const store = product.stores;
+  const storeLocation = {
+    latitude: Number(store?.latitude),
+    longitude: Number(store?.longitude)
+  };
+
+  if (!isValidCoordinates(storeLocation)) {
+    return { ...product, distance_km: null, distance_text: null };
+  }
+
+  const rawDistanceKm = distanceKmBetween(userLocation, storeLocation);
+  const distanceKm = roundDistanceKm(rawDistanceKm);
+  const distanceText = formatDistanceText(rawDistanceKm);
+  const productWithDistance = {
+    ...product,
+    distance_km: distanceKm,
+    distance_text: distanceText
+  };
+  return store ? { ...productWithDistance, stores: { ...store, distance_km: distanceKm, distance_text: distanceText } } : productWithDistance;
+};
+
+const storeDistance = (store: Store, userLocation: Coordinates): Store => {
+  const storeLocation = {
+    latitude: Number(store.latitude),
+    longitude: Number(store.longitude)
+  };
+
+  if (!isValidCoordinates(storeLocation)) return { ...store, distance_km: null, distance_text: null };
+  const rawDistanceKm = distanceKmBetween(userLocation, storeLocation);
+  const distanceKm = roundDistanceKm(rawDistanceKm);
+  return {
+    ...store,
+    distance_km: distanceKm,
+    distance_text: formatDistanceText(rawDistanceKm)
+  };
+};
 
 const getStoreOwner = async (storeId: string): Promise<string> => {
   const { data, error } = await supabaseAdmin
@@ -29,14 +84,18 @@ const getStoreOwner = async (storeId: string): Promise<string> => {
 
 export const catalogService = {
   async listProducts(query: ProductListQuery): Promise<PaginatedResponse<Product>> {
+    await productExpiryLabelService.syncProductExpiryLabels();
+
     const { from, to } = getRange(query);
+    const nowIso = new Date().toISOString();
+    const userLocation = queryLocation(query);
     let request = supabaseAdmin
       .from("products")
       .select(productSelect, { count: "exact" })
       .eq("is_active", true)
       .gt("stock_quantity", 0)
-      .eq("stores.status", "active")
-      .range(from, to);
+      .gte("expires_at", nowIso)
+      .eq("stores.status", "active");
 
     if (query.search) {
       request = request.or(`name.ilike.%${query.search}%,description.ilike.%${query.search}%`);
@@ -48,50 +107,108 @@ export const catalogService = {
     if (query.min_price_cents !== undefined) request = request.gte("price_cents", query.min_price_cents);
     if (query.max_price_cents !== undefined) request = request.lte("price_cents", query.max_price_cents);
 
+    if (userLocation) {
+      const bounds = geoBoundingBox(userLocation, query.radius_km);
+      request = request
+        .not("stores.latitude", "is", null)
+        .not("stores.longitude", "is", null)
+        .gte("stores.latitude", bounds.minLatitude)
+        .lte("stores.latitude", bounds.maxLatitude)
+        .gte("stores.longitude", bounds.minLongitude)
+        .lte("stores.longitude", bounds.maxLongitude)
+        .range(0, proximityCandidateLimit - 1);
+    } else {
+      request = request.range(from, to);
+    }
+
     if (query.sort === "urgent") request = request.order("expires_at", { ascending: true });
     if (query.sort === "discount") request = request.order("original_price_cents", { ascending: false });
     if (query.sort === "price_low") request = request.order("price_cents", { ascending: true });
     if (query.sort === "price_high") request = request.order("price_cents", { ascending: false });
     if (query.sort === "rating") request = request.order("rating", { ascending: false });
-    if (query.sort === "newest" || query.sort === "nearest") request = request.order("created_at", { ascending: false });
+    if (query.sort === "newest" || (query.sort === "nearest" && !userLocation)) request = request.order("created_at", { ascending: false });
 
     const { data, error, count } = await request;
     if (error) handleSupabaseError(error, "Failed to list products");
 
+    const products = ((data ?? []) as Product[]).map(applyDerivedProductLabel);
+    if (userLocation) {
+      let nearbyProducts = products
+        .map((product) => productDistance(product, userLocation))
+        .filter((product) => product.distance_km !== null && product.distance_km !== undefined && product.distance_km <= query.radius_km);
+
+      if (query.sort === "nearest") {
+        nearbyProducts = nearbyProducts.sort((a, b) => (a.distance_km ?? Number.POSITIVE_INFINITY) - (b.distance_km ?? Number.POSITIVE_INFINITY));
+      }
+
+      return {
+        items: nearbyProducts.slice(from, to + 1),
+        pagination: toPagination(query.page, query.limit, nearbyProducts.length)
+      };
+    }
+
     return {
-      items: (data ?? []) as Product[],
+      items: products,
       pagination: toPagination(query.page, query.limit, count ?? 0)
     };
   },
 
   async getProduct(productId: string): Promise<Product> {
+    await productExpiryLabelService.syncProductExpiryLabels();
+
     const { data, error } = await supabaseAdmin
       .from("products")
       .select(productSelect)
       .eq("id", productId)
       .eq("is_active", true)
+      .gte("expires_at", new Date().toISOString())
       .single();
 
     if (error) handleSupabaseError(error, "Failed to load product");
-    return data as Product;
+    return applyDerivedProductLabel(data as Product);
   },
 
   async listStores(query: StoreListQuery): Promise<PaginatedResponse<Store>> {
     const { from, to } = getRange(query);
+    const userLocation = queryLocation(query);
     let request = supabaseAdmin
       .from("stores")
       .select(storeSelect, { count: "exact" })
-      .eq("status", "active")
-      .range(from, to)
-      .order("rating", { ascending: false });
+      .eq("status", "active");
 
     if (query.search) request = request.or(`name.ilike.%${query.search}%,address.ilike.%${query.search}%`);
     if (query.district) request = request.eq("district", query.district);
     if (query.verified !== undefined) request = request.eq("is_verified", query.verified);
     if (query.open !== undefined) request = request.eq("is_open", query.open);
 
+    if (userLocation) {
+      const bounds = geoBoundingBox(userLocation, query.radius_km);
+      request = request
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
+        .gte("latitude", bounds.minLatitude)
+        .lte("latitude", bounds.maxLatitude)
+        .gte("longitude", bounds.minLongitude)
+        .lte("longitude", bounds.maxLongitude)
+        .range(0, proximityCandidateLimit - 1);
+    } else {
+      request = request.range(from, to).order("rating", { ascending: false });
+    }
+
     const { data, error, count } = await request;
     if (error) handleSupabaseError(error, "Failed to list stores");
+
+    if (userLocation) {
+      const nearbyStores = ((data ?? []) as Store[])
+        .map((store) => storeDistance(store, userLocation))
+        .filter((store) => store.distance_km !== null && store.distance_km !== undefined && store.distance_km <= query.radius_km)
+        .sort((a, b) => (a.distance_km ?? Number.POSITIVE_INFINITY) - (b.distance_km ?? Number.POSITIVE_INFINITY));
+
+      return {
+        items: nearbyStores.slice(from, to + 1),
+        pagination: toPagination(query.page, query.limit, nearbyStores.length)
+      };
+    }
 
     return {
       items: (data ?? []) as Store[],
@@ -146,7 +263,10 @@ export const catalogService = {
 
     const { data, error } = await supabaseAdmin
       .from("products")
-      .insert(body)
+      .insert({
+        ...body,
+        label: deriveProductLabel(body.expires_at)
+      })
       .select("*")
       .single();
 
@@ -157,23 +277,27 @@ export const catalogService = {
   async updateProduct(actorId: string, actorRole: UserRole, productId: string, body: UpdateProductBody): Promise<Product> {
     const { data: product, error: loadError } = await supabaseAdmin
       .from("products")
-      .select("id,store_id,stores!inner(owner_id)")
+      .select("id,store_id,expires_at,stores!inner(owner_id)")
       .eq("id", productId)
       .single();
 
     if (loadError) handleSupabaseError(loadError, "Failed to load product");
-    const loaded = product as { store_id: string; stores: { owner_id: string } } | null;
+    const loaded = product as { store_id: string; expires_at: string; stores: { owner_id: string } } | null;
     assertOwnerOrAdmin(requireRecord(loaded, "Product was not found").stores.owner_id, actorId, actorRole);
+    const expiresAt = body.expires_at ?? requireRecord(loaded, "Product was not found").expires_at;
 
     const { data, error } = await supabaseAdmin
       .from("products")
-      .update(body)
+      .update({
+        ...body,
+        label: deriveProductLabel(expiresAt)
+      })
       .eq("id", productId)
       .select("*")
       .single();
 
     if (error) handleSupabaseError(error, "Failed to update product");
-    return data as Product;
+    return applyDerivedProductLabel(data as Product);
   },
 
   async deleteProduct(actorId: string, actorRole: UserRole, productId: string): Promise<void> {

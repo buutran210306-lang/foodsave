@@ -473,6 +473,32 @@ function moLienQuan(t,p,rows){oD(t,Sec('Tóm tắt nghiệp vụ',R(rows))+Sec('
 
 // ===== PAGES =====
 const pg={};
+let ECO_PLATFORM=null;
+function adminApiBase(){
+const explicit=(window.FOODSAVE_API_BASE||'').replace(/\/+$/,'');
+if(explicit)return explicit;
+const loc=window.location;
+if((loc.protocol==='http:'||loc.protocol==='https:')&&loc.hostname!=='localhost'&&loc.hostname!=='127.0.0.1')return `${loc.origin}/api/v1`;
+return 'http://localhost:8080/api/v1';
+}
+function adminAuthToken(){
+try{const raw=localStorage.getItem('foodsave.auth.session');const session=raw?JSON.parse(raw):null;return session&&session.accessToken?session.accessToken:'';}catch(e){return '';}
+}
+function adminEcoTotals(){return ECO_PLATFORM&&ECO_PLATFORM.totals?ECO_PLATFORM.totals:null;}
+function adminEcoNum(v,d){return (Number(v)||0).toLocaleString('vi-VN',{maximumFractionDigits:d});}
+function adminEcoFoodSaved(){const t=adminEcoTotals();return t?`${adminEcoNum(t.food_saved_kg,1)} kg`:'1.247 kg';}
+function adminEcoCo2Note(){const t=adminEcoTotals();return t?`Tương đương ${adminEcoNum(t.co2_avoided_kg,1)} kg CO2 tránh phát thải`:'Tương đương 2.494 kg CO2 tránh phát thải';}
+function adminEcoMeals(){const t=adminEcoTotals();return t?`${adminEcoNum(t.meals_equivalent,0)} suất`:'186 suất';}
+function adminEcoDonationNote(){const t=adminEcoTotals();return t?`${adminEcoNum(t.completed_donations,0)} donation hoàn thành`:'11 tổ chức từ thiện nhận trong tuần';}
+async function syncEcoImpactPlatform(){
+const token=adminAuthToken();
+if(!token)return;
+try{
+const res=await fetch(`${adminApiBase()}/eco-impact/platform?period=all&months=6`,{headers:{Authorization:`Bearer ${token}`}});
+const payload=await res.json().catch(()=>null);
+if(res.ok&&payload&&payload.success===true){ECO_PLATFORM=payload.data;if(typeof currentPage!=='undefined'&&currentPage==='dashboard')go('dashboard');}
+}catch(e){}
+}
 pg.dashboard=()=>`
 <div class="al al-w"><strong>4 tranh chấp</strong> đang mở cần xử lý - thời hạn gần nhất còn 4 giờ</div>
 <div class="hero">
@@ -502,8 +528,8 @@ pg.dashboard=()=>`
   <div class="K" onclick="moLienQuan('Tranh chấp đang mở','disputes',[['Số hồ sơ','4'],['Hạn gần nhất','Còn 4 giờ'],['Việc cần làm','Thu thập bằng chứng, ra quyết định hoàn tiền hoặc bảo vệ đối tác']])"><div class="K-l">Tranh chấp đang mở</div><div class="K-v" style="color:var(--err)">4</div><div class="K-n">Thời hạn gần nhất: 4 giờ</div></div>
 </div>
 <div class="impact">
-  <div class="K" onclick="moLienQuan('Thực phẩm đã được cứu','inventory',[['Khối lượng','1.247 kg'],['Tác động môi trường','Tương đương 2.494 kg CO2 tránh phát thải'],['Việc cần làm','Theo dõi nhóm hàng cận hạn để giảm thất thoát thực phẩm']])"><div class="K-l">Thực phẩm đã cứu</div><div class="K-v" style="color:var(--ok)">1.247 kg</div><div class="K-n">Tương đương 2.494 kg CO2 tránh phát thải</div></div>
-  <div class="K" onclick="moLienQuan('Quyên góp thành công','inventory',[['Số suất','186 suất'],['Đơn vị tiếp nhận','11 tổ chức từ thiện'],['Việc cần làm','Xác nhận lịch nhận và ghi nhận biên bản bàn giao']])"><div class="K-l">Quyên góp thành công</div><div class="K-v" style="color:var(--pur)">186 suất</div><div class="K-n">11 tổ chức từ thiện nhận trong tuần</div></div>
+  <div class="K" onclick="moLienQuan('Thực phẩm đã được cứu','inventory',[['Khối lượng',adminEcoFoodSaved()],['Tác động môi trường',adminEcoCo2Note()],['Việc cần làm','Theo dõi nhóm hàng cận hạn để giảm thất thoát thực phẩm']])"><div class="K-l">Thực phẩm đã cứu</div><div class="K-v" style="color:var(--ok)">${adminEcoFoodSaved()}</div><div class="K-n">${adminEcoCo2Note()}</div></div>
+  <div class="K" onclick="moLienQuan('Quyên góp thành công','inventory',[['Số suất',adminEcoMeals()],['Donation hoàn thành',adminEcoDonationNote()],['Việc cần làm','Xác nhận lịch nhận và ghi nhận biên bản bàn giao']])"><div class="K-l">Quyên góp thành công</div><div class="K-v" style="color:var(--pur)">${adminEcoMeals()}</div><div class="K-n">${adminEcoDonationNote()}</div></div>
   <div class="K" onclick="moLienQuan('Tỷ lệ đúng hạn xử lý','audits',[['Tỷ lệ đúng hạn','96,8%'],['So với tuần trước','Tăng 3,1 điểm'],['Ý nghĩa','Tỷ lệ hồ sơ được xử lý trong thời hạn cam kết với người dùng và đối tác']])"><div class="K-l">Tỷ lệ đúng hạn</div><div class="K-v" style="color:var(--blue)">96,8%</div><div class="K-n">Tăng 3,1 điểm so với tuần trước</div></div>
 </div>
 <div class="split">
@@ -678,6 +704,7 @@ document.getElementById('ct').innerHTML=`<div class="page">${(pg[p]||pg.dashboar
 document.querySelectorAll('.S-i').forEach(el=>el.addEventListener('click',()=>go(el.dataset.p)));
 go('dashboard');
 syncOrdersFromSupabase();
+syncEcoImpactPlatform();
 </script>
 </body>
 </html>

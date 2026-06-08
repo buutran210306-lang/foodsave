@@ -5,6 +5,8 @@ import type { Donation, UserRole } from "../types/domain";
 import type { PaginatedResponse } from "../types/api";
 import { AppError } from "../utils/appError";
 import { generateCode, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
+import { ecoImpactService } from "./ecoImpactService";
+import { logger } from "../utils/logger";
 
 const getOwnedStoreIds = async (ownerId: string): Promise<string[]> => {
   const { data, error } = await supabaseAdmin.from("stores").select("id").eq("owner_id", ownerId);
@@ -155,12 +157,12 @@ export const donationService = {
   async updateDonationStatus(actorId: string, actorRole: UserRole, donationId: string, body: UpdateDonationStatusBody): Promise<Donation> {
     const { data: loadedDonation, error: loadError } = await supabaseAdmin
       .from("donations")
-      .select("id,store_id,charity_id,stores!inner(owner_id)")
+      .select("id,store_id,charity_id,status,stores!inner(owner_id)")
       .eq("id", donationId)
       .single();
 
     if (loadError) handleSupabaseError(loadError, "Failed to load donation");
-    const donation = requireRecord(loadedDonation as { store_id: string; charity_id: string | null; stores: { owner_id: string } } | null, "Donation was not found");
+    const donation = requireRecord(loadedDonation as { store_id: string; charity_id: string | null; status: string; stores: { owner_id: string } } | null, "Donation was not found");
 
     if (actorRole === "partner") await assertStoreOwner(donation.store_id, actorId, actorRole);
     if (actorRole === "charity") {
@@ -169,6 +171,8 @@ export const donationService = {
       }
       await assertCharityOwner(donation.charity_id, actorId, actorRole);
     }
+
+    const shouldRecordImpact = donation.status !== "completed" && body.status === "completed";
 
     const { data, error } = await supabaseAdmin
       .from("donations")
@@ -183,6 +187,13 @@ export const donationService = {
       .single();
 
     if (error) handleSupabaseError(error, "Failed to update donation");
+    if (shouldRecordImpact) {
+      try {
+        await ecoImpactService.recordDonationImpact(donationId);
+      } catch (impactError) {
+        logger.warn("Failed to record eco impact for completed donation", { donationId, error: impactError });
+      }
+    }
     return data as Donation;
   }
 };

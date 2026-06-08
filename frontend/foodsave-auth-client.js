@@ -1588,6 +1588,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const location = state.location || {};
     const finance = state.finance || {};
     const address = location.formattedAddress || [location.street, location.ward, location.district, location.city].filter(Boolean).join(", ");
+    const latitude = location.lat === "" || location.lat === undefined || location.lat === null ? undefined : Number(location.lat);
+    const longitude = location.lng === "" || location.lng === undefined || location.lng === null ? undefined : Number(location.lng);
 
     try {
       const data = await request(portalConfig.partner.registerEndpoint, {
@@ -1600,6 +1602,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
           address,
           district: location.district || undefined,
           city: location.city || "TP.HCM",
+          latitude: Number.isFinite(latitude) ? latitude : undefined,
+          longitude: Number.isFinite(longitude) ? longitude : undefined,
           business_type: profile.businessType,
           representative_name: account.representative,
           bank_name: finance.bankName,

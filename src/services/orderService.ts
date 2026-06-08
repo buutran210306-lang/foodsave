@@ -16,6 +16,9 @@ import { generateCode, getRange, handleSupabaseError, requireRecord, supabaseAdm
 import type { PaginatedResponse } from "../types/api";
 import { sellerReputationService } from "./sellerReputationService";
 import { momoPaymentService } from "./momoPaymentService";
+import { ecoImpactService } from "./ecoImpactService";
+import { logger } from "../utils/logger";
+import { deriveProductLabel } from "../utils/productExpiryLabel";
 
 interface ProductForCheckout {
   id: string;
@@ -29,7 +32,10 @@ interface ProductForCheckout {
   is_active: boolean;
   category: string;
   label: string;
+  expires_at: string;
   emoji: string | null;
+  estimated_weight_kg: number | null;
+  servings_count: number | null;
 }
 
 interface VoucherForCheckout {
@@ -83,7 +89,7 @@ const loadCheckoutProducts = async (body: CreateOrderBody): Promise<ProductForCh
   const productIds = body.items.map((item) => item.product_id);
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id,store_id,name,price_cents,original_price_cents,stock_quantity,sold_count,is_active,category,label,emoji")
+    .select("id,store_id,name,price_cents,original_price_cents,stock_quantity,sold_count,is_active,category,label,expires_at,emoji,estimated_weight_kg,servings_count")
     .in("id", productIds);
 
   if (error) handleSupabaseError(error, "Failed to load checkout products");
@@ -104,10 +110,15 @@ const loadCheckoutProducts = async (body: CreateOrderBody): Promise<ProductForCh
     throw new AppError("A single order can only contain products from one store", HTTP_STATUS.BAD_REQUEST, ERROR_CODES.VALIDATION_ERROR);
   }
 
+  const now = Date.now();
   for (const item of body.items) {
     const product = products.find((candidate) => candidate.id === item.product_id);
     if (!product?.is_active || product.stock_quantity < item.quantity) {
       throw new AppError(`Product ${item.product_id} does not have enough stock`, HTTP_STATUS.CONFLICT, ERROR_CODES.RESOURCE_CONFLICT);
+    }
+    const expiryTime = new Date(product.expires_at).getTime();
+    if (!Number.isFinite(expiryTime) || expiryTime <= now) {
+      throw new AppError(`Product ${item.product_id} is expired`, HTTP_STATUS.CONFLICT, ERROR_CODES.RESOURCE_CONFLICT);
     }
   }
 
@@ -206,8 +217,11 @@ export const orderService = {
             quantity: item.quantity,
             product_metadata: {
                 category: product.category,
-                label: product.label,
-                emoji: product.emoji
+                label: deriveProductLabel(product.expires_at),
+                expires_at: product.expires_at,
+                emoji: product.emoji,
+                estimated_weight_kg: product.estimated_weight_kg,
+                servings_count: product.servings_count
             }
         };
     });
@@ -382,6 +396,11 @@ export const orderService = {
 
     if (shouldRewardSeller) {
       await sellerReputationService.handleOrderSuccess(order.store_id, body.is_charity_order);
+      try {
+        await ecoImpactService.recordOrderImpact(order.id);
+      } catch (error) {
+        logger.warn("Failed to record eco impact for completed order", { orderId: order.id, error });
+      }
     }
 
     await supabaseAdmin.from("notifications").insert({

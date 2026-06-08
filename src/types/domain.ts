@@ -42,6 +42,8 @@ export interface Store {
   city: string;
   latitude: number | null;
   longitude: number | null;
+  distance_km?: number | null;
+  distance_text?: string | null;
   rating: number;
   commission_rate: number;
   service_tier: string;
@@ -68,11 +70,16 @@ export interface Product {
   stock_quantity: number;
   rating: number;
   sold_count: number;
+  estimated_weight_kg: number | null;
+  servings_count: number | null;
   is_donation: boolean;
   is_active: boolean;
   blocked_reason: string | null;
   created_at: string;
   updated_at: string;
+  distance_km?: number | null;
+  distance_text?: string | null;
+  stores?: Store;
 }
 
 export interface Voucher {
