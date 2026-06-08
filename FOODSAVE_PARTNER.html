@@ -5,7 +5,7 @@
   window.FOODSAVE_API_BASE = "https://foodsave-vn.netlify.app/api/v1";
 </script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FoodSave for Business — Dành cho Đối tác Cửa hàng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -329,6 +329,69 @@ textarea.inp{resize:none;font-family:inherit}
 .otp-inp{display:flex;gap:10px;justify-content:center;margin:24px 0}
 .otp-b{width:56px;height:64px;border:1.5px solid var(--line);border-radius:14px;text-align:center;font-family:"Plus Jakarta Sans";font-size:24px;font-weight:900;color:var(--green-800);outline:none;background:#fff;transition:.2s}
 .otp-b:focus{border-color:var(--green-700);box-shadow:0 0 0 4px rgba(34,197,94,.14);transform:translateY(-2px)}
+
+.auth-wrap.partner-wizard-mode{grid-template-columns:1fr;background:#f8fafb}
+.auth-wrap.partner-wizard-mode .auth-left{display:none}
+.auth-wrap.partner-wizard-mode .auth-right{max-width:1160px;justify-content:flex-start;padding:28px 28px 120px}
+.partner-wizard{width:100%;min-height:calc(100vh - 56px)}
+.partner-wizard-head{display:flex;align-items:flex-start;gap:24px;margin-bottom:20px}
+.partner-wizard-title{min-width:260px;font-family:"Plus Jakarta Sans";font-size:24px;font-weight:900;color:var(--green-950);letter-spacing:-.025em;line-height:1.15}
+.partner-stepper{flex:1;display:grid;grid-template-columns:repeat(6,minmax(92px,1fr));gap:8px}
+.partner-step{display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid var(--line);border-radius:14px;background:#fff;color:var(--muted);font-size:11px;font-weight:800;min-width:0}
+.partner-step.active{border-color:var(--green-600,var(--green-700));background:var(--green-50);color:var(--green-800);box-shadow:0 8px 24px rgba(34,197,94,.12)}
+.partner-step.done{border-color:var(--green-700);color:var(--green-800)}
+.partner-step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--soft);color:var(--muted);font-family:"Plus Jakarta Sans";font-size:11px;font-weight:900;flex-shrink:0}
+.partner-step.active .partner-step-num,.partner-step.done .partner-step-num{background:var(--green-700);color:#fff}
+.partner-step span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.partner-wizard-body{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow-sm);margin-bottom:28px}
+.partner-wizard-actions{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:min(1120px,calc(100vw - 32px));display:flex;justify-content:space-between;gap:12px;padding:14px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 46px rgba(10,10,10,.14);backdrop-filter:blur(14px);z-index:900}
+.partner-wizard-actions .btn{min-width:148px;justify-content:center}
+.partner-section{padding:18px;border:1px solid var(--line);border-radius:18px;background:#fff;margin-bottom:16px}
+.partner-section h2{font-family:"Plus Jakarta Sans";font-size:22px;font-weight:900;color:var(--green-950);letter-spacing:-.02em;margin-bottom:6px}
+.partner-section h3{font-family:"Plus Jakarta Sans";font-size:16px;font-weight:900;color:var(--green-950);margin-bottom:4px;letter-spacing:-.015em}
+.partner-section p{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+.partner-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.partner-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.partner-upload{position:relative;min-height:150px;border:2px dashed var(--line);border-radius:16px;background:var(--soft);display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;text-align:center;cursor:pointer;overflow:hidden;transition:.2s;padding:16px;font-family:inherit;color:var(--ink-soft)}
+.partner-upload:hover{border-color:var(--green-700);background:var(--green-50)}
+.partner-upload.done{border-color:var(--green-700);background:var(--green-50)}
+.partner-upload.loading{border-color:var(--yellow);background:#fffbeb}
+.partner-upload>i{font-size:28px;color:var(--green-700)}
+.partner-upload strong{position:relative;z-index:1;font-size:12.5px;font-weight:900;color:var(--ink-soft);line-height:1.35}
+.partner-upload small{position:relative;z-index:1;font-size:10.5px;color:var(--muted);font-weight:700;line-height:1.45;max-width:100%;word-break:break-word}
+.partner-upload.done strong,.partner-upload.done small{background:rgba(255,255,255,.9);border-radius:999px;padding:3px 9px}
+.partner-upload-preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.partner-upload-success{position:absolute;right:10px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--green-700);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(34,197,94,.24)}
+.partner-spinner{width:24px;height:24px;border-radius:50%;border:3px solid rgba(34,197,94,.2);border-top-color:var(--green-700);animation:spin .8s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.partner-face{min-height:230px;border:1.5px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#fff,var(--soft));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+.partner-face-oval{width:128px;height:168px;border:3px solid var(--green-700);border-radius:50%;position:relative;margin-bottom:14px;background:radial-gradient(circle at 50% 38%,rgba(34,197,94,.14),transparent 42%)}
+.partner-face.scanning .partner-face-oval::after{content:"";position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--green-700),transparent);animation:faceScan 1.2s ease-in-out infinite;box-shadow:0 0 16px rgba(34,197,94,.5)}
+@keyframes faceScan{0%{top:18%}50%{top:76%}100%{top:18%}}
+.partner-locked{opacity:.55;filter:grayscale(.08);pointer-events:none}
+.partner-help{font-size:11.5px;color:var(--muted);font-weight:700;line-height:1.5;margin-top:6px}
+.partner-error{font-size:12px;color:var(--red);font-weight:800;margin-top:8px;min-height:18px}
+.partner-bank-card{min-height:188px;border-radius:22px;padding:22px;color:#fff;background:linear-gradient(135deg,#15803d,#0f5132);box-shadow:0 22px 46px rgba(21,128,61,.26);position:relative;overflow:hidden}
+.partner-bank-card::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.14)}
+.partner-bank-logo{font-family:"Plus Jakarta Sans";font-size:28px;font-weight:900;letter-spacing:.02em}
+.partner-policy-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+.partner-policy-card strong,.partner-policy-card small{display:block}
+.partner-policy-dot{display:block;width:12px;height:12px;border-radius:50%;margin-bottom:8px}
+.partner-policy-dot.green{background:var(--green-700)}
+.partner-policy-dot.yellow{background:var(--yellow)}
+.partner-policy-dot.red{background:var(--red)}
+.partner-switch{width:44px;height:24px;border:0;border-radius:999px;background:var(--line);padding:3px;cursor:pointer;transition:.2s;flex-shrink:0}
+.partner-switch::before{content:"";display:block;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(10,10,10,.18);transition:.2s}
+.partner-switch.active{background:var(--green-700)}
+.partner-switch.active::before{transform:translateX(20px)}
+@media(max-width:900px){
+  .auth-wrap.partner-wizard-mode .auth-right{padding:18px 14px 116px}
+  .partner-wizard-head{display:block}
+  .partner-wizard-title{margin-bottom:12px}
+  .partner-stepper{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .partner-grid-2,.partner-grid-3{grid-template-columns:1fr}
+  .partner-wizard-actions{bottom:10px;width:calc(100vw - 20px)}
+}
 
 /* ════ PORTAL ════ */
 .app-w{height:100vh;display:none;flex-direction:row;overflow:hidden}
@@ -900,6 +963,7 @@ textarea.inp{resize:none;font-family:inherit}
 </script>
 <!-- END BT OVERRIDE -->
 
+<link rel="stylesheet" href="frontend/foodsave-responsive.css">
 </head>
 <body>
 

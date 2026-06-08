@@ -276,6 +276,8 @@
       addr: store.address || "",
       distance: normalizeDistanceKm(store.distance_km ?? store.distance),
       distanceText: store.distance_text || distanceLabel(store.distance_km ?? store.distance),
+      latitude: Number.isFinite(Number(store.latitude)) ? Number(store.latitude) : null,
+      longitude: Number.isFinite(Number(store.longitude)) ? Number(store.longitude) : null,
       rating: Number(store.rating) || 0,
       products: 0,
       hours: store.opening_hours || "",

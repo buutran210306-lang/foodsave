@@ -5,7 +5,7 @@
   window.FOODSAVE_API_BASE = "https://foodsave-vn.netlify.app/api/v1";
 </script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FoodSave – Khu vực người dùng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1249,6 +1249,27 @@
       font-size: 13px !important;
     }
   }
+  .signup-card .brand { justify-content: center; margin-bottom: 18px; }
+  .signup-card .brand-word { font-size: 28px !important; }
+  .signup-head { text-align: center; margin-bottom: 24px; }
+  .signup-head h2 { font-size: 24px; margin-bottom: 6px; color: var(--ink); font-weight: 900; letter-spacing: -.02em; }
+  .signup-head p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.55; }
+  .signup-stepper { display: none; align-items: center; gap: 8px; margin: 0 0 24px; }
+  .signup-stepper .stepper-step { font-size: 11px; min-width: 0; }
+  .signup-stepper .stepper-step span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .signup-stepper .stepper-num { width: 30px; height: 30px; }
+  .signup-legal { font-size: 12.5px; color: var(--muted); line-height: 1.6; text-align: center; font-weight: 600; margin: 14px 0 16px; }
+  .signup-legal a { color: var(--green-700); font-weight: 900; text-decoration: none; cursor: pointer; }
+  .signup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .signup-actions .btn { justify-content: center; }
+  .signup-actions.single { grid-template-columns: 1fr; }
+  .signup-auth-switch { text-align: center; font-size: 14px; margin: 18px 0 0; color: var(--muted); }
+  .signup-auth-switch a { color: var(--green-700); font-weight: 900; cursor: pointer; text-decoration: none; }
+  .signup-verified { background: var(--green-50); border: 1px solid var(--green-100); color: var(--green-900); }
+  .signup-pass-wrap { position: relative; }
+  .signup-pass-wrap .inp { padding-right: 42px; }
+  .signup-pass-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; }
+  .signup-otp-input { text-align: center; font-size: 22px; font-weight: 900; letter-spacing: .18em; font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
   @media (max-width: 900px) {
     html { font-size: 14.5px; }
     .wrap, .container, .shell {
@@ -1281,6 +1302,8 @@
     h2, .section-title { font-size: clamp(24px, 8vw, 34px) !important; }
     .card { padding: 18px !important; }
     footer, .site-footer { padding-left: 0 !important; padding-right: 0 !important; }
+    .signup-actions { grid-template-columns: 1fr; }
+    .signup-stepper { overflow-x: auto; padding-bottom: 2px; }
   }
 </style>
 
@@ -1468,6 +1491,7 @@
 </script>
 <!-- END BT OVERRIDE -->
 
+  <link rel="stylesheet" href="frontend/foodsave-responsive.css">
 </head>
 <body>
 
@@ -1534,6 +1558,7 @@
     <nav class="nav hidden" id="userNav">
       <button onclick="navTo('home')" class="nav-text">Trang chủ</button>
       <button onclick="navTo('market')" class="nav-text">Sản phẩm</button>
+      <button onclick="navTo('map')" class="nav-text">Bản đồ</button>
       <button onclick="navTo('orders')" class="nav-text">Đơn hàng</button>
       <button onclick="navTo('vouchers')" class="nav-text">Voucher</button>
       <button onclick="navTo('impact')" class="nav-text">Tác động</button>
@@ -1985,84 +2010,125 @@
 <div id="page-register" class="page">
   <section style="min-height:calc(100vh - 74px);padding:40px 0;background:radial-gradient(circle at 80% 20%,rgba(243,154,22,.12),transparent 30%),radial-gradient(circle at 10% 90%,rgba(20,97,61,.1),transparent 30%),linear-gradient(180deg,#fbfdfb,#eff8f2)">
     <div class="wrap-xs">
-      <div class="card" style="padding:36px">
-        <div style="margin-bottom:34px">
-          <h2 style="font-size:30px;line-height:1.1;margin:0;color:#111827;font-weight:500">Sign Up</h2>
+      <div class="card signup-card" style="padding:36px">
+        <div class="signup-head">
+          <div class="brand"><span class="brand-word">FOOD<span>SAVE</span></span></div>
+          <h2>Đăng ký</h2>
+          <p>Tạo tài khoản để lưu đơn hàng, voucher và theo dõi tác động xanh của bạn.</p>
         </div>
 
-        <!-- Step indicator -->
-        <div class="stepper" id="register-stepper" style="max-width:none;margin-bottom:24px;display:none">
-          <div class="stepper-step active" id="rstep-1"><div class="stepper-num">1</div><span>Email</span></div>
+        <div class="stepper signup-stepper" id="register-stepper">
+          <div class="stepper-step active" id="rstep-1"><div class="stepper-num">1</div><span>Tài khoản</span></div>
           <div class="stepper-line"></div>
           <div class="stepper-step" id="rstep-2"><div class="stepper-num">2</div><span>OTP</span></div>
           <div class="stepper-line"></div>
           <div class="stepper-step" id="rstep-3"><div class="stepper-num">3</div><span>Hồ sơ</span></div>
+          <div class="stepper-line"></div>
+          <div class="stepper-step" id="rstep-4"><div class="stepper-num">4</div><span>Bảo mật</span></div>
+          <div class="stepper-line"></div>
+          <div class="stepper-step" id="rstep-5"><div class="stepper-num">5</div><span>Điều khoản</span></div>
+          <div class="stepper-line"></div>
+          <div class="stepper-step" id="rstep-6"><div class="stepper-num">6</div><span>Hoàn tất</span></div>
         </div>
 
-        <!-- ===== STEP 1: BASIC INFO ===== -->
         <div id="reg-step-1">
           <div id="register-methods">
             <div id="signup-email-flow">
-            <form id="signup-email-request-form" onsubmit="event.preventDefault();sendSignupEmailOtp()" autocomplete="email" novalidate>
-              <div id="signup-email-panel">
-                <div class="field">
-                  <label>Email</label>
-                  <input class="inp" type="email" id="signup-email-entry" placeholder="email@domain.com" autocomplete="email" inputmode="email">
+              <form id="signup-email-request-form" onsubmit="event.preventDefault();sendSignupEmailOtp()" autocomplete="email" novalidate>
+                <div id="signup-email-panel">
+                  <div class="field">
+                    <label>Email / Số điện thoại</label>
+                    <input class="inp" type="text" id="signup-email-entry" name="identifier" placeholder="Email / Số điện thoại" autocomplete="username" inputmode="text">
+                  </div>
+                  <div class="signup-legal">
+                    Bằng việc tiếp tục, bạn đồng ý với
+                    <a href="chinh-sach.html">chính sách</a>
+                    và
+                    <a href="dieu-khoan.html">điều khoản sử dụng</a>
+                    của FoodSave.
+                  </div>
+                  <div class="signup-actions">
+                    <button class="btn btn-ghost btn-lg" type="button" onclick="navTo('login')"><i class="ti ti-arrow-left"></i> Quay lại</button>
+                    <button class="btn btn-primary btn-lg" id="signup-email-next-btn" type="submit"><i class="ti ti-arrow-right"></i> Tiếp tục</button>
+                  </div>
+                  <div class="field-error" id="signup-email-error"></div>
                 </div>
-                <button class="btn btn-primary btn-block btn-lg" id="signup-email-next-btn" type="submit"><i class="ti ti-mail-forward"></i> Gửi mã OTP</button>
-                <div class="field-error" id="signup-email-error"></div>
-              </div>
-            </form>
+              </form>
 
-            <div id="signup-email-otp-panel" style="display:none">
-              <h3 class="auth-h">Xác thực Email</h3>
-              <p class="auth-sub text-muted">Mã 6 số đã gửi đến <strong id="signup-email-otp-target"></strong></p>
-              <div class="field">
-                <label>Mã OTP</label>
-                <input class="inp" type="text" id="signup-email-otp-input" placeholder="Nhập 6 số" autocomplete="one-time-code" inputmode="numeric" maxlength="6">
+              <div id="signup-email-otp-panel" style="display:none">
+                <h3 class="auth-h">Xác thực mã OTP</h3>
+                <p class="auth-sub text-muted">Mã 6 số đã gửi đến <strong id="signup-email-otp-target"></strong></p>
+                <div class="field">
+                  <label>Mã OTP</label>
+                  <input class="inp signup-otp-input" type="text" id="signup-email-otp-input" placeholder="Nhập 6 số" autocomplete="one-time-code" inputmode="numeric" maxlength="6">
+                </div>
+                <div class="field-hint">Gửi lại mã sau <strong id="signup-email-otp-timer">03:00</strong></div>
+                <button class="btn btn-link btn-block btn-sm" id="signup-email-otp-resend" type="button" disabled onclick="resendSignupEmailOtp()"><i class="ti ti-refresh"></i> Gửi lại mã OTP</button>
+                <div class="field-error" id="signup-email-otp-error"></div>
+                <div class="signup-actions">
+                  <button class="btn btn-ghost btn-lg" type="button" onclick="backSignupToEmail()"><i class="ti ti-arrow-left"></i> Quay lại</button>
+                  <button class="btn btn-primary btn-lg" id="signup-email-otp-verify-btn" type="button" onclick="verifySignupEmailOtp()"><i class="ti ti-circle-check"></i> Tiếp tục</button>
+                </div>
               </div>
-              <div class="field-hint">Gửi lại mã sau <strong id="signup-email-otp-timer">03:00</strong></div>
-              <button class="btn btn-link btn-block btn-sm" id="signup-email-otp-resend" type="button" disabled onclick="resendSignupEmailOtp()"><i class="ti ti-refresh"></i> Gửi lại mã OTP</button>
-              <button class="btn btn-primary btn-block btn-lg" id="signup-email-otp-verify-btn" type="button" onclick="verifySignupEmailOtp()"><i class="ti ti-circle-check"></i> Xác nhận OTP</button>
-              <div class="field-error" id="signup-email-otp-error"></div>
+
+              <form id="signup-detail-panel" style="display:none" onsubmit="event.preventDefault();completeSignupDetails()" autocomplete="on" novalidate>
+                <h3 class="auth-h">Thiết lập Hồ sơ &amp; Mật khẩu bảo mật</h3>
+                <p class="auth-sub text-muted">Hoàn tất hồ sơ cá nhân để bảo vệ tài khoản FoodSave của bạn.</p>
+                <div class="field">
+                  <label>Họ và tên</label>
+                  <div class="input-icon"><i class="ti ti-user"></i><input class="inp" type="text" id="signup-detail-name" name="full_name" placeholder="Họ và tên" autocomplete="name"></div>
+                </div>
+                <div class="field">
+                  <label>Email/Số điện thoại đã xác thực</label>
+                  <div class="input-icon"><i class="ti ti-circle-check"></i><input class="inp signup-verified" type="text" id="signup-detail-identifier" placeholder="Thông tin đã xác thực" readonly></div>
+                  <input type="hidden" id="signup-detail-phone" name="phone" autocomplete="tel" inputmode="tel">
+                </div>
+                <div class="field">
+                  <label>Mật khẩu</label>
+                  <div class="input-icon signup-pass-wrap">
+                    <i class="ti ti-lock"></i>
+                    <input class="inp" type="password" id="signup-detail-password" name="password" placeholder="Tối thiểu 8 ký tự" autocomplete="new-password" oninput="validateSignupDetailPasswords()">
+                    <button class="signup-pass-toggle" type="button" onclick="togglePass('signup-detail-password',this)" aria-label="Ẩn/Hiện mật khẩu"><i class="ti ti-eye"></i></button>
+                  </div>
+                  <div class="field-hint">Cần chữ hoa, chữ thường, số và ký tự đặc biệt.</div>
+                  <div class="field-error" id="signup-detail-password-error"></div>
+                </div>
+                <div class="field">
+                  <label>Xác nhận lại mật khẩu</label>
+                  <div class="input-icon signup-pass-wrap">
+                    <i class="ti ti-lock-check"></i>
+                    <input class="inp" type="password" id="signup-detail-password-confirm" name="password_confirm" placeholder="Nhập lại mật khẩu" autocomplete="new-password" oninput="validateSignupDetailPasswords()">
+                    <button class="signup-pass-toggle" type="button" onclick="togglePass('signup-detail-password-confirm',this)" aria-label="Ẩn/Hiện mật khẩu"><i class="ti ti-eye"></i></button>
+                  </div>
+                  <div class="field-error" id="signup-detail-confirm-error"></div>
+                </div>
+                <div class="field">
+                  <label style="display:flex;align-items:flex-start;gap:10px;line-height:1.5;color:var(--ink);font-weight:700">
+                    <input type="checkbox" id="signup-detail-terms" name="terms" style="width:18px;min-height:18px;height:18px;padding:0;margin-top:2px;accent-color:var(--green-700);flex:0 0 auto">
+                    <span>Tôi đã đọc và đồng ý với <a href="chinh-sach.html" style="color:var(--green-700);font-weight:900;text-decoration:none">chính sách</a> và <a href="dieu-khoan.html" style="color:var(--green-700);font-weight:900;text-decoration:none">điều khoản sử dụng</a> của FoodSave.</span>
+                  </label>
+                </div>
+                <div class="field-error" id="signup-detail-error"></div>
+                <div class="signup-actions">
+                  <button class="btn btn-ghost btn-lg" type="button" onclick="backSignupToOtp()"><i class="ti ti-arrow-left"></i> Quay lại</button>
+                  <button class="btn btn-primary btn-lg" id="signup-detail-submit-btn" type="submit"><i class="ti ti-circle-check"></i> Tiếp tục</button>
+                </div>
+              </form>
+
+              <div id="signup-complete-panel" style="display:none;text-align:center">
+                <div style="width:78px;height:78px;margin:0 auto 16px;border-radius:50%;background:linear-gradient(135deg,var(--green-700),var(--green-900));display:grid;place-items:center">
+                  <i class="ti ti-check" style="font-size:42px;color:#fff"></i>
+                </div>
+                <h3 class="auth-h">Đăng ký thành công!</h3>
+                <p class="auth-sub text-muted">Tài khoản của bạn đã sẵn sàng.</p>
+                <div class="signup-actions single">
+                  <button class="btn btn-primary btn-lg" type="button" onclick="navTo('home')"><i class="ti ti-shopping-bag"></i> Bắt đầu mua sắm</button>
+                </div>
+              </div>
             </div>
 
-            <form id="signup-detail-panel" style="display:none" onsubmit="event.preventDefault();completeSignupDetails()" autocomplete="on" novalidate>
-              <h3 class="auth-h">Thông tin chi tiết</h3>
-              <p class="auth-sub text-muted">Hoàn tất hồ sơ để bảo vệ tài khoản FoodSave của bạn.</p>
-              <div class="field">
-                <label>Họ và Tên</label>
-                <div class="input-icon"><i class="ti ti-user"></i><input class="inp" type="text" id="signup-detail-name" placeholder="Họ và tên" autocomplete="name"></div>
-              </div>
-              <div class="field">
-                <label>Mật khẩu</label>
-                <div class="input-icon"><i class="ti ti-lock"></i><input class="inp" type="password" id="signup-detail-password" placeholder="Tối thiểu 8 ký tự" autocomplete="new-password"></div>
-                <div class="field-hint">Cần chữ hoa, chữ thường, số và ký tự đặc biệt.</div>
-                <div class="field-error" id="signup-detail-password-error"></div>
-              </div>
-              <div class="field">
-                <label>Số điện thoại</label>
-                <div class="input-icon"><i class="ti ti-phone"></i><input class="inp" type="tel" id="signup-detail-phone" placeholder="0901234567" autocomplete="tel" inputmode="tel"></div>
-              </div>
-              <div class="field">
-                <label style="display:flex;align-items:flex-start;gap:10px;line-height:1.5;color:var(--ink);font-weight:700">
-                  <input type="checkbox" id="signup-detail-terms" style="width:18px;min-height:18px;height:18px;padding:0;margin-top:2px;accent-color:var(--green-700);flex:0 0 auto">
-                  <span>Tôi đã đọc và đồng ý với chính sách và điều khoản sử dụng của FoodSave.</span>
-                </label>
-              </div>
-              <div class="field-error" id="signup-detail-error"></div>
-              <button class="btn btn-primary btn-block btn-lg" id="signup-detail-submit-btn" type="submit"><i class="ti ti-device-floppy"></i> Cập nhật</button>
-            </form>
-
-            <div id="signup-complete-panel" style="display:none">
-              <h3 class="auth-h">Đăng ký thành công!</h3>
-              <p class="auth-sub text-muted">Tài khoản của bạn đã sẵn sàng.</p>
-              <button class="btn btn-primary btn-block btn-lg" type="button" onclick="navTo('home')"><i class="ti ti-shopping-bag"></i> Bắt đầu mua sắm</button>
-            </div>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:24px;margin:46px 0 28px;color:#b5bbc3;font-size:16px;font-weight:800">
-              <div style="flex:1;height:1px;background:#d1d5db"></div>OR<div style="flex:1;height:1px;background:#d1d5db"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:11px;font-weight:800">
+              <div style="flex:1;height:1px;background:var(--line)"></div>HOẶC ĐĂNG KÝ BẰNG<div style="flex:1;height:1px;background:var(--line)"></div>
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:34px">
@@ -2076,8 +2142,7 @@
               </button>
             </div>
 
-            <p style="text-align:center;font-size:15px;line-height:1.45;color:#111827;margin:0 0 46px">By signing up, you agree to FoodSave's <a onclick="openLegal('terms')" style="color:#fb3f2f;cursor:pointer">Terms of Service</a> &amp; <a onclick="openLegal('privacy')" style="color:#fb3f2f;cursor:pointer">Privacy Policy</a></p>
-            <p style="text-align:center;font-size:20px;color:#b5bbc3;margin:0">Have an account? <a style="color:#fb3f2f;cursor:pointer" onclick="navTo('login')">Log In</a></p>
+            <p class="signup-auth-switch">Đã có tài khoản? <a onclick="navTo('login')">Đăng nhập</a></p>
           </div>
 
           <div id="register-details" style="display:none">
@@ -2638,39 +2703,35 @@
 <div id="page-map" class="page">
   <section style="padding:32px 0">
     <div class="wrap">
-      <div class="section-head"><div><h2>Bản đồ điểm nhận hàng</h2><p>Tìm cửa hàng gần bạn để chọn điểm nhận khi đặt online. Cập nhật theo thời gian thực.</p></div></div>
+      <div class="section-head">
+        <div><h2>Bản đồ điểm nhận hàng</h2><p>Tìm cửa hàng gần bạn để chọn điểm nhận khi đặt online. Cập nhật theo thời gian thực.</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="enableNearbyDeals()"><i class="ti ti-current-location"></i> Dùng GPS</button>
+          <button class="btn btn-soft btn-sm" onclick="clearNearbyDeals()"><i class="ti ti-location-off"></i> Tắt GPS</button>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start" class="map-grid">
-        <div class="card" style="padding:0;height:600px;position:relative;overflow:hidden;border-radius:18px">
-          <div style="position:absolute;inset:0;background:
-            radial-gradient(circle at 20% 30%,rgba(20,97,61,.18) 0%,transparent 25%),
-            radial-gradient(circle at 60% 50%,rgba(243,154,22,.18) 0%,transparent 22%),
-            radial-gradient(circle at 80% 30%,rgba(239,68,68,.18) 0%,transparent 18%),
-            radial-gradient(circle at 40% 70%,rgba(20,97,61,.18) 0%,transparent 22%),
-            radial-gradient(circle at 75% 75%,rgba(243,154,22,.18) 0%,transparent 25%),
-            linear-gradient(135deg,#e3f0e9,#f4fbf7)">
-            <svg style="width:100%;height:100%;opacity:.3" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0 30 Q 50 25, 100 35" stroke="#6E7585" stroke-width="0.3" fill="none"/>
-              <path d="M0 60 Q 50 65, 100 55" stroke="#6E7585" stroke-width="0.3" fill="none"/>
-              <path d="M30 0 Q 35 50, 25 100" stroke="#6E7585" stroke-width="0.3" fill="none"/>
-              <path d="M70 0 Q 65 50, 75 100" stroke="#6E7585" stroke-width="0.3" fill="none"/>
+        <div class="foodsave-map-shell">
+          <div class="map-roads">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M0 18 C 24 24, 42 18, 100 28"></path>
+              <path d="M0 56 C 28 48, 52 72, 100 60"></path>
+              <path d="M14 0 C 24 24, 24 64, 18 100"></path>
+              <path d="M56 0 C 44 26, 62 56, 52 100"></path>
+              <path d="M82 0 C 74 34, 86 62, 76 100"></path>
             </svg>
           </div>
-          <div class="map-pin" style="top:30%;left:20%"><div class="map-dot" style="background:#10b981;box-shadow:0 0 0 8px rgba(16,185,129,.2)"></div></div>
-          <div class="map-pin" style="top:50%;left:60%"><div class="map-dot" style="background:var(--orange-500);box-shadow:0 0 0 8px rgba(243,154,22,.2)"></div></div>
-          <div class="map-pin" style="top:30%;left:80%"><div class="map-dot" style="background:#ef4444;box-shadow:0 0 0 8px rgba(239,68,68,.2)"></div></div>
-          <div class="map-pin" style="top:70%;left:40%"><div class="map-dot" style="background:#10b981;box-shadow:0 0 0 8px rgba(16,185,129,.2)"></div></div>
-          <div class="map-pin" style="top:75%;left:75%"><div class="map-dot" style="background:var(--orange-500);box-shadow:0 0 0 8px rgba(243,154,22,.2)"></div></div>
-          <div class="map-pin" style="top:45%;left:45%"><div class="map-dot" style="background:#3b82f6;box-shadow:0 0 0 12px rgba(59,130,246,.25)"></div></div>
-          <div style="position:absolute;bottom:20px;right:20px;background:#fff;padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(11,52,36,.12);font-size:12px">
+          <div id="pickup-map"></div>
+          <div class="map-legend">
             <div style="font-weight:800;margin-bottom:8px;font-size:13px">Chú thích</div>
             <div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:10px;height:10px;border-radius:50%;background:#3b82f6"></span> Vị trí của bạn</div>
             <div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:10px;height:10px;border-radius:50%;background:#10b981"></span> Có nhãn xanh</div>
             <div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:10px;height:10px;border-radius:50%;background:var(--orange-500)"></span> Có nhãn vàng</div>
             <div style="display:flex;align-items:center;gap:6px;margin:4px 0"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span> Có nhãn đỏ</div>
           </div>
-          <div style="position:absolute;top:20px;left:20px;background:#fff;padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(11,52,36,.12)">
-            <div style="font-weight:800;font-size:13px;color:var(--green-950)">5 cửa hàng quanh bạn</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">trong bán kính 2km</div>
+          <div class="map-summary">
+            <div id="map-summary-count" style="font-weight:800;font-size:13px;color:var(--green-950)">Đang tải cửa hàng</div>
+            <div id="map-summary-radius" style="font-size:11px;color:var(--muted);margin-top:2px">Bật GPS để ưu tiên gần bạn</div>
           </div>
         </div>
         <aside id="map-store-list" style="display:flex;flex-direction:column;gap:10px"></aside>
@@ -2678,10 +2739,24 @@
     </div>
   </section>
   <style>
-    .map-pin { position: absolute; width: 16px; height: 16px; cursor: pointer; transform: translate(-50%,-50%); }
-    .map-dot { width: 16px; height: 16px; border-radius: 50%; transition: transform .2s; }
-    .map-pin:hover .map-dot { transform: scale(1.3); }
+    .foodsave-map-shell { min-height: 600px; position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(135deg,#e3f0e9,#f4fbf7); }
+    .foodsave-map-shell::before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 20% 30%,rgba(20,97,61,.16) 0%,transparent 24%), radial-gradient(circle at 62% 48%,rgba(243,154,22,.16) 0%,transparent 22%), radial-gradient(circle at 82% 28%,rgba(239,68,68,.14) 0%,transparent 18%), radial-gradient(circle at 42% 72%,rgba(20,97,61,.14) 0%,transparent 22%); }
+    .map-roads { position:absolute; inset:0; opacity:.46; }
+    .map-roads svg { width:100%; height:100%; }
+    .map-roads path { fill:none; stroke:#6E7585; stroke-width:.35; vector-effect:non-scaling-stroke; }
+    #pickup-map { position:absolute; inset:0; }
+    .map-pin { position:absolute; width:18px; height:18px; border:0; padding:0; cursor:pointer; transform:translate(-50%,-50%); background:transparent; z-index:3; }
+    .map-dot { width:18px; height:18px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 8px rgba(16,185,129,.2),0 10px 24px rgba(11,52,36,.18); transition:transform .2s; }
+    .map-pin:hover .map-dot { transform:scale(1.28); }
+    .map-pin-user { width:22px; height:22px; z-index:4; }
+    .map-pin-user .map-dot { width:22px; height:22px; background:#3b82f6; box-shadow:0 0 0 12px rgba(59,130,246,.25),0 10px 24px rgba(37,99,235,.24); }
+    .map-pin-label { position:absolute; left:50%; top:24px; transform:translateX(-50%); white-space:nowrap; background:#fff; border:1px solid var(--line); border-radius:10px; padding:5px 8px; font-size:11px; font-weight:800; color:var(--green-950); box-shadow:0 8px 20px rgba(11,52,36,.12); opacity:0; pointer-events:none; transition:opacity .2s; }
+    .map-pin:hover .map-pin-label { opacity:1; }
+    .map-legend,.map-summary { position:absolute; background:#fff; padding:14px; border-radius:12px; box-shadow:0 8px 24px rgba(11,52,36,.12); z-index:5; }
+    .map-legend { bottom:20px; right:20px; font-size:12px; }
+    .map-summary { top:20px; left:20px; }
     @media (max-width:900px) { .map-grid { grid-template-columns: 1fr !important; } }
+    @media (max-width:640px) { .foodsave-map-shell { min-height: 440px; } .map-legend { left:14px; right:14px; bottom:14px; } .map-summary { left:14px; right:14px; top:14px; } }
   </style>
 </div>
 <!-- End market section -->
@@ -4131,7 +4206,22 @@ function formatDistanceDisplay(distance, distanceText='') {
 }
 
 // ============ NAV ============
+function readFoodSaveCustomerSession() {
+  try {
+    const raw = localStorage.getItem('foodsave.auth.session');
+    const session = raw ? JSON.parse(raw) : null;
+    return session && session.role === 'customer' && (session.accessToken || session.profile) ? session : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function navTo(page) {
+  if (page === 'map' && !readFoodSaveCustomerSession()) {
+    toast('Vui lòng đăng nhập để sử dụng bản đồ cửa hàng.', 'warn');
+    page = 'login';
+  }
+
   $$('.page').forEach(p => p.classList.remove('active'));
   const target = $('#page-' + page);
   if (target) target.classList.add('active');
@@ -4145,13 +4235,14 @@ function navTo(page) {
   $('#topsearch').style.display = isAuth ? 'block' : 'none';
 
   $$('#userNav button').forEach(b => b.classList.remove('active'));
-  const navMap = { home:0, market:1, orders:2, vouchers:3, impact:4, 'impact-report-apr2026':4 };
+  const navMap = { home:0, market:1, map:2, orders:3, vouchers:4, impact:5, 'impact-report-apr2026':5 };
   if (navMap[page] !== undefined) {
     const btns = $$('#userNav button');
     if (btns[navMap[page]]) btns[navMap[page]].classList.add('active');
   }
 
   // Render specific pages
+  if (page === 'register' && typeof window.resetSignupFlow === 'function') window.resetSignupFlow();
   if (page === 'home') renderHome();
   if (page === 'market') renderMarket();
   if (page === 'orders') { renderOrders('all'); updateOrderCounts(); }
@@ -4655,6 +4746,7 @@ async function enableNearbyDeals() {
     if ($('#sort-select')) $('#sort-select').value = 'nearest';
     renderMarket();
     renderHome();
+    if ($('#page-map.active')) renderMap();
     toast(`Đã ưu tiên ${data.products.length} deal gần bạn`, 'info');
   } catch (error) {
     toast(error.message || 'Không lấy được vị trí GPS', 'warn');
@@ -4667,11 +4759,13 @@ async function clearNearbyDeals() {
   syncNearbyStatus(null);
   renderMarket();
   renderHome();
+  if ($('#page-map.active')) renderMap();
   toast('Đã tắt ưu tiên theo GPS', 'info');
 }
 
 window.addEventListener('foodsave:nearby-location', (event) => {
   syncNearbyStatus(event.detail && event.detail.location);
+  if ($('#page-map.active')) renderMap();
 });
 
 setTimeout(() => {
@@ -5778,13 +5872,140 @@ function copyVoucher(code) { toast(`Đã sao chép "${code}"`, 'info'); }
 function useVoucher(code) { navTo('market'); toast(`Đã lưu mã "${code}". Áp dụng khi thanh toán`, 'info'); }
 
 // ============ MAP ============
+const MAP_FALLBACK_POINTS = [
+  { left: 20, top: 30 },
+  { left: 60, top: 50 },
+  { left: 80, top: 30 },
+  { left: 40, top: 70 },
+  { left: 75, top: 75 },
+  { left: 28, top: 58 },
+  { left: 66, top: 24 }
+];
+
+function storeCoordinates(store) {
+  const latitude = Number(store?.latitude ?? store?.lat);
+  const longitude = Number(store?.longitude ?? store?.lng);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return { latitude, longitude };
+}
+
+function mapBoundsFor(stores, location) {
+  const coordinates = stores.map(storeCoordinates).filter(Boolean);
+  if (location && Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
+    coordinates.push({ latitude: Number(location.latitude), longitude: Number(location.longitude) });
+  }
+  if (!coordinates.length) return null;
+  const latitudes = coordinates.map(point => point.latitude);
+  const longitudes = coordinates.map(point => point.longitude);
+  let minLatitude = Math.min(...latitudes);
+  let maxLatitude = Math.max(...latitudes);
+  let minLongitude = Math.min(...longitudes);
+  let maxLongitude = Math.max(...longitudes);
+  if (maxLatitude === minLatitude) { maxLatitude += 0.01; minLatitude -= 0.01; }
+  if (maxLongitude === minLongitude) { maxLongitude += 0.01; minLongitude -= 0.01; }
+  return { minLatitude, maxLatitude, minLongitude, maxLongitude };
+}
+
+function mapPointFromCoordinates(coordinates, bounds) {
+  if (!coordinates || !bounds) return null;
+  const left = 10 + ((coordinates.longitude - bounds.minLongitude) / (bounds.maxLongitude - bounds.minLongitude)) * 80;
+  const top = 90 - ((coordinates.latitude - bounds.minLatitude) / (bounds.maxLatitude - bounds.minLatitude)) * 80;
+  return {
+    left: Math.max(8, Math.min(92, left)),
+    top: Math.max(8, Math.min(92, top))
+  };
+}
+
+function productsForStore(store) {
+  const storeKey = productIdKey(store.id);
+  return PRODUCTS.filter(product => productIdKey(product.storeId) === storeKey);
+}
+
+function storeMapStatus(store) {
+  const products = productsForStore(store);
+  const labels = products.map(product => product.label);
+  if (labels.includes('red')) return { label: 'Có nhãn đỏ', color: '#ef4444', tag: 'tag-red', shadow: 'rgba(239,68,68,.22)' };
+  if (labels.includes('yellow')) return { label: 'Có nhãn vàng', color: 'var(--orange-500)', tag: 'tag-yellow', shadow: 'rgba(243,154,22,.22)' };
+  return { label: 'Có nhãn xanh', color: '#10b981', tag: 'tag-green', shadow: 'rgba(16,185,129,.22)' };
+}
+
+function openStoreDirections(id) {
+  const store = STORES.find(item => productIdKey(item.id) === productIdKey(id));
+  if (!store) return;
+  const coordinates = storeCoordinates(store);
+  const query = coordinates ? `${coordinates.latitude},${coordinates.longitude}` : `${store.name} ${store.addr || ''}`.trim();
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank', 'noopener');
+}
+
 function renderMap() {
-  $('#map-store-list').innerHTML = STORES.map(s => `
-    <div class="store-card" onclick="openStore(${htmlSafe(jsArg(s.id))})">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="store-name" style="font-size:14px">${s.name}</div><span class="store-rating" style="font-size:12px"><i class="ti ti-star-filled"></i> ${s.rating}</span></div>
-      <div class="store-addr" style="font-size:11px;margin-bottom:10px"><i class="ti ti-map-pin"></i> ${formatDistanceDisplay(s.distance, s.distanceText)} · ${s.products} sản phẩm</div>
-      <button class="btn btn-ghost btn-sm btn-block"><i class="ti ti-arrow-right"></i> Xem chi tiết</button>
-    </div>`).join('');
+  const map = $('#pickup-map');
+  const list = $('#map-store-list');
+  if (!map || !list) return;
+
+  const location = window.FS && window.FS.sync && typeof window.FS.sync.getNearbyLocation === 'function'
+    ? window.FS.sync.getNearbyLocation()
+    : window.FOODSAVE_NEARBY_LOCATION;
+  const stores = [...STORES].sort((a, b) => {
+    const aDistance = Number(a.distance);
+    const bDistance = Number(b.distance);
+    if (Number.isFinite(aDistance) && Number.isFinite(bDistance)) return aDistance - bDistance;
+    return String(a.name || '').localeCompare(String(b.name || ''), 'vi');
+  });
+
+  const count = $('#map-summary-count');
+  const radius = $('#map-summary-radius');
+  if (count) count.textContent = location ? `${stores.length} cửa hàng gần bạn` : `${stores.length} cửa hàng FoodSave`;
+  if (radius) radius.textContent = location ? `trong bán kính ${location.radiusKm || 5}km` : 'Bật GPS để ưu tiên cửa hàng gần bạn';
+
+  if (!stores.length) {
+    map.innerHTML = `<div class="empty" style="position:absolute;inset:0;display:grid;place-items:center;background:transparent"><div style="text-align:center"><div class="empty-emo">📍</div><h3>Chưa có cửa hàng để hiển thị</h3><p>Dữ liệu cửa hàng sẽ xuất hiện sau khi catalog đồng bộ.</p></div></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-emo">🏪</div><h3>Không có cửa hàng</h3><p>Hãy thử lại sau vài phút.</p></div>`;
+    return;
+  }
+
+  const bounds = mapBoundsFor(stores, location);
+  const storePins = stores.map((store, index) => {
+    const coordinates = storeCoordinates(store);
+    const point = mapPointFromCoordinates(coordinates, bounds) || MAP_FALLBACK_POINTS[index % MAP_FALLBACK_POINTS.length];
+    const status = storeMapStatus(store);
+    return `
+      <button class="map-pin" style="top:${point.top}%;left:${point.left}%" onclick="openStore(${htmlSafe(jsArg(store.id))})" title="${htmlSafe(store.name)}">
+        <span class="map-dot" style="background:${status.color};box-shadow:0 0 0 8px ${status.shadow},0 10px 24px rgba(11,52,36,.18)"></span>
+        <span class="map-pin-label">${htmlSafe(store.name)}</span>
+      </button>`;
+  }).join('');
+
+  const userPoint = location && bounds
+    ? mapPointFromCoordinates({ latitude: Number(location.latitude), longitude: Number(location.longitude) }, bounds)
+    : null;
+  const userPin = userPoint ? `
+    <button class="map-pin map-pin-user" style="top:${userPoint.top}%;left:${userPoint.left}%" title="Vị trí của bạn">
+      <span class="map-dot"></span>
+      <span class="map-pin-label">Vị trí của bạn</span>
+    </button>` : '';
+
+  map.innerHTML = storePins + userPin;
+
+  list.innerHTML = stores.map(store => {
+    const status = storeMapStatus(store);
+    const storeProducts = productsForStore(store);
+    const productCount = storeProducts.length || Number(store.products) || 0;
+    const hotCount = storeProducts.filter(product => product.label === 'red' || product.label === 'yellow').length;
+    const distance = formatDistanceDisplay(store.distance, store.distanceText);
+    return `
+      <div class="store-card" onclick="openStore(${htmlSafe(jsArg(store.id))})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px">
+          <div style="min-width:0"><div class="store-name" style="font-size:14px">${htmlSafe(store.name)}</div><div class="store-addr" style="font-size:11px;margin-top:4px"><i class="ti ti-map-pin"></i> ${htmlSafe(store.addr || 'Đang cập nhật địa chỉ')}</div></div>
+          <span class="store-rating" style="font-size:12px"><i class="ti ti-star-filled"></i> ${Number(store.rating || 0).toFixed(1)}</span>
+        </div>
+        <div class="store-meta" style="margin-bottom:10px"><span class="text-muted">${distance} · ${htmlSafe(store.hours || 'Đang cập nhật')}</span><span class="tag ${status.tag}">${status.label}</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="tag tag-green">${productCount} deal</span>
+          ${hotCount ? `<span class="tag tag-red">${hotCount} cận hạn</span>` : ''}
+        </div>
+        <button class="btn btn-ghost btn-sm btn-block" style="margin-top:10px" onclick="event.stopPropagation();openStoreDirections(${htmlSafe(jsArg(store.id))})"><i class="ti ti-route"></i> Chỉ đường</button>
+      </div>`;
+  }).join('');
 }
 
 // ============ ACCOUNT ============
@@ -6598,7 +6819,7 @@ function updateReputationRules(){
       verifyButtonId: 'signup-email-otp-verify-btn',
       errorId: 'signup-email-otp-error',
       requestErrorId: 'signup-email-error',
-      idleHtml: '<i class="ti ti-mail-forward"></i> Gửi mã OTP',
+      idleHtml: '<i class="ti ti-arrow-right"></i> Tiếp tục',
       shouldCreateUser: true
     };
   }
@@ -6680,9 +6901,9 @@ function updateReputationRules(){
   function updateSignupStepper(activeStep) {
     const stepper = fsEl('register-stepper');
     if (!stepper) return;
-    stepper.style.display = 'flex';
+    stepper.style.display = activeStep >= 3 ? 'flex' : 'none';
 
-    ['rstep-1', 'rstep-2', 'rstep-3'].forEach((id, index) => {
+    ['rstep-1', 'rstep-2', 'rstep-3', 'rstep-4', 'rstep-5', 'rstep-6'].forEach((id, index) => {
       const stepNumber = index + 1;
       const step = fsEl(id);
       const num = step?.querySelector('.stepper-num');
@@ -6706,6 +6927,41 @@ function updateReputationRules(){
     showSignupSocialOptions(panelName === 'email');
   }
 
+  window.backSignupToEmail = function() {
+    clearEmailOtpTimer('signup');
+    setEmailOtpFlow(null, null);
+    setError('signup-email-error', '');
+    setError('signup-email-otp-error', '');
+    showSignupPanel('email');
+    updateSignupStepper(1);
+    window.setTimeout(() => fsEl('signup-email-entry')?.focus(), 80);
+  };
+
+  window.backSignupToOtp = function() {
+    setError('signup-detail-password-error', '');
+    setError('signup-detail-confirm-error', '');
+    setError('signup-detail-error', '');
+    showSignupPanel('otp');
+    updateSignupStepper(2);
+    window.setTimeout(() => fsEl('signup-email-otp-input')?.focus(), 80);
+  };
+
+  window.resetSignupFlow = function() {
+    clearEmailOtpTimer('signup');
+    emailOtpState.signup.email = '';
+    emailOtpState.signup.session = null;
+    setEmailOtpFlow(null, null);
+    ['signup-email-error', 'signup-email-otp-error', 'signup-detail-password-error', 'signup-detail-confirm-error', 'signup-detail-error'].forEach((id) => setError(id, ''));
+    ['signup-email-entry', 'signup-email-otp-input', 'signup-detail-name', 'signup-detail-password', 'signup-detail-password-confirm', 'signup-detail-identifier', 'signup-detail-phone'].forEach((id) => {
+      const input = fsEl(id);
+      if (input) input.value = '';
+    });
+    const terms = fsEl('signup-detail-terms');
+    if (terms) terms.checked = false;
+    showSignupPanel('email');
+    updateSignupStepper(1);
+  };
+
   function syncSupabaseSession(session, navigateHome) {
     if (session && window.FoodSaveAuth?.syncSupabaseCustomerSession) {
       window.FoodSaveAuth.syncSupabaseCustomerSession(session, { navigateHome });
@@ -6727,13 +6983,13 @@ function updateReputationRules(){
     setError(config.requestErrorId, '');
 
     if (!email) {
-      setError(errorTarget, 'Vui lòng nhập địa chỉ email.');
+      setError(errorTarget, mode === 'signup' ? 'Vui lòng nhập Email / Số điện thoại.' : 'Vui lòng nhập địa chỉ email.');
       emailInput?.focus();
       return;
     }
 
     if (!EMAIL_RE.test(email)) {
-      setError(errorTarget, 'Email không hợp lệ. Vui lòng kiểm tra lại.');
+      setError(errorTarget, mode === 'signup' ? 'Thông tin đăng ký chưa hợp lệ. Hiện tại OTP email cần địa chỉ email đúng định dạng.' : 'Email không hợp lệ. Vui lòng kiểm tra lại.');
       emailInput?.focus();
       return;
     }
@@ -6845,15 +7101,41 @@ function updateReputationRules(){
     const nameInput = fsEl('signup-detail-name');
     const phoneInput = fsEl('signup-detail-phone');
     const passwordInput = fsEl('signup-detail-password');
+    const confirmInput = fsEl('signup-detail-password-confirm');
+    const identifierInput = fsEl('signup-detail-identifier');
     const termsInput = fsEl('signup-detail-terms');
     if (nameInput) nameInput.value = fallbackName;
     if (phoneInput) phoneInput.value = user.phone || metadata.phone || '';
+    if (identifierInput) identifierInput.value = user.email || user.phone || emailOtpState.signup.email || '';
     if (passwordInput) passwordInput.value = '';
+    if (confirmInput) confirmInput.value = '';
     if (termsInput) termsInput.checked = false;
     setError('signup-detail-password-error', '');
+    setError('signup-detail-confirm-error', '');
     setError('signup-detail-error', '');
     window.setTimeout(() => nameInput?.focus(), 80);
   }
+
+  window.validateSignupDetailPasswords = function() {
+    const passwordInput = fsEl('signup-detail-password');
+    const confirmInput = fsEl('signup-detail-password-confirm');
+    const password = passwordInput?.value || '';
+    const confirm = confirmInput?.value || '';
+    setError('signup-detail-password-error', '');
+    setError('signup-detail-confirm-error', '');
+
+    if (password && !SIGNUP_PASSWORD_RE.test(password)) {
+      setError('signup-detail-password-error', 'Mật khẩu cần ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.');
+      return false;
+    }
+
+    if (confirm && password !== confirm) {
+      setError('signup-detail-confirm-error', 'Mật khẩu xác nhận không khớp, vui lòng kiểm tra lại.');
+      return false;
+    }
+
+    return true;
+  };
 
   function normalizePhoneForSupabase(rawPhone) {
     const compact = String(rawPhone || '').replace(/[^\d+]/g, '');
@@ -6920,13 +7202,16 @@ function updateReputationRules(){
     const passwordInput = fsEl('signup-detail-password');
     const phoneInput = fsEl('signup-detail-phone');
     const termsInput = fsEl('signup-detail-terms');
+    const confirmInput = fsEl('signup-detail-password-confirm');
     const button = fsEl('signup-detail-submit-btn');
     const fullName = nameInput?.value.trim();
     const password = passwordInput?.value || '';
+    const confirmPassword = confirmInput?.value || '';
     const phoneRaw = phoneInput?.value.trim();
     const phone = normalizePhoneForSupabase(phoneRaw);
 
     setError('signup-detail-password-error', '');
+    setError('signup-detail-confirm-error', '');
     setError('signup-detail-error', '');
 
     if (!fullName) {
@@ -6941,9 +7226,9 @@ function updateReputationRules(){
       return;
     }
 
-    if (!phone) {
-      setError('signup-detail-error', 'Vui lòng nhập số điện thoại.');
-      phoneInput?.focus();
+    if (password !== confirmPassword) {
+      setError('signup-detail-confirm-error', 'Mật khẩu xác nhận không khớp, vui lòng kiểm tra lại.');
+      confirmInput?.focus();
       return;
     }
 
@@ -6981,7 +7266,7 @@ function updateReputationRules(){
       syncSupabaseSession(session, false);
       setEmailOtpFlow(null, null);
       showSignupPanel('complete');
-      updateSignupStepper(4);
+      updateSignupStepper(6);
       if (typeof toast === 'function') toast('Đăng ký thành công!', 'info');
     } catch (error) {
       setError('signup-detail-error', 'Không thể cập nhật thông tin: ' + (error?.message || 'Vui lòng thử lại sau.'));
@@ -7065,6 +7350,12 @@ function updateReputationRules(){
       signupPhoneInput.value = signupPhoneInput.value.replace(/[^\d+]/g, '');
     });
   }
+
+  ['signup-detail-password', 'signup-detail-password-confirm'].forEach((id) => {
+    const input = fsEl(id);
+    if (!input) return;
+    input.addEventListener('input', () => window.validateSignupDetailPasswords());
+  });
 
   const signupTermsInput = fsEl('signup-detail-terms');
   if (signupTermsInput) {

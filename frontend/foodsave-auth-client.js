@@ -917,15 +917,16 @@
   }
 
   const PARTNER_REGISTER_STEPS = [
-    "Tài khoản",
-    "Hồ sơ & định vị",
-    "Vận hành & KYC",
+    "Liên hệ",
+    "OTP",
+    "eKYC",
+    "Cửa hàng",
     "Tài chính",
-    "Chờ duyệt"
+    "Vận hành"
   ];
 
   const PARTNER_BUSINESS_TYPES = [
-    { id: "bakery", label: "Tiệm bánh/Bakery", icon: "ti-bread" },
+    { id: "bakery", label: "Tiệm bánh", icon: "ti-bread" },
     { id: "restaurant", label: "Nhà hàng/Bếp ăn", icon: "ti-chef-hat" },
     { id: "convenience", label: "Cửa hàng tiện lợi", icon: "ti-building-store" },
     { id: "supermarket", label: "Siêu thị", icon: "ti-shopping-cart" }
@@ -1013,6 +1014,10 @@
       location: current.location || {},
       operations: current.operations || {},
       docs: current.docs || {},
+      uploads: current.uploads || {},
+      ekyc: current.ekyc || {},
+      otp: current.otp || {},
+      automation: current.automation || { dynamicPricing: true, charityTransfer: true },
       finance: current.finance || {}
     };
     return window.FoodSavePortalRegistration;
@@ -1666,6 +1671,683 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     window.rAuth();
   }
 
+  function partnerWeekDays() {
+    return ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
+  }
+
+  function ensurePartnerRegistrationDefaults() {
+    const state = partnerState();
+    state.operations = {
+      ...(state.operations || {}),
+      schedule: (state.operations?.schedule?.length ? state.operations.schedule : partnerWeekDays().map((day) => ({ day, open: true, from: "08:00", to: "22:00" })))
+    };
+    state.uploads = state.uploads || {};
+    state.docs = state.docs || {};
+    state.ekyc = state.ekyc || {};
+    state.otp = state.otp || {};
+    state.profile = state.profile || {};
+    state.account = state.account || {};
+    state.location = state.location || {};
+    state.finance = state.finance || {};
+    state.automation = {
+      dynamicPricing: state.automation?.dynamicPricing !== false,
+      charityTransfer: state.automation?.charityTransfer !== false
+    };
+    return state;
+  }
+
+  function splitPartnerContact(value) {
+    const contact = String(value || "").trim();
+    if (!contact) return { contact: "", email: "", phone: "" };
+    if (contact.includes("@")) return { contact, email: contact.toLowerCase(), phone: "" };
+    return { contact, email: "", phone: normalizePhone(contact) };
+  }
+
+  function partnerContactValue() {
+    const account = partnerState().account || {};
+    return account.contact || account.email || account.phone || "";
+  }
+
+  function setPartnerWizardMode(enabled) {
+    const wrap = select(".auth-wrap");
+    if (wrap) wrap.classList.toggle("partner-wizard-mode", Boolean(enabled));
+  }
+
+  function ensurePartnerOtp(reset) {
+    const state = ensurePartnerRegistrationDefaults();
+    if (reset || !state.otp.code || !state.otp.expiresAt) {
+      state.otp = {
+        code: "123456",
+        value: reset ? "" : state.otp.value || "",
+        expiresAt: Date.now() + 180000,
+        error: ""
+      };
+    }
+    return state.otp;
+  }
+
+  function partnerOtpRemainingSeconds() {
+    const otp = ensurePartnerOtp(false);
+    return Math.max(0, Math.ceil((Number(otp.expiresAt || 0) - Date.now()) / 1000));
+  }
+
+  function formatPartnerOtpTime(seconds) {
+    const minutes = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const rest = String(seconds % 60).padStart(2, "0");
+    return `${minutes}:${rest}`;
+  }
+
+  function stopPartnerOtpTimer() {
+    if (window.__partnerOtpTimer) {
+      window.clearInterval(window.__partnerOtpTimer);
+      window.__partnerOtpTimer = null;
+    }
+  }
+
+  function startPartnerOtpTimer() {
+    stopPartnerOtpTimer();
+    ensurePartnerOtp(false);
+    const tick = () => {
+      const seconds = partnerOtpRemainingSeconds();
+      const timer = select("#partner-otp-timer");
+      const resend = select("#partner-otp-resend");
+      if (timer) timer.textContent = formatPartnerOtpTime(seconds);
+      if (resend) resend.style.display = seconds <= 0 ? "inline-flex" : "none";
+      if (seconds <= 0) stopPartnerOtpTimer();
+    };
+    tick();
+    window.__partnerOtpTimer = window.setInterval(tick, 1000);
+  }
+
+  function resendPartnerOtp() {
+    ensurePartnerOtp(true);
+    window.rAuth();
+    notify("Đã gửi lại mã OTP", "Mã OTP mới có hiệu lực trong 3 phút.", "info");
+  }
+
+  function partnerOtpInput(input, index) {
+    const state = ensurePartnerRegistrationDefaults();
+    const boxes = Array.from(document.querySelectorAll(".partner-otp-box"));
+    const value = String(input?.value || "").replace(/\D/g, "").slice(-1);
+    if (input) input.value = value;
+    state.otp = { ...(state.otp || {}), value: boxes.map((box) => box.value || "").join(""), error: "" };
+    if (value && boxes[index + 1]) boxes[index + 1].focus();
+  }
+
+  function partnerOtpKey(input, index, event) {
+    if (event?.key === "Backspace" && !input?.value) {
+      const boxes = Array.from(document.querySelectorAll(".partner-otp-box"));
+      if (boxes[index - 1]) boxes[index - 1].focus();
+    }
+  }
+
+  function partnerUploadPreview(upload) {
+    if (upload?.preview) return `<img class="partner-upload-preview" src="${escapeHtml(upload.preview)}" alt="${escapeHtml(upload.name || "preview")}">`;
+    return `<div class="partner-upload-preview" style="display:flex;align-items:center;justify-content:center;background:var(--green-50);color:var(--green-700)"><i class="ti ti-file-check" style="font-size:24px"></i></div>`;
+  }
+
+  function partnerUploadBox(field, label, hint, options = {}) {
+    const state = partnerState();
+    const upload = state.uploads?.[field] || {};
+    const fileName = upload.name || (field === "logo" ? state.logoFileName : field === "cover" ? state.coverFileName : state.docs?.[field]);
+    const loading = upload.loading;
+    const done = Boolean(fileName) && !loading;
+    const icon = options.icon || (options.add ? "ti-plus" : "ti-upload");
+    return `
+<button type="button" class="partner-upload ${done ? "done" : ""} ${loading ? "loading" : ""}" onclick="document.getElementById('seller-file-${field}').click()">
+  ${loading ? `<span class="partner-spinner"></span><strong>Đang phân tích dữ liệu...</strong><small>${escapeHtml(label)}</small>` : done ? `${partnerUploadPreview(upload)}<span class="partner-upload-success"><i class="ti ti-check"></i></span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(fileName)}</small>` : `<i class="ti ${icon}"></i><strong>${escapeHtml(label)}</strong><small>${escapeHtml(hint || "Chọn file có sẵn")}</small>`}
+</button>
+<input id="seller-file-${field}" type="file" accept="image/*, application/pdf" style="display:none" onchange="FoodSaveAuth.markSellerFileUploaded('${field}',this)">`;
+  }
+
+  function applyPartnerMockOcr(field) {
+    const state = ensurePartnerRegistrationDefaults();
+    if (field === "cccdFront" || field === "cccdBack") {
+      state.account = {
+        ...(state.account || {}),
+        representative: state.account?.representative || "Nguyễn Minh Anh",
+        cccdNumber: state.account?.cccdNumber || "079203000123"
+      };
+    }
+    if (field === "businessLicense") {
+      state.profile = {
+        ...(state.profile || {}),
+        legalName: state.profile?.legalName || "CÔNG TY TNHH TIỆM BÁNH ABC",
+        taxCode: state.profile?.taxCode || "0317456789",
+        storeName: state.profile?.storeName || "Tiệm bánh ABC"
+      };
+    }
+  }
+
+  function markSellerFileUploaded(field, input) {
+    const file = input?.files?.[0];
+    if (!file) return;
+    savePartnerStep(partnerStep());
+    const state = ensurePartnerRegistrationDefaults();
+    const upload = {
+      name: file.name,
+      loading: true,
+      preview: file.type && file.type.startsWith("image/") ? URL.createObjectURL(file) : ""
+    };
+    state.uploads = { ...(state.uploads || {}), [field]: upload };
+    if (field === "logo") state.logoFileName = file.name;
+    else if (field === "cover") state.coverFileName = file.name;
+    else state.docs = { ...(state.docs || {}), [field]: file.name };
+    window.rAuth();
+
+    window.setTimeout(() => {
+      const nextState = ensurePartnerRegistrationDefaults();
+      nextState.uploads = {
+        ...(nextState.uploads || {}),
+        [field]: { ...(nextState.uploads?.[field] || upload), loading: false }
+      };
+      applyPartnerMockOcr(field);
+      window.rAuth();
+    }, 2000);
+  }
+
+  function partnerKycUnlocked() {
+    const state = partnerState();
+    return Boolean(state.docs?.cccdFront && state.docs?.cccdBack && state.ekyc?.faceVerified);
+  }
+
+  function startPartnerFaceScan() {
+    const state = ensurePartnerRegistrationDefaults();
+    state.ekyc = { ...(state.ekyc || {}), faceStatus: "scanning", faceVerified: false };
+    window.rAuth();
+    window.setTimeout(() => {
+      const nextState = ensurePartnerRegistrationDefaults();
+      nextState.ekyc = { ...(nextState.ekyc || {}), faceStatus: "verified", faceVerified: true };
+      window.rAuth();
+      notify("Xác thực thành công", "Khu vực thông tin người đại diện đã được mở khóa.", "info");
+    }, 1800);
+  }
+
+  function partnerPasswordField(id, iconId, label, placeholder, disabled = false) {
+    const account = partnerState().account || {};
+    const value = id === "auth-register-password-confirm" ? account.passwordConfirm : account.password;
+    return `<div class="field"><label>${label}</label><div style="position:relative"><input class="inp" id="${id}" type="password" autocomplete="new-password" placeholder="${placeholder}" value="${escapeHtml(value || "")}" style="padding-right:42px" ${disabled ? "disabled" : ""} oninput="FoodSaveAuth.validatePartnerPasswords()"><button type="button" class="btn btn-icon" style="position:absolute;right:4px;top:4px;width:36px;height:36px;border:0;background:transparent;color:var(--muted);box-shadow:none" onclick="FoodSaveAuth.togglePartnerPassword('${id}','${iconId}')" ${disabled ? "disabled" : ""}><i class="ti ti-eye" id="${iconId}"></i></button></div><div id="${id === "auth-register-password" ? "auth-register-password-error" : "auth-register-confirm-error"}" class="partner-error" style="min-height:16px"></div></div>`;
+  }
+
+  function partnerStepper() {
+    const step = partnerStep();
+    return `<div class="partner-stepper">${PARTNER_REGISTER_STEPS.map((label, index) => `
+<div class="partner-step ${index === step ? "active" : ""} ${index < step ? "done" : ""}">
+  <span class="partner-step-num">${index < step ? '<i class="ti ti-check"></i>' : index + 1}</span>
+  <span>${label}</span>
+</div>`).join("")}</div>`;
+  }
+
+  function partnerWizardActions() {
+    const step = partnerStep();
+    const last = PARTNER_REGISTER_STEPS.length - 1;
+    return `<div class="partner-wizard-actions">
+  <button class="btn btn-o btn-lg" style="${step === 0 ? "visibility:hidden" : ""}" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button>
+  <button class="btn btn-primary btn-lg" onclick="FoodSaveAuth.nextPartnerRegisterStep()">${step === last ? "Gửi hồ sơ" : "Tiếp tục"} <i class="ti ${step === last ? "ti-send" : "ti-arrow-right"}"></i></button>
+</div>`;
+  }
+
+  function partnerStepContact() {
+    const value = partnerContactValue();
+    return `
+<section class="partner-section">
+  <h2>Xác thực thông tin liên hệ</h2>
+  <p>FoodSave dùng thông tin này để gửi OTP và điền trước các bước xác thực sau.</p>
+  <div class="field"><label>Số điện thoại hoặc Email</label><input class="inp" id="partner-contact" autocomplete="email tel" placeholder="Nhập số điện thoại hoặc email" value="${escapeHtml(value)}" style="height:58px;font-size:16px"></div>
+  <div class="partner-help">Bằng việc tiếp tục, bạn đồng ý với <a href="chinh-sach.html" style="color:var(--green-700);font-weight:900">Chính sách và điều khoản sử dụng</a> của FoodSave.</div>
+</section>`;
+  }
+
+  function partnerStepOtp() {
+    const otp = ensurePartnerOtp(false);
+    const value = String(otp.value || "").padEnd(6, " ").slice(0, 6).split("");
+    const expired = partnerOtpRemainingSeconds() <= 0;
+    return `
+<section class="partner-section">
+  <h2>Xác thực mã OTP</h2>
+  <p>Mã xác thực đã được gửi đến ${escapeHtml(partnerContactValue() || "thông tin liên hệ của bạn")}.</p>
+  <div style="display:flex;gap:10px;margin:16px 0 12px">${value.map((digit, index) => `<input class="inp partner-otp-box" inputmode="numeric" maxlength="1" value="${escapeHtml(digit.trim())}" oninput="FoodSaveAuth.partnerOtpInput(this,${index})" onkeydown="FoodSaveAuth.partnerOtpKey(this,${index},event)" style="width:52px;height:56px;text-align:center;font-size:22px;font-weight:900;font-family:'Plus Jakarta Sans'">`).join("")}</div>
+  <div class="partner-help" style="display:flex;align-items:center;gap:10px"><i class="ti ti-clock"></i> Mã OTP có hiệu lực trong <strong id="partner-otp-timer">${formatPartnerOtpTime(partnerOtpRemainingSeconds())}</strong>.</div>
+  <button id="partner-otp-resend" class="btn btn-o" style="margin-top:12px;display:${expired ? "inline-flex" : "none"}" onclick="FoodSaveAuth.resendPartnerOtp()"><i class="ti ti-refresh"></i> Gửi lại mã OTP</button>
+  <div class="partner-error" style="margin-top:12px">${escapeHtml(otp.error || "")}</div>
+</section>`;
+  }
+
+  function partnerStepEkyc() {
+    const state = ensurePartnerRegistrationDefaults();
+    const account = state.account || {};
+    const contact = splitPartnerContact(partnerContactValue());
+    if (contact.email && !account.email) account.email = contact.email;
+    if (contact.phone && !account.phone) account.phone = contact.phone;
+    const faceStatus = state.ekyc?.faceStatus || "idle";
+    const unlocked = partnerKycUnlocked();
+    const disabled = unlocked ? "" : "disabled";
+    return `
+<section class="partner-section">
+  <h2>Thông tin Người đại diện & Xác thực</h2>
+  <p>Hoàn tất CCCD và quét khuôn mặt để mở khóa form thông tin.</p>
+  <h3>Khu vực 1: Tải lên ảnh Căn cước công dân</h3>
+  <div class="partner-grid-2">
+    <div>${partnerUploadBox("cccdFront", "CCCD Mặt trước", "Chọn ảnh/PDF có sẵn", { icon: "ti-id" })}</div>
+    <div>${partnerUploadBox("cccdBack", "CCCD Mặt sau", "Chọn ảnh/PDF có sẵn", { icon: "ti-id-badge-2" })}</div>
+  </div>
+  <h3>Khu vực 2: Quét khuôn mặt</h3>
+  <div class="partner-face ${faceStatus === "scanning" ? "scanning" : ""}">
+    <div class="partner-face-oval"><i class="ti ${faceStatus === "verified" ? "ti-check" : "ti-user-scan"}"></i></div>
+    <div>
+      <strong>${faceStatus === "verified" ? "Xác thực thành công!" : faceStatus === "scanning" ? "Đang quét khuôn mặt..." : "Sẵn sàng xác thực khuôn mặt"}</strong>
+      <small>${faceStatus === "verified" ? "Khu vực 3 đã được mở khóa." : "Khung mô phỏng camera, không mở camera thật trong bản demo."}</small>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="FoodSaveAuth.startPartnerFaceScan()" ${faceStatus === "scanning" ? "disabled" : ""}><i class="ti ti-scan"></i> Bắt đầu quét khuôn mặt</button>
+    </div>
+  </div>
+  <h3>Khu vực 3: Form điền thông tin</h3>
+  <div class="${unlocked ? "" : "partner-locked"}">
+    <div class="partner-grid-2">
+      <div class="field"><label>Tên người đại diện</label><input class="inp" id="auth-register-representative" value="${escapeHtml(account.representative || "")}" ${disabled}></div>
+      <div class="field"><label>Số CCCD</label><input class="inp" id="partner-cccd-number" inputmode="numeric" value="${escapeHtml(account.cccdNumber || "")}" ${disabled}></div>
+      <div class="field"><label>Email</label><input class="inp" id="auth-register-email" type="email" value="${escapeHtml(account.email || "")}" ${disabled}></div>
+      <div class="field"><label>Số điện thoại</label><input class="inp" id="auth-register-phone" autocomplete="tel" value="${escapeHtml(account.phone || "")}" ${disabled}></div>
+    </div>
+    <div class="partner-help" style="margin-bottom:12px">Trích xuất tự động từ CCCD, có thể chỉnh sửa.</div>
+    <div class="partner-grid-2">
+      ${partnerPasswordField("auth-register-password", "auth-register-password-icon", "Mật khẩu", "In hoa, in thường, số và ký tự đặc biệt", !unlocked)}
+      ${partnerPasswordField("auth-register-password-confirm", "auth-register-confirm-icon", "Xác nhận Mật khẩu", "Nhập lại mật khẩu", !unlocked)}
+    </div>
+  </div>
+</section>`;
+  }
+
+  function partnerHashtagList() {
+    const tags = partnerState().profile?.hashtags || [];
+    if (!tags.length) return "";
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${tags.map((tag) => `<span class="tg" style="background:var(--green-50);color:var(--green-800);border:1px solid var(--green-100)">${escapeHtml(tag)}</span>`).join("")}</div>`;
+  }
+
+  function partnerStepStoreLegal() {
+    const state = ensurePartnerRegistrationDefaults();
+    const profile = state.profile || {};
+    const location = state.location || {};
+    const account = state.account || {};
+    return `
+<section class="partner-section">
+  <h2>Hồ sơ Cửa hàng & Pháp lý</h2>
+  <p>Các nhóm được sắp theo luồng quét giấy tờ trước, sau đó hoàn thiện hồ sơ công khai và quản trị nội bộ.</p>
+  <h3>Nhóm 1: Hồ sơ pháp lý & Chứng nhận An toàn</h3>
+  <div class="partner-grid-2">
+    <div>${partnerUploadBox("businessLicense", "Giấy ĐKKD (Trang 1)", "Quét để tự điền pháp nhân", { icon: "ti-file-certificate" })}</div>
+    <div>${partnerUploadBox("businessLicenseExtra", "Thêm", "Trang 2, trang 3...", { icon: "ti-plus", add: true })}</div>
+  </div>
+  <div class="partner-grid-2">
+    <div class="field"><label>Tên pháp nhân công ty / Hộ kinh doanh cá thể</label><input class="inp" id="seller-legal-name" value="${escapeHtml(profile.legalName || "")}"></div>
+    <div class="field"><label>Mã số thuế / Số CMND/CCCD</label><input class="inp" id="seller-tax-code" value="${escapeHtml(profile.taxCode || "")}"></div>
+  </div>
+  <div class="partner-grid-2">
+    <div>${partnerUploadBox("foodSafety", "Giấy ATTP", "Chọn giấy chứng nhận", { icon: "ti-shield-check" })}</div>
+    <div>${partnerUploadBox("foodSafetyExtra", "Thêm", "Trang bổ sung", { icon: "ti-plus", add: true })}</div>
+  </div>
+
+  <h3>Nhóm 2: Thông tin hiển thị cửa hàng</h3>
+  <div class="partner-grid-2">
+    <div>${partnerUploadBox("logo", "Logo cửa hàng", "Ảnh vuông khuyến nghị", { icon: "ti-photo" })}</div>
+    <div>${partnerUploadBox("cover", "Banner / Ảnh bìa", "Ảnh ngang khuyến nghị", { icon: "ti-photo-up" })}</div>
+  </div>
+  <div class="partner-grid-2">
+    <div class="field"><label>Tên hiển thị của cửa hàng/Thương hiệu</label><input class="inp" id="auth-register-name" value="${escapeHtml(profile.storeName || "")}" placeholder="Tiệm bánh ABC"></div>
+    <div class="field"><label>Số điện thoại Hotline Cửa hàng</label><input class="inp" id="seller-public-hotline" value="${escapeHtml(profile.hotline || "")}" placeholder="0900 000 000"><div class="partner-help">Hiển thị công khai để khách hàng liên hệ.</div></div>
+  </div>
+  <div class="field"><label>Loại hình kinh doanh</label><select class="inp" id="seller-business-type" onchange="FoodSaveAuth.selectPartnerBusinessType(this.value)"><option value="">Chọn loại hình</option>${PARTNER_BUSINESS_TYPES.map((type) => `<option value="${type.id}" ${profile.businessType === type.id ? "selected" : ""}>${type.label}</option>`).join("")}</select></div>
+  <div class="field"><label>Mô tả cửa hàng</label><textarea class="inp" id="seller-store-description" rows="3" placeholder="Giới thiệu ngắn về cửa hàng">${escapeHtml(profile.description || "")}</textarea></div>
+  <div class="field"><label>Hashtag</label><input class="inp" id="seller-hashtag-input" placeholder="Gõ từ khóa và bấm Enter" onkeydown="FoodSaveAuth.handlePartnerHashtagKey(this,event)">${partnerHashtagList()}<div class="partner-help">Tối đa 5 tag.</div></div>
+  <div class="field"><label>Địa chỉ chi tiết</label><input class="inp" id="seller-address-search" placeholder="Nhập địa chỉ hoặc dùng Google Places Autocomplete" value="${escapeHtml(location.formattedAddress || "")}" onblur="FoodSaveAuth.parseSellerTypedAddress()"></div>
+  <div id="seller-map" style="height:220px;border:1.5px solid var(--line);border-radius:8px;background:var(--soft);margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:800;text-align:center;padding:16px"><i class="ti ti-map-pin" style="font-size:22px;color:var(--green-700);margin-right:6px"></i> Google Maps sẽ hiển thị khi API đã được nạp</div>
+
+  <h3>Nhóm 3: Thông tin quản trị viên</h3>
+  <div class="partner-grid-2">
+    <div class="field"><label>Chức vụ người đại diện</label><input class="inp" id="seller-admin-title" value="${escapeHtml(profile.adminTitle || "")}" placeholder="Chủ cửa hàng, Quản lý"></div>
+    <div class="field"><label>Email quản trị</label><input class="inp" id="seller-admin-email" type="email" value="${escapeHtml(profile.adminEmail || account.email || "")}"><div class="partner-help">Dùng làm tài khoản đăng nhập hệ thống quản lý của Đối tác.</div></div>
+    <div class="field"><label>Số điện thoại cá nhân liên hệ trực tiếp</label><input class="inp" id="seller-admin-phone" value="${escapeHtml(profile.adminPhone || account.phone || "")}"><div class="partner-help">Số bảo mật dùng để FoodSave liên hệ khẩn cấp, không hiển thị cho khách hàng.</div></div>
+  </div>
+</section>`;
+  }
+
+  function partnerBankStyle(bank) {
+    const styles = {
+      Vietcombank: "linear-gradient(135deg,#047857,#16a34a)",
+      Techcombank: "linear-gradient(135deg,#b91c1c,#ef4444)",
+      BIDV: "linear-gradient(135deg,#0369a1,#14b8a6)",
+      "MB Bank": "linear-gradient(135deg,#1d4ed8,#38bdf8)",
+      VPBank: "linear-gradient(135deg,#15803d,#f59e0b)",
+      ACB: "linear-gradient(135deg,#075985,#2563eb)",
+      Sacombank: "linear-gradient(135deg,#1e40af,#f97316)",
+      VietinBank: "linear-gradient(135deg,#0f766e,#0ea5e9)"
+    };
+    return styles[bank] || "linear-gradient(135deg,#166534,#22c55e)";
+  }
+
+  function selectPartnerBank(value) {
+    savePartnerStep(4);
+    partnerState().finance = { ...(partnerState().finance || {}), bankName: value };
+    window.rAuth();
+  }
+
+  function partnerStepFinance() {
+    const finance = ensurePartnerRegistrationDefaults().finance || {};
+    const bank = finance.bankName || "FoodSave Bank";
+    return `
+<section class="partner-section">
+  <h2>Thiết lập Tài chính</h2>
+  <p>Thông tin nhận thanh toán cho đơn hàng của đối tác.</p>
+  <div class="partner-bank-card" style="background:${partnerBankStyle(finance.bankName)}">
+    <div class="partner-bank-logo">${escapeHtml(String(bank).split(/\s+/).map((word) => word[0]).join("").slice(0, 3).toUpperCase())}</div>
+    <div>
+      <span>Ngân hàng nhận thanh toán</span>
+      <strong>${escapeHtml(bank)}</strong>
+      <small>${escapeHtml(finance.accountNumber || "•••• •••• ••••")}</small>
+    </div>
+  </div>
+  <div class="field"><label>Lựa chọn Ngân hàng</label><select class="inp" id="seller-bank-name" onchange="FoodSaveAuth.selectPartnerBank(this.value)"><option value="">Chọn ngân hàng</option>${PARTNER_BANKS.map((item) => `<option value="${item}" ${finance.bankName === item ? "selected" : ""}>${item}</option>`).join("")}</select></div>
+  <div class="field"><label>Số tài khoản ngân hàng</label><input class="inp" id="seller-bank-account" inputmode="numeric" value="${escapeHtml(finance.accountNumber || "")}" placeholder="0123456789"></div>
+  <div class="field"><label>Tên chủ tài khoản</label><input class="inp" id="seller-bank-holder" value="${escapeHtml(finance.accountHolder || "")}" placeholder="NGUYEN MINH ANH" style="text-transform:uppercase" oninput="FoodSaveAuth.formatBankAccountName(this)"><div class="partner-help">Phải trùng khớp với tên trên CCCD/Giấy ĐKKD.</div></div>
+</section>`;
+  }
+
+  function togglePartnerAutomation(key) {
+    savePartnerStep(5);
+    const state = ensurePartnerRegistrationDefaults();
+    state.automation = { ...(state.automation || {}), [key]: !state.automation?.[key] };
+    window.rAuth();
+  }
+
+  function partnerSwitch(key, label, note) {
+    const active = partnerState().automation?.[key] !== false;
+    return `<div class="f ac jb" style="gap:14px;padding:14px 0;border-bottom:1px solid var(--line)">
+  <div><strong style="display:block;font-size:13.5px;color:var(--ink-soft)">${escapeHtml(label)}</strong><small style="color:var(--muted);font-weight:700">${escapeHtml(note)}</small></div>
+  <button type="button" class="partner-switch ${active ? "active" : ""}" onclick="FoodSaveAuth.togglePartnerAutomation('${key}')"><span></span></button>
+</div>`;
+  }
+
+  function partnerStepOperations() {
+    const state = ensurePartnerRegistrationDefaults();
+    const scheduleByDay = Object.fromEntries((state.operations?.schedule || []).map((item) => [item.day, item]));
+    return `
+<section class="partner-section">
+  <h2>Vận hành & Chính sách</h2>
+  <p>Cấu hình giờ hoạt động, nhãn hạn sử dụng và tự động hóa bán hàng.</p>
+  <h3>Cấu hình giờ hoạt động</h3>
+  <div style="border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:18px">${partnerWeekDays().map((day) => {
+    const item = scheduleByDay[day] || { day, open: true, from: "08:00", to: "22:00" };
+    return `<div class="f ac jb seller-day-row" data-day="${day}" style="gap:10px;padding:10px 8px;border-bottom:1px solid var(--line)"><div class="f ac g8"><button type="button" class="partner-switch ${item.open === false ? "" : "active"}" onclick="FoodSaveAuth.toggleSellerDay('${day}',this)"><span></span></button><strong style="min-width:76px;color:var(--ink-soft);font-size:13px">${day}</strong></div><div class="f ac g6"><input data-time="from" type="time" class="inp" value="${item.from || "08:00"}" ${item.open === false ? "disabled" : ""} style="width:116px;padding:9px"><span style="color:var(--muted)">-</span><input data-time="to" type="time" class="inp" value="${item.to || "22:00"}" ${item.open === false ? "disabled" : ""} style="width:116px;padding:9px"></div></div>`;
+  }).join("")}</div>
+  <h3>Cấu hình Quy tắc Nhãn HSD</h3>
+  <div class="partner-grid-3">
+    <div class="partner-policy-card"><span class="partner-policy-dot green"></span><strong>Nhãn Xanh</strong><small>Thời hạn &gt; 3-5 ngày.</small></div>
+    <div class="partner-policy-card"><span class="partner-policy-dot yellow"></span><strong>Nhãn Vàng</strong><small>Còn 48h.</small></div>
+    <div class="partner-policy-card"><span class="partner-policy-dot red"></span><strong>Nhãn Đỏ</strong><small>Cận khẩn cấp 24h.</small></div>
+  </div>
+  <h3>Thiết lập tự động</h3>
+  ${partnerSwitch("dynamicPricing", "Kích hoạt điều chỉnh giá linh hoạt khi sản phẩm gần hết hạn.", "Ưu tiên đẩy deal phù hợp nhãn HSD.")}
+  ${partnerSwitch("charityTransfer", "Tự động chuyển trạng thái Tặng từ thiện khi không bán được.", "Giúp sản phẩm còn dùng được đến đúng tổ chức nhận hỗ trợ.")}
+  ${state.submitted ? `<div style="margin-top:18px;padding:16px;border-radius:8px;background:var(--green-50);border:1px solid var(--green-100);color:var(--green-800);font-weight:800"><i class="ti ti-circle-check"></i> Hồ sơ đã được gửi. FoodSave sẽ phản hồi trong 24-48 giờ.</div>` : ""}
+</section>`;
+  }
+
+  function partnerRegisterWizardPage() {
+    ensurePartnerRegistrationDefaults();
+    const pages = [partnerStepContact, partnerStepOtp, partnerStepEkyc, partnerStepStoreLegal, partnerStepFinance, partnerStepOperations];
+    const step = partnerStep();
+    return `<div class="partner-wizard">
+  <div class="partner-wizard-head">
+    <h1 class="partner-wizard-title">Đăng ký Cửa hàng Đối tác</h1>
+    ${partnerStepper()}
+  </div>
+  <div class="partner-wizard-body">${pages[step]()}</div>
+  ${partnerWizardActions()}
+</div>`;
+  }
+
+  function savePartnerStep(step) {
+    const state = ensurePartnerRegistrationDefaults();
+    if (step === 0) {
+      const parsed = splitPartnerContact(readValue("#partner-contact"));
+      state.account = { ...(state.account || {}), ...parsed };
+      if (parsed.email) state.profile = { ...(state.profile || {}), adminEmail: state.profile?.adminEmail || parsed.email };
+      if (parsed.phone) state.profile = { ...(state.profile || {}), adminPhone: state.profile?.adminPhone || parsed.phone };
+    }
+    if (step === 1) {
+      const boxes = Array.from(document.querySelectorAll(".partner-otp-box"));
+      state.otp = { ...(state.otp || {}), value: boxes.map((box) => box.value || "").join("") };
+    }
+    if (step === 2) {
+      state.account = {
+        ...(state.account || {}),
+        representative: readValue("#auth-register-representative") || state.account?.representative || "",
+        cccdNumber: readValue("#partner-cccd-number") || state.account?.cccdNumber || "",
+        email: readValue("#auth-register-email") || state.account?.email || "",
+        phone: normalizePhone(readValue("#auth-register-phone") || state.account?.phone || ""),
+        password: readValue("#auth-register-password") || state.account?.password || "",
+        passwordConfirm: readValue("#auth-register-password-confirm") || state.account?.passwordConfirm || ""
+      };
+    }
+    if (step === 3) {
+      state.profile = {
+        ...(state.profile || {}),
+        legalName: readValue("#seller-legal-name"),
+        taxCode: readValue("#seller-tax-code"),
+        storeName: readValue("#auth-register-name"),
+        hotline: normalizePhone(readValue("#seller-public-hotline")),
+        businessType: readValue("#seller-business-type") || state.profile?.businessType || "",
+        description: readValue("#seller-store-description"),
+        adminTitle: readValue("#seller-admin-title"),
+        adminEmail: readValue("#seller-admin-email"),
+        adminPhone: normalizePhone(readValue("#seller-admin-phone"))
+      };
+      const address = readValue("#seller-address-search");
+      if (address) state.location = { ...(state.location || {}), formattedAddress: address };
+    }
+    if (step === 4) {
+      state.finance = {
+        ...(state.finance || {}),
+        bankName: readValue("#seller-bank-name"),
+        accountNumber: readValue("#seller-bank-account").replace(/\s/g, ""),
+        accountHolder: stripVietnameseTone(readValue("#seller-bank-holder")).toUpperCase().replace(/\s+/g, " ").trim()
+      };
+    }
+    if (step === 5) {
+      state.operations = {
+        ...(state.operations || {}),
+        schedule: Array.from(document.querySelectorAll(".seller-day-row")).map((row) => {
+          const open = row.querySelector(".partner-switch")?.classList.contains("active");
+          return {
+            day: row.getAttribute("data-day"),
+            open,
+            from: row.querySelector("[data-time='from']")?.value || "08:00",
+            to: row.querySelector("[data-time='to']")?.value || "22:00"
+          };
+        })
+      };
+    }
+  }
+
+  function validatePartnerStep(step) {
+    savePartnerStep(step);
+    const state = ensurePartnerRegistrationDefaults();
+    if (step === 0) {
+      const contact = state.account?.contact || "";
+      if (!contact) return "Vui lòng nhập số điện thoại hoặc email.";
+      if (contact.includes("@") && !PORTAL_EMAIL_RE.test(contact)) return "Email không hợp lệ.";
+      if (!contact.includes("@") && normalizePhone(contact).length < 8) return "Số điện thoại không hợp lệ.";
+      ensurePartnerOtp(true);
+    }
+    if (step === 1) {
+      const otp = ensurePartnerOtp(false);
+      if (partnerOtpRemainingSeconds() <= 0) {
+        state.otp = { ...(state.otp || {}), error: "Mã OTP đã hết hạn, vui lòng gửi lại mã OTP." };
+        window.rAuth();
+        return state.otp.error;
+      }
+      if (String(otp.value || "").length !== 6 || otp.value !== otp.code) {
+        state.otp = { ...(state.otp || {}), error: "Mã OTP không chính xác, vui lòng kiểm tra lại" };
+        window.rAuth();
+        return state.otp.error;
+      }
+      state.otp = { ...(state.otp || {}), verified: true, error: "" };
+    }
+    if (step === 2) {
+      const account = state.account || {};
+      if (!state.docs?.cccdFront) return "Vui lòng tải CCCD mặt trước.";
+      if (!state.docs?.cccdBack) return "Vui lòng tải CCCD mặt sau.";
+      if (!state.ekyc?.faceVerified) return "Vui lòng hoàn tất quét khuôn mặt.";
+      if (!account.representative) return "Vui lòng nhập tên người đại diện.";
+      if (!account.cccdNumber) return "Vui lòng nhập số CCCD.";
+      if (!PORTAL_EMAIL_RE.test(account.email || "")) return "Email đăng nhập không hợp lệ.";
+      if (!account.phone || account.phone.length < 8) return "Số điện thoại không hợp lệ.";
+      const passwordError = passwordErrorText(account.password, account.passwordConfirm);
+      if (passwordError) return passwordError;
+    }
+    if (step === 3) {
+      const profile = state.profile || {};
+      const location = state.location || {};
+      if (!state.docs?.businessLicense) return "Vui lòng tải Giấy ĐKKD.";
+      if (!profile.legalName) return "Vui lòng nhập tên pháp nhân công ty.";
+      if (!profile.taxCode) return "Vui lòng nhập mã số thuế.";
+      if (!state.docs?.foodSafety) return "Vui lòng tải Giấy chứng nhận ATTP.";
+      if (!state.logoFileName) return "Vui lòng tải logo cửa hàng.";
+      if (!state.coverFileName) return "Vui lòng tải banner/ảnh bìa cửa hàng.";
+      if (!profile.storeName) return "Vui lòng nhập tên hiển thị cửa hàng.";
+      if (!profile.hotline || profile.hotline.length < 8) return "Số hotline cửa hàng không hợp lệ.";
+      if (!profile.businessType) return "Vui lòng chọn loại hình kinh doanh.";
+      if (!profile.description || profile.description.length < 12) return "Mô tả cửa hàng cần ít nhất 12 ký tự.";
+      if (!location.formattedAddress) return "Vui lòng nhập địa chỉ chi tiết cửa hàng.";
+      if (!PORTAL_EMAIL_RE.test(profile.adminEmail || "")) return "Email quản trị không hợp lệ.";
+      if (!profile.adminPhone || profile.adminPhone.length < 8) return "Số điện thoại cá nhân không hợp lệ.";
+    }
+    if (step === 4) {
+      const finance = state.finance || {};
+      if (!finance.bankName) return "Vui lòng chọn ngân hàng.";
+      if (!/^\d{6,24}$/.test(String(finance.accountNumber || ""))) return "Số tài khoản phải gồm 6-24 chữ số.";
+      if (!finance.accountHolder) return "Vui lòng nhập tên chủ tài khoản.";
+    }
+    return "";
+  }
+
+  function selectPartnerBusinessType(type) {
+    if (partnerStep() === 3) savePartnerStep(3);
+    partnerState().profile = { ...(partnerState().profile || {}), businessType: type };
+    window.rAuth();
+  }
+
+  function handlePartnerHashtagKey(input, event) {
+    if (event?.key !== "Enter") return;
+    event.preventDefault();
+    savePartnerStep(3);
+    const state = ensurePartnerRegistrationDefaults();
+    const tags = state.profile?.hashtags || [];
+    const raw = String(input?.value || "").trim();
+    if (!raw || tags.length >= 5) return;
+    const normalized = raw.startsWith("#") ? raw : `#${raw}`;
+    state.profile = { ...(state.profile || {}), hashtags: [...tags, normalized].slice(0, 5) };
+    if (input) input.value = "";
+    window.rAuth();
+  }
+
+  function limitPartnerHashtags(input) {
+    const tags = readPartnerTags(input?.value || "");
+    partnerState().profile = { ...(partnerState().profile || {}), hashtags: tags };
+    if (input) input.value = tags.join(" ");
+  }
+
+  function toggleSellerDay(day, toggle) {
+    const row = toggle?.closest(".seller-day-row") || document.querySelector(`.seller-day-row[data-day="${day}"]`);
+    if (!row) return;
+    toggle.classList.toggle("active");
+    const open = toggle.classList.contains("active");
+    row.querySelectorAll("input[type='time']").forEach((input) => {
+      input.disabled = !open;
+    });
+    savePartnerStep(5);
+  }
+
+  function afterPartnerRegisterRender() {
+    setPartnerWizardMode(portalAuthState() === "register");
+    if (portalAuthState() !== "register") {
+      stopPartnerOtpTimer();
+      return;
+    }
+    if (partnerStep() === 1) startPartnerOtpTimer();
+    else stopPartnerOtpTimer();
+    if (partnerStep() === 2) validatePartnerPasswords();
+    if (partnerStep() === 3) window.setTimeout(initSellerGoogleMaps, 80);
+  }
+
+  async function submitPartnerRegistration() {
+    if (portalRegisterPending) return;
+    portalRegisterPending = true;
+    savePartnerStep(5);
+    const state = ensurePartnerRegistrationDefaults();
+    const account = state.account || {};
+    const profile = state.profile || {};
+    const location = state.location || {};
+    const finance = state.finance || {};
+    const address = location.formattedAddress || [location.street, location.ward, location.district, location.city].filter(Boolean).join(", ");
+    const latitude = location.lat === "" || location.lat === undefined || location.lat === null ? undefined : Number(location.lat);
+    const longitude = location.lng === "" || location.lng === undefined || location.lng === null ? undefined : Number(location.lng);
+
+    try {
+      const data = await request(portalConfig.partner.registerEndpoint, {
+        method: "POST",
+        body: {
+          store_name: profile.storeName,
+          email: profile.adminEmail || account.email,
+          phone: profile.adminPhone || account.phone,
+          password: account.password,
+          address,
+          district: location.district || undefined,
+          city: location.city || "TP.HCM",
+          latitude: Number.isFinite(latitude) ? latitude : undefined,
+          longitude: Number.isFinite(longitude) ? longitude : undefined,
+          business_type: profile.businessType,
+          representative_name: account.representative,
+          bank_name: finance.bankName,
+          bank_account_number: String(finance.accountNumber || "").replace(/\s/g, ""),
+          bank_account_holder: finance.accountHolder,
+          terms_accepted: true
+        }
+      });
+      state.submitted = true;
+      saveSession(data, "partner");
+      window.rAuth();
+      notify("Đăng ký thành công", portalConfig.partner.pendingMessage, "info");
+    } catch (error) {
+      notify("Đăng ký thất bại", error.message, "error");
+    } finally {
+      portalRegisterPending = false;
+    }
+  }
+
+  async function nextPartnerRegisterStep() {
+    const step = partnerStep();
+    const error = validatePartnerStep(step);
+    if (error) {
+      if (step === 2) validatePartnerPasswords();
+      notify(step === 1 ? "OTP không hợp lệ" : "Thiếu thông tin", error, "warn");
+      return;
+    }
+    if (step >= PARTNER_REGISTER_STEPS.length - 1) {
+      await submitPartnerRegistration();
+      return;
+    }
+    setPartnerStep(step + 1);
+    window.rAuth();
+  }
+
+  function backPartnerRegisterStep() {
+    const step = partnerStep();
+    savePartnerStep(step);
+    if (step <= 0) return;
+    setPartnerStep(step - 1);
+    window.rAuth();
+  }
+
   async function registerPortal(role) {
     if (role === "partner") {
       await submitPartnerRegistration();
@@ -1803,6 +2485,13 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     parseSellerTypedAddress,
     selectPartnerBusinessType,
     limitPartnerHashtags,
+    resendPartnerOtp,
+    partnerOtpInput,
+    partnerOtpKey,
+    startPartnerFaceScan,
+    selectPartnerBank,
+    handlePartnerHashtagKey,
+    togglePartnerAutomation,
     beginPhoneSignup,
     backToRegisterMethods,
     oauthNotice
@@ -1871,7 +2560,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
         }
 
         const state = portalAuthState();
-        let html = '<div class="auth-back" onclick="goView(\'landing\')"><i class="ti ti-arrow-left"></i> Về trang chủ</div>';
+        setPartnerWizardMode(state === "register");
+        let html = state === "register" ? "" : '<div class="auth-back" onclick="goView(\'landing\')"><i class="ti ti-arrow-left"></i> Về trang chủ</div>';
         if (state === "login") html += portalLoginPage("partner");
         else if (state === "forgot") html += portalForgotPage("partner");
         else if (state === "qr" && typeof window.qrPage === "function") html += window.qrPage();
