@@ -1236,6 +1236,164 @@ function rejectCharity(charityId) {
     }
 }
 
+pg.users=()=>`
+<div class="G G4">
+<div class="K"><div class="K-l">Tổng khách hàng</div><div class="K-v" id="customer-total-count">...</div></div>
+<div class="K"><div class="K-l">Hoạt động</div><div class="K-v" id="customer-active-count" style="color:var(--ok)">...</div></div>
+<div class="K"><div class="K-l">Khóa</div><div class="K-v" id="customer-suspended-count" style="color:var(--err)">...</div></div>
+<div class="K"><div class="K-l">Nguồn dữ liệu</div><div class="K-v" style="font-size:1rem;color:var(--blue)">profiles</div></div>
+</div>
+<div class="P">
+<div class="P-h"><div class="P-t">Danh sách khách hàng</div><div class="P-a"><button type="button" class="bt" onclick="fetchCustomers()">Tải lại</button></div></div>
+<div class="W" style="max-height:550px;overflow-y:auto">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Họ Tên</th>
+<th>Email</th>
+<th>SĐT</th>
+<th>Trạng Thái</th>
+<th>Hành Động</th>
+</tr>
+</thead>
+<tbody id="customer-table-body">
+<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:22px">Đang tải dữ liệu...</td></tr>
+</tbody>
+</table>
+</div>
+</div>`;
+
+function setCustomerSummary(customers){
+const list=Array.isArray(customers)?customers:[];
+const active=list.filter(customer=>(customer.status||'active')==='active').length;
+const suspended=list.filter(customer=>customer.status==='suspended').length;
+const total=document.getElementById('customer-total-count');
+const activeEl=document.getElementById('customer-active-count');
+const suspendedEl=document.getElementById('customer-suspended-count');
+if(total)total.textContent=String(list.length);
+if(activeEl)activeEl.textContent=String(active);
+if(suspendedEl)suspendedEl.textContent=String(suspended);
+document.querySelectorAll('.S-i[data-p="users"] em').forEach(el=>el.textContent=String(list.length));
+}
+
+function setCustomerTableState(message,isError=false){
+const body=document.getElementById('customer-table-body');
+if(!body)return;
+body.innerHTML=`<tr><td colspan="6" style="text-align:center;color:${isError?'var(--err)':'var(--t3)'};padding:22px">${esc(message)}</td></tr>`;
+}
+
+function customerStatusBadge(status){
+return status==='suspended'?B('b-e','Tạm khóa'):B('b-ok','Hoạt động');
+}
+
+async function fetchCustomers(){
+const body=document.getElementById('customer-table-body');
+if(!body)return;
+setCustomerTableState('Đang tải dữ liệu...');
+try{
+const {data,error}=await foodsaveAdminSupabase
+.from('profiles')
+.select('id,full_name,email,phone,status,created_at')
+.eq('role','customer')
+.order('created_at',{ascending:false});
+if(error)throw error;
+const customers=data||[];
+setCustomerSummary(customers);
+if(!customers.length){
+setCustomerTableState('Không có dữ liệu khách hàng.');
+return;
+}
+body.innerHTML=customers.map(customer=>{
+const id=customer.id||'';
+const status=customer.status||'active';
+const nextAction=status==='suspended'?'Mở khóa':'Khóa tài khoản';
+const actionStyle=status==='suspended'?'background:var(--ok);border-color:var(--ok);color:#fff':'background:var(--warn);border-color:var(--warn);color:#fff';
+return`<tr>
+<td>${mn(esc(String(id).slice(0,8)))}</td>
+<td><strong>${val(customer.full_name||'Chưa cập nhật')}</strong></td>
+<td>${val(customer.email||'Chưa cập nhật')}</td>
+<td>${mn(val(customer.phone||'Chưa cập nhật'))}</td>
+<td>${customerStatusBadge(status)}</td>
+<td>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button type="button" class="bt" style="${actionStyle}" onclick="event.stopPropagation();toggleUserStatus('${esc(jsQ(id))}','${esc(jsQ(status))}')">${nextAction}</button>
+</div>
+</td>
+</tr>`;
+}).join('');
+}catch(error){
+console.error('Lỗi khi tải danh sách khách hàng:',error);
+setCustomerSummary([]);
+setCustomerTableState(error.message||'Không thể tải dữ liệu khách hàng. Vui lòng thử lại.',true);
+}
+}
+
+function ensureAdminToastRoot(){
+const styleId='admin-toast-style';
+if(!document.getElementById(styleId)){
+const style=document.createElement('style');
+style.id=styleId;
+style.textContent=`
+.admin-toast-wrap{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.admin-toast{min-width:280px;max-width:min(390px,calc(100vw - 36px));display:grid;grid-template-columns:34px 1fr;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--bd);background:#fff;color:var(--text);box-shadow:0 18px 44px rgba(21,43,34,.16);font-size:.78rem;font-weight:700;line-height:1.45;pointer-events:auto;animation:adminToastIn .24s ease-out}
+.admin-toast-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:900;background:var(--ok-bg);color:var(--ok)}
+.admin-toast.success{border-left:4px solid var(--ok)}
+.admin-toast.error{border-left:4px solid var(--err)}
+.admin-toast.warn{border-left:4px solid var(--warn)}
+.admin-toast.error .admin-toast-ic{background:var(--err-bg);color:var(--err)}
+.admin-toast.warn .admin-toast-ic{background:var(--warn-bg);color:var(--warn)}
+@keyframes adminToastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+`;
+document.head.appendChild(style);
+}
+let root=document.getElementById('admin-toast-wrap');
+if(!root){
+root=document.createElement('div');
+root.id='admin-toast-wrap';
+root.className='admin-toast-wrap';
+document.body.appendChild(root);
+}
+return root;
+}
+
+function showAdminToast(message,type='success'){
+const root=ensureAdminToastRoot();
+const variant=['success','error','warn'].includes(type)?type:'success';
+const icons={success:'✓',error:'!',warn:'!'};
+const toast=document.createElement('div');
+toast.className=`admin-toast ${variant}`;
+toast.innerHTML=`<span class="admin-toast-ic">${icons[variant]}</span><span>${esc(message)}</span>`;
+root.appendChild(toast);
+window.setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translateX(24px)';toast.style.transition='all .24s ease'},2600);
+window.setTimeout(()=>toast.remove(),2920);
+}
+
+async function toggleUserStatus(userId,currentStatus){
+if(!userId){
+showAdminToast('Không tìm thấy ID khách hàng cần cập nhật.','warn');
+return;
+}
+const nextStatus=currentStatus==='suspended'?'active':'suspended';
+const confirmMessage=nextStatus==='suspended'
+?'Bạn có chắc chắn muốn khóa tài khoản khách hàng này?'
+:'Bạn có chắc chắn muốn mở khóa tài khoản khách hàng này?';
+if(!confirm(confirmMessage))return;
+try{
+const {error}=await foodsaveAdminSupabase
+.from('profiles')
+.update({status:nextStatus})
+.eq('id',userId)
+.eq('role','customer');
+if(error)throw error;
+showAdminToast(nextStatus==='suspended'?'Đã khóa tài khoản thành công':'Đã mở khóa tài khoản thành công','success');
+await fetchCustomers();
+}catch(error){
+console.error('Lỗi khi cập nhật trạng thái khách hàng:',error);
+showAdminToast(error.message||'Không thể cập nhật trạng thái khách hàng.','error');
+}
+}
+
 // ===== NAV =====
 const titles={dashboard:'Bảng điều khiển',admins:'Quản trị viên',users:'Người dùng',reputation:'Uy tín',merchants:'Cửa hàng',charities:'Tổ chức từ thiện',inventory:'Lô hàng tồn kho',orders:'Đơn hàng',payments:'Thanh toán',payouts:'Chi trả đối tác',disputes:'Tranh chấp',risks:'Cảnh báo gian lận',audits:'Nhật ký hoạt động',config:'Cấu hình'};
 let currentPage='dashboard';
@@ -1244,6 +1402,7 @@ currentPage=p;
 document.querySelectorAll('.S-i').forEach(el=>el.classList.toggle('on',el.dataset.p===p));
 document.getElementById('pt').textContent=titles[p]||p;
 document.getElementById('ct').innerHTML=`<div class="page">${(pg[p]||pg.dashboard)()}</div>`;
+if(p==='users')fetchCustomers();
 }
 document.querySelectorAll('.S-i').forEach(el=>el.addEventListener('click',()=>go(el.dataset.p)));
 function initAdminSupabaseSync(){
@@ -1252,11 +1411,14 @@ go('dashboard');
 syncOrdersFromSupabase();
 syncPartnersFromSupabase();
 syncCharitiesFromSupabase(); // Thêm dòng này vào đây
+fetchCustomers();
 }
 if(document.readyState==='loading'){
 document.addEventListener('DOMContentLoaded',initAdminSupabaseSync);
+document.addEventListener('DOMContentLoaded',fetchCustomers);
 }else{
 initAdminSupabaseSync();
+fetchCustomers();
 }
 
 </script>

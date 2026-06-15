@@ -23,6 +23,7 @@
   let partnerOtpPending = false;
   let partnerVerifyPending = false;
   let supabaseAuthInitialized = false;
+  let blockedUserKickoutPending = false;
 
   function trimTrailingSlash(value) {
     return String(value || "").replace(/\/+$/, "");
@@ -292,6 +293,84 @@
     window.FoodSaveCurrentAuth = null;
   }
 
+  function clearBlockedUserAuthState() {
+    clearSession();
+
+    try {
+      localStorage.removeItem(`sb-${new URL(SUPABASE_URL).hostname.split(".")[0]}-auth-token`);
+      localStorage.removeItem("supabase.auth.token");
+    } catch (error) {
+      // Ignore storage cleanup failures in private browsing modes.
+    }
+
+    try {
+      sessionStorage.removeItem(PHONE_OTP_STORAGE_KEY);
+    } catch (error) {
+      // Ignore storage cleanup failures in private browsing modes.
+    }
+
+    window.FoodSaveCurrentAuth = null;
+    phoneOtpPending = null;
+    customerLoginPending = false;
+    googleLoginPending = false;
+    facebookLoginPending = false;
+  }
+
+  async function checkBlockedUser(userId) {
+    if (!userId) return true;
+    if (blockedUserKickoutPending) return false;
+
+    try {
+      const client = window.foodsaveSupabase || getFoodSaveSupabase();
+      const { data, error } = await client
+        .from("profiles")
+        .select("status")
+        .eq("id", userId)
+        .eq("role", "customer")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data || data.status !== "suspended") return true;
+
+      blockedUserKickoutPending = true;
+      try {
+        await client.auth.signOut();
+      } catch (signOutError) {
+        console.warn("[FoodSave Auth] Supabase signOut failed for suspended user", signOutError);
+      }
+
+      localStorage.removeItem("foodsave.auth.session");
+      sessionStorage.clear();
+      clearBlockedUserAuthState();
+      document.body.innerHTML = `
+        <main style="position:fixed;inset:0;z-index:2147483647;width:100vw;height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#fff1f2,#fee2e2 48%,#fecaca);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#7f1d1d;padding:24px">
+          <section style="width:min(520px,calc(100vw - 32px));background:rgba(255,255,255,.92);border:1px solid rgba(248,113,113,.36);border-radius:28px;box-shadow:0 30px 90px rgba(127,29,29,.22);padding:34px 30px;text-align:center">
+            <div style="width:78px;height:78px;margin:0 auto 20px;border-radius:24px;display:grid;place-items:center;background:#fee2e2;color:#dc2626;font-size:42px;font-weight:900;box-shadow:0 14px 34px rgba(220,38,38,.2)">!</div>
+            <h1 style="margin:0 0 12px;color:#991b1b;font-size:clamp(28px,5vw,40px);line-height:1.12;font-weight:900;letter-spacing:-.02em">Tài khoản đã bị khóa</h1>
+            <p style="margin:0 auto 22px;max-width:430px;color:#7f1d1d;font-size:15.5px;line-height:1.7;font-weight:600">Tài khoản của bạn đã bị khóa do vi phạm chính sách của hệ thống. Vui lòng gọi Hotline <strong style="color:#dc2626">090 995 2120</strong> để được bộ phận hỗ trợ kiểm tra và hướng dẫn.</p>
+            <button type="button" onclick="window.location.reload()" style="height:48px;padding:0 22px;border:0;border-radius:14px;background:#dc2626;color:#fff;font-weight:900;font-size:14px;box-shadow:0 14px 34px rgba(220,38,38,.28);cursor:pointer">Quay lại trang chủ</button>
+          </section>
+        </main>
+      `;
+      return false;
+    } catch (error) {
+      console.error("[FoodSave Auth] Không thể kiểm tra trạng thái khóa tài khoản", error);
+      return true;
+    }
+  }
+
+  function customerUserIdFromSession(session) {
+    if (!session || session.role !== "customer") return "";
+    return session.profile?.id || session.user?.id || session.context?.profile?.id || "";
+  }
+
+  async function initStoredCustomerBlockGuard() {
+    const session = readSession();
+    const userId = customerUserIdFromSession(session);
+    if (!userId) return;
+    await checkBlockedUser(userId);
+  }
+
   function readStoredPhoneOtp() {
     try {
       const raw = sessionStorage.getItem(PHONE_OTP_STORAGE_KEY);
@@ -406,10 +485,13 @@
     };
   }
 
-  function syncSupabaseCustomerSession(session, options) {
+  async function syncSupabaseCustomerSession(session, options) {
     if (!session || !session.access_token) return null;
 
     const profile = customerProfileFromSupabaseSession(session);
+    // Hook đăng nhập khách hàng: kiểm tra trạng thái profiles.status ngay sau khi có Supabase session.
+    if (!(await checkBlockedUser(profile.id))) return null;
+
     const authSession = saveSession({
       session: {
         access_token: session.access_token,
@@ -514,7 +596,7 @@
 
     client.auth.onAuthStateChange((event, session) => {
       if (session) {
-        syncSupabaseCustomerSession(session, {
+        void syncSupabaseCustomerSession(session, {
           navigateHome: !shouldHoldEmailOtpNavigation() && (event === "SIGNED_IN" || shouldNavigateHomeAfterSupabaseAuth())
         });
         return;
@@ -527,7 +609,7 @@
 
     client.auth.getSession().then(({ data, error }) => {
       if (error || !data || !data.session) return;
-      syncSupabaseCustomerSession(data.session, {
+      void syncSupabaseCustomerSession(data.session, {
         navigateHome: !shouldHoldEmailOtpNavigation() && shouldNavigateHomeAfterSupabaseAuth()
       });
     }).catch(() => {
@@ -788,6 +870,7 @@
       });
 
       clearPhoneOtpPending();
+      if (!(await checkBlockedUser(data?.profile?.id || data?.user?.id || data?.session?.user?.id))) return;
       saveSession(data, "customer");
       updateCustomerUiFromProfile(data.profile);
       notify("Đăng nhập thành công", "OTP SMS đã được xác thực.", "info");
@@ -2332,13 +2415,177 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     return `${base}-${suffix}`;
   }
 
+  function charityCoordinate(value) {
+    if (value === "" || value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
   function charityAddressParts(address) {
-    const parts = String(address || "").split(",").map((item) => item.trim()).filter(Boolean);
+    const source = address && typeof address === "object" ? address : {};
+    const formatted = String(source.formattedAddress || source.address || (typeof address === "string" ? address : "") || "").trim();
+    const parts = formatted.split(",").map((item) => item.trim()).filter(Boolean);
     return {
-      address: String(address || "").trim() || "Chưa cập nhật",
-      district: parts.length >= 3 ? parts[parts.length - 2] : "",
-      city: parts.length >= 2 ? normalizeVietnamAdminName(parts[parts.length - 1], "province") : "TP.HCM"
+      address: formatted || "Chưa cập nhật",
+      street: source.street || parts[0] || "",
+      ward: source.ward || "",
+      district: source.district || (parts.length >= 3 ? parts[parts.length - 2] : ""),
+      city: source.city || (parts.length >= 2 ? normalizeVietnamAdminName(parts[parts.length - 1], "province") : "TP.HCM"),
+      latitude: charityCoordinate(source.lat ?? source.latitude),
+      longitude: charityCoordinate(source.lng ?? source.longitude)
     };
+  }
+
+  function charityOrgLocationInfo(org = {}, profilePayload = {}) {
+    const location = org.addressParts || org.location || {};
+    const addressInfo = charityAddressParts({
+      address: org.formattedAddress || org.address || location.formattedAddress || location.address,
+      formattedAddress: org.formattedAddress || location.formattedAddress,
+      street: org.street || location.street,
+      ward: org.ward || location.ward,
+      district: org.district || location.district,
+      city: org.city || location.city,
+      lat: org.lat ?? org.latitude ?? location.lat ?? location.latitude,
+      lng: org.lng ?? org.longitude ?? location.lng ?? location.longitude
+    });
+    return {
+      ...addressInfo,
+      address: profilePayload.address || addressInfo.address,
+      district: profilePayload.district || addressInfo.district || "",
+      city: profilePayload.city || addressInfo.city || "TP.HCM",
+      latitude: charityCoordinate(org.lat ?? org.latitude ?? location.lat ?? location.latitude),
+      longitude: charityCoordinate(org.lng ?? org.longitude ?? location.lng ?? location.longitude)
+    };
+  }
+
+  function applyCharityAddress(parsed = {}) {
+    const state = charityState();
+    const org = state.org || {};
+    const lat = charityCoordinate(parsed.lat ?? parsed.latitude ?? org.lat ?? org.latitude);
+    const lng = charityCoordinate(parsed.lng ?? parsed.longitude ?? org.lng ?? org.longitude);
+    const formattedAddress = String(parsed.formattedAddress || parsed.address || org.formattedAddress || org.address || "").trim();
+    const addressParts = {
+      formattedAddress,
+      street: parsed.street || org.street || "",
+      ward: parsed.ward || org.ward || "",
+      district: parsed.district || org.district || "",
+      city: parsed.city || org.city || "",
+      lat,
+      lng
+    };
+
+    state.org = {
+      ...org,
+      address: formattedAddress || org.address || "",
+      formattedAddress: formattedAddress || org.formattedAddress || "",
+      street: addressParts.street,
+      ward: addressParts.ward,
+      district: addressParts.district,
+      city: addressParts.city,
+      lat: lat ?? org.lat ?? "",
+      lng: lng ?? org.lng ?? "",
+      latitude: lat ?? org.latitude ?? "",
+      longitude: lng ?? org.longitude ?? "",
+      addressParts
+    };
+
+    const input = select("#orgAddress");
+    if (input && formattedAddress) input.value = formattedAddress;
+  }
+
+  function charityMapCenterFromState() {
+    const org = charityState().org || {};
+    const location = org.addressParts || org.location || {};
+    const lat = charityCoordinate(org.lat ?? org.latitude ?? location.lat ?? location.latitude);
+    const lng = charityCoordinate(org.lng ?? org.longitude ?? location.lng ?? location.longitude);
+    if (lat !== null && lng !== null) return { center: { lat, lng }, hasSavedLocation: true };
+    return { center: { lat: 10.7769, lng: 106.7009 }, hasSavedLocation: false };
+  }
+
+  function plainLatLng(latLng) {
+    if (!latLng) return null;
+    const lat = typeof latLng.lat === "function" ? latLng.lat() : latLng.lat;
+    const lng = typeof latLng.lng === "function" ? latLng.lng() : latLng.lng;
+    const parsedLat = charityCoordinate(lat);
+    const parsedLng = charityCoordinate(lng);
+    return parsedLat !== null && parsedLng !== null ? { lat: parsedLat, lng: parsedLng } : null;
+  }
+
+  function initCharityRegistrationMap() {
+    const input = select("#orgAddress");
+    const mapEl = select("#charity-map") || select("#charity-registration-map");
+    if (!input || !mapEl) return;
+    mapEl.style.width = "100%";
+    mapEl.style.height = "230px";
+    mapEl.style.display = "block";
+
+    if (!window.google?.maps?.places) {
+      mapEl.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;color:var(--muted);font-size:12px;font-weight:700">Chưa nạp Google Maps API. Bạn vẫn có thể nhập địa chỉ thủ công.</div>';
+      return;
+    }
+    if (mapEl.dataset.foodsaveCharityMap === "ready") {
+      const instance = mapEl.__foodsaveCharityMap;
+      if (instance?.map) {
+        window.google.maps.event.trigger(instance.map, "resize");
+        const position = instance.marker?.getPosition?.();
+        if (position) instance.map.setCenter(position);
+      }
+      return;
+    }
+    mapEl.dataset.foodsaveCharityMap = "ready";
+
+    const { center, hasSavedLocation } = charityMapCenterFromState();
+    const map = new window.google.maps.Map(mapEl, {
+      center,
+      zoom: hasSavedLocation ? 16 : 13,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false
+    });
+    const marker = new window.google.maps.Marker({ map, position: center, draggable: true });
+    const geocoder = new window.google.maps.Geocoder();
+    const autocomplete = new window.google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: "vn" },
+      fields: ["address_components", "geometry", "formatted_address", "name"]
+    });
+
+    const moveMarker = (latLng) => {
+      const point = plainLatLng(latLng);
+      if (!point) return null;
+      marker.setPosition(latLng);
+      map.panTo(latLng);
+      return point;
+    };
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      const point = plainLatLng(place?.geometry?.location);
+      const parsed = parseVietnamAddressFromPlace(place);
+      applyCharityAddress({ ...parsed, lat: point?.lat ?? parsed.lat, lng: point?.lng ?? parsed.lng });
+      if (point) {
+        marker.setPosition(place.geometry.location);
+        map.setCenter(place.geometry.location);
+        map.setZoom(16);
+      }
+    });
+
+    marker.addListener("dragend", (event) => {
+      const point = moveMarker(event.latLng);
+      if (!point) return;
+      applyCharityAddress({ lat: point.lat, lng: point.lng });
+      geocoder.geocode({ location: point }, (results, status) => {
+        if (status === "OK" && results?.[0]) {
+          const parsed = parseVietnamAddressFromPlace(results[0]);
+          applyCharityAddress({ ...parsed, lat: point.lat, lng: point.lng });
+        }
+      });
+    });
+
+    mapEl.__foodsaveCharityMap = { map, marker, geocoder, autocomplete };
+  }
+
+  function initCharityMap() {
+    initCharityRegistrationMap();
   }
 
   function charityDocumentPublicUrl(doc) {
@@ -2495,7 +2742,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const verifiedEmail = normalizeCharityEmail(state.otpEmail || state.authEmail || state.contact);
     const email = PORTAL_EMAIL_RE.test(emailCandidate) ? emailCandidate : verifiedEmail;
     const phone = charityContactPhone(state) || "Chưa cập nhật";
-    const addressInfo = charityAddressParts(org.address);
+    const addressInfo = charityOrgLocationInfo(org);
     const name = String(org.name || "").trim() || "Chưa cập nhật";
     const logoUrl = charityDocumentPublicUrl(state.docs?.logo) || charityDocumentPublicUrl(org.logo);
 
@@ -2540,6 +2787,10 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const rep = state.rep || {};
     const scale = state.scale || {};
     const documentUrls = charityLegalDocumentUrls(state);
+    const locationInfo = charityOrgLocationInfo(org, profilePayload);
+    const address = charityFormValue("orgAddress", locationInfo.address);
+    const district = profilePayload.district || locationInfo.district || "";
+    const city = profilePayload.city || locationInfo.city || "";
 
     return {
       organization_name: charityFormValue("orgName", profilePayload.name || org.name || ""),
@@ -2547,9 +2798,22 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       tax_id: charityFormValue("orgTaxId", org.taxId || org.tax_id || ""),
       organization_phone: charityFormValue("orgContactPhone", org.phone || profilePayload.phone || ""),
       organization_email: charityFormValue("orgContactEmail", org.email || profilePayload.email || ""),
-      address: charityFormValue("orgAddress", profilePayload.address || org.address || ""),
-      district: profilePayload.district || "",
-      city: profilePayload.city || "",
+      address,
+      street: locationInfo.street || "",
+      ward: locationInfo.ward || "",
+      district,
+      city,
+      latitude: locationInfo.latitude,
+      longitude: locationInfo.longitude,
+      location: {
+        formatted_address: address,
+        street: locationInfo.street || "",
+        ward: locationInfo.ward || "",
+        district,
+        city,
+        lat: locationInfo.latitude,
+        lng: locationInfo.longitude
+      },
       description: charityFormValue("orgDesc", org.description || ""),
       mission: charityFormValue("orgMission", org.mission || ""),
       representative_name: charityFormValue("repName", rep.name || ""),
@@ -2577,6 +2841,13 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       role: "charity",
       tax_id: organizationInfo.tax_id || "",
       address: organizationInfo.address || "",
+      street: organizationInfo.street || "",
+      ward: organizationInfo.ward || "",
+      district: organizationInfo.district || "",
+      city: organizationInfo.city || "",
+      latitude: organizationInfo.latitude,
+      longitude: organizationInfo.longitude,
+      location: organizationInfo.location,
       description: organizationInfo.description || "",
       mission: organizationInfo.mission || "",
       representative_name: organizationInfo.representative_name || "",
@@ -2971,8 +3242,10 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       stopFoodSaveFaceStream();
       return;
     }
-    if (charityStep() === 2) initPartnerFaceScan({ role: "charity" });
+    const step = charityStep();
+    if (step === 2) initPartnerFaceScan({ role: "charity" });
     else stopFoodSaveFaceStream();
+    if (step === 3) window.setTimeout(initCharityMap, 150);
   }
 
   async function nextCharityRegisterStep() {
@@ -4763,12 +5036,14 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   window.loginSupabaseGoogle = startGoogleLogin;
   window.loginSupabaseFacebook = startFacebookLogin;
+  window.checkBlockedUser = checkBlockedUser;
 
   window.FoodSaveAuth = {
     request,
     readSession,
     saveSession,
     clearSession,
+    checkBlockedUser,
     loginCustomer,
     registerCustomer,
     getSupabaseClient: getFoodSaveSupabase,
@@ -4788,6 +5063,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     validatePartnerPasswords,
     formatBankAccountName,
     initSellerGoogleMaps,
+    initCharityRegistrationMap,
+    initCharityMap,
     parseVietnamAddressFromPlace,
     normalizeVietnamAdminName,
     nextPartnerRegisterStep,
@@ -4837,6 +5114,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   window.submitCharityRegistration = submitCharityRegistration;
   window.nextCharityRegisterStep = nextCharityRegisterStep;
   window.backCharityRegisterStep = backCharityRegisterStep;
+  window.initCharityRegistrationMap = initCharityRegistrationMap;
+  window.initCharityMap = initCharityMap;
 
   if (pageRole === "customer") {
     window.doLogin = loginCustomer;
@@ -4857,6 +5136,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     window.verifyPhoneLoginOtp = verifyPhoneLoginOtp;
     window.cancelPhoneLoginOtp = cancelPhoneLoginOtp;
     window.logout = function () { logout("customer"); };
+    void initStoredCustomerBlockGuard();
     restorePhoneOtpAfterReload();
     initSupabaseCustomerAuth();
     return;

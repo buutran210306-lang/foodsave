@@ -370,8 +370,7 @@ textarea.inp{resize:none;font-family:inherit}
 .ekyc-lock{opacity:.48;filter:grayscale(.28);pointer-events:none;user-select:none}
 .password-wrap{position:relative}
 .password-wrap .reg-input{padding-right:48px}
-.password-wrap .inp{padding-right:48px}
-.pass-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer}
+.pass-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
 .pass-toggle:hover{background:var(--soft);color:var(--green-800)}
 .pass-toggle svg{width:18px;height:18px}
 .password-rules{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
@@ -1881,7 +1880,7 @@ function loginPage(){return`
 <h2 class="auth-h">Đăng nhập tổ chức</h2>
 <p class="auth-sub">Truy cập cổng điều phối dành cho tổ chức từ thiện</p>
 <div class="field"><label>Email / Số điện thoại</label><input class="inp" placeholder="email@domain.com"></div>
-<div class="field"><div class="f ac jb m6"><label style="margin-bottom:0">Mật khẩu</label><span style="font-size:11.5px;color:var(--rose);cursor:pointer;font-weight:800" onclick="aS='forgot';rAuth()">Quên mật khẩu?</span></div><div class="password-wrap"><input id="charityLoginPassword" class="inp" type="password" placeholder="Nhập mật khẩu"><button type="button" class="pass-toggle" data-pass-toggle="charityLoginPassword" onclick="togglePassword('charityLoginPassword')" aria-label="Ẩn hiện mật khẩu"><i data-lucide="eye"></i></button></div></div>
+<div class="field"><div class="f ac jb m6"><label style="margin-bottom:0">Mật khẩu</label><span style="font-size:11.5px;color:var(--rose);cursor:pointer;font-weight:800" onclick="aS='forgot';rAuth()">Quên mật khẩu?</span></div><input class="inp" type="password" placeholder="Nhập mật khẩu"></div>
 <div class="f ac g8 m16"><input type="checkbox" id="rmm" style="accent-color:var(--rose);width:16px;height:16px"><label for="rmm" style="font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:500">Ghi nhớ đăng nhập</label></div>
 <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-bottom:12px" onclick="aS='otp';rAuth()"><i class="ti ti-login"></i> Đăng nhập</button>
 <div style="text-align:center;margin:14px 0"><span style="font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.08em">— HOẶC —</span></div>

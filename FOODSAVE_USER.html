@@ -7914,13 +7914,13 @@ function updateReputationRules(){
     updateSignupStepper(1);
   };
 
-  function syncSupabaseSession(session, navigateHome) {
+  async function syncSupabaseSession(session, navigateHome) {
     if (session && window.FoodSaveAuth?.syncSupabaseCustomerSession) {
-      window.FoodSaveAuth.syncSupabaseCustomerSession(session, { navigateHome });
-      return;
+      return window.FoodSaveAuth.syncSupabaseCustomerSession(session, { navigateHome });
     }
 
     if (navigateHome && typeof navTo === 'function') navTo('home');
+    return session || null;
   }
 
   async function sendEmailOtp(mode) {
@@ -8024,14 +8024,16 @@ function updateReputationRules(){
 
       if (mode === 'login') {
         setEmailOtpFlow('login', 'verified');
-        syncSupabaseSession(data?.session, true);
+        const syncedSession = await syncSupabaseSession(data?.session, true);
+        if (!syncedSession) return;
         setEmailOtpFlow(null, null);
         return;
       }
 
       emailOtpState.signup.session = data?.session || null;
       setEmailOtpFlow('signup', 'details');
-      syncSupabaseSession(data?.session, false);
+      const syncedSession = await syncSupabaseSession(data?.session, false);
+      if (!syncedSession) return;
       showSignupDetails(data?.session);
     } catch (error) {
       setError(config.errorId, 'Xác thực OTP thất bại. Mã có thể sai hoặc đã hết hạn.');
