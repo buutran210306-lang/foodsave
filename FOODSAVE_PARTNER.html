@@ -362,7 +362,7 @@ textarea.inp{resize:none;font-family:inherit}
 .partner-error{font-size:12px;color:var(--red);font-weight:800;margin-top:8px;min-height:18px}
 .partner-input-wrap{position:relative}
 .partner-input-wrap .inp{padding-right:46px}
-.partner-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer}
+.partner-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer}
 .partner-eye:hover{background:var(--green-50);color:var(--green-800)}
 .partner-status{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:900;border-radius:999px;padding:6px 10px}
 .partner-status.ok{background:var(--green-100);color:var(--green-800);border:1px solid var(--green-200)}
@@ -1961,6 +1961,18 @@ function toggleRegPassword(k){
   if(k==="representativePasswordConfirm")regData.showRepresentativeConfirm=!regData.showRepresentativeConfirm;
   rAuth();
 }
+function toggleLoginPassword(id,btn){
+  const input=document.getElementById(id);
+  if(!input)return;
+  const shouldShow=input.type==="password";
+  input.type=shouldShow?"text":"password";
+  const icon=btn?.querySelector("i");
+  if(icon)icon.className=`ti ${shouldShow?"ti-eye-off":"ti-eye"}`;
+  if(btn){
+    btn.setAttribute("aria-label",shouldShow?"Ẩn mật khẩu":"Hiện mật khẩu");
+    btn.setAttribute("aria-pressed",shouldShow?"true":"false");
+  }
+}
 
 function rAuth(){
   const C=document.getElementById('auth-c');
@@ -1992,7 +2004,7 @@ function loginPage(){return`
 <h2 class="auth-h">Đăng nhập cửa hàng</h2>
 <p class="auth-sub">Truy cập trang quản lý dành cho đối tác FoodSave</p>
 <div class="field"><label>Email / Số điện thoại</label><input class="inp" placeholder="email@domain.com"></div>
-<div class="field"><div class="f ac jb m6"><label style="margin-bottom:0">Mật khẩu</label><span style="font-size:11.5px;color:var(--green-800);cursor:pointer;font-weight:800" onclick="aS='forgot';rAuth()">Quên mật khẩu?</span></div><input class="inp" type="password" placeholder="Nhập mật khẩu"></div>
+<div class="field"><div class="f ac jb m6"><label style="margin-bottom:0">Mật khẩu</label><span style="font-size:11.5px;color:var(--green-800);cursor:pointer;font-weight:800" onclick="aS='forgot';rAuth()">Quên mật khẩu?</span></div><div class="partner-input-wrap"><input id="partnerLoginPassword" class="inp" type="password" placeholder="Nhập mật khẩu"><button type="button" class="partner-eye" onclick="toggleLoginPassword('partnerLoginPassword',this)" aria-label="Hiện mật khẩu" aria-pressed="false"><i class="ti ti-eye"></i></button></div></div>
 <div class="f ac g8 m16"><input type="checkbox" id="rmm" style="accent-color:var(--green-700);width:16px;height:16px"><label for="rmm" style="font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:500">Ghi nhớ đăng nhập</label></div>
 <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-bottom:12px" onclick="aS='otp';rAuth()"><i class="ti ti-login"></i> Đăng nhập</button>
 <div style="text-align:center;margin:14px 0"><span style="font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.08em">HOẶC</span></div>

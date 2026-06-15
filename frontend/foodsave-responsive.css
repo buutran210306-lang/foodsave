@@ -169,6 +169,51 @@ body > main:not(#app):not(#landingMain),
   overflow: hidden;
 }
 
+.product-art,
+.product-image,
+.product-photo,
+.store-cover,
+.thumb,
+.food-item,
+.food-orb,
+.piece-img,
+.banner-art,
+.donation-img,
+.card-img,
+.gallery-tile,
+.hero-media,
+.t-av,
+.avatar,
+.founder-photo,
+[class*="avatar"] {
+  position: relative;
+}
+
+.product-art,
+.product-image,
+.product-photo,
+.donation-img,
+.card-img {
+  aspect-ratio: 4 / 3;
+}
+
+.store-cover,
+.banner-art,
+.hero-media,
+.piece-img {
+  aspect-ratio: 16 / 9;
+}
+
+.gallery-tile,
+.thumb,
+.food-item,
+.food-orb,
+.t-av,
+.avatar,
+.founder-photo {
+  aspect-ratio: 1 / 1;
+}
+
 h1,
 .h1,
 .hero-title {
@@ -256,6 +301,61 @@ img.store-img {
   max-width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.product-art > picture,
+.product-image > picture,
+.product-photo > picture,
+.store-cover > picture,
+.thumb > picture,
+.food-item > picture,
+.food-orb > picture,
+.piece-img > picture,
+.banner-art > picture,
+.donation-img > picture,
+.card-img > picture,
+.gallery-tile > picture,
+.hero-media > picture {
+  width: 100%;
+  height: 100%;
+}
+
+.product-art > img,
+.product-image > img,
+.product-photo > img,
+.store-cover > img,
+.thumb > img,
+.food-item > img,
+.food-orb > img,
+.piece-img > img,
+.banner-art > img,
+.donation-img > img,
+.card-img > img,
+.gallery-tile > img,
+.hero-media > img {
+  inset: 0;
+}
+
+.store-cover img,
+.banner-art img,
+.hero-media img {
+  object-fit: cover;
+}
+
+.partner-upload-preview,
+img[data-partner-avatar],
+img[id$="-avatar-img"],
+.avatar img,
+.t-av img {
+  border-radius: inherit;
+}
+
+img[alt*="QR"],
+img[src*="qrcode"],
+img[src*="qr"] {
+  object-fit: contain;
 }
 
 .product-grid,
@@ -1002,5 +1102,508 @@ img.store-img {
   div[style*="grid-template-columns:7fr"],
   div[style*="grid-template-columns:minmax"] {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* Device hardening layer
+   Keeps the current FoodSave flows intact while preventing mobile/tablet
+   horizontal overflow from fixed split layouts, headers, tables and inline grids. */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+@supports not (overflow-x: clip) {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+img {
+  max-width: 100%;
+}
+
+.topbar,
+.topbar-main,
+.mission-strip,
+#top-info-bar,
+footer,
+.site-footer {
+  width: 100%;
+  max-width: 100vw;
+}
+
+footer,
+.site-footer {
+  overflow: hidden;
+}
+
+footer .wrap,
+.site-footer .wrap {
+  max-width: 100% !important;
+}
+
+.topbar > .wrap,
+.topbar-main > .wrap,
+.mission-strip > .wrap,
+#top-info-bar > .wrap {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.brand,
+.brand-stack,
+.brand-word,
+.wordmark {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.brand-word,
+.wordmark,
+.foot-brand {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.hero-actions,
+.actions,
+.footer-social-row,
+.footer-bottom .wrap,
+.foot-bottom {
+  min-width: 0;
+}
+
+.hero-actions > *,
+.actions > *,
+.footer-social-row > * {
+  max-width: 100%;
+}
+
+.product-grid,
+#product-container,
+.deal-grid,
+.store-grid,
+.catalog-grid {
+  gap: clamp(14px, 2vw, 22px);
+}
+
+@media (min-width: 1025px) {
+  .product-grid,
+  #product-container,
+  .deal-grid,
+  .store-grid,
+  .catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1320px) {
+  .product-grid,
+  #product-container,
+  .deal-grid,
+  .store-grid,
+  .catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topbar > .wrap,
+  .topbar-main > .wrap,
+  .mission-strip > .wrap {
+    width: min(calc(100% - 28px), 100%) !important;
+  }
+
+  .topbar .nav,
+  .topbar-main .nav,
+  #publicNav,
+  #userNav {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start !important;
+  }
+
+  .topbar .nav > *,
+  .topbar-main .nav > *,
+  #publicNav > *,
+  #userNav > * {
+    flex: 0 0 auto;
+  }
+
+  .foot-grid,
+  .footer-grid {
+    gap: 28px !important;
+  }
+
+  .product-art,
+  .product-image,
+  .product-photo,
+  .donation-img,
+  .card-img {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .banner-art,
+  .hero-media,
+  .piece-img,
+  .store-cover {
+    height: auto !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    height: auto !important;
+  }
+
+  .topbar-main {
+    height: auto !important;
+    min-height: 64px;
+  }
+
+  .topbar > .wrap,
+  .topbar-main > .wrap {
+    flex-wrap: wrap;
+    gap: 10px !important;
+    height: auto !important;
+    padding-block: 10px;
+  }
+
+  .topbar .brand {
+    flex: 1 1 auto;
+  }
+
+  .topbar .actions,
+  .topbar-main .actions,
+  #publicActions,
+  #userActions {
+    flex: 0 1 auto;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .topbar .topsearch,
+  .topsearch {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+  }
+
+  .topbar .nav,
+  #publicNav,
+  #userNav {
+    order: 4;
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .brand-word {
+    font-size: clamp(18px, 6vw, 22px) !important;
+  }
+
+  .brand-tagline {
+    white-space: normal !important;
+    line-height: 1.25;
+  }
+
+  #auth.view.show {
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #auth .auth-wrap,
+  #auth .auth-wrap.partner-wizard-mode,
+  .auth-wrap,
+  .auth-wrap.partner-wizard-mode {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #auth .auth-left,
+  #auth .auth-wrap .auth-left,
+  #auth .auth-wrap.partner-wizard-mode .auth-left,
+  .auth-wrap .auth-left,
+  .auth-wrap.partner-wizard-mode .auth-left {
+    display: none !important;
+    width: 0 !important;
+    flex: 0 0 0 !important;
+    min-width: 0 !important;
+  }
+
+  #auth .auth-right,
+  #auth .auth-wrap.partner-wizard-mode .auth-right,
+  .auth-right,
+  .auth-right.register-mode {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    padding: 24px 18px calc(32px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  #auth .auth-panel,
+  #auth .partner-wizard,
+  .auth-panel,
+  .partner-wizard,
+  .charity-partner-wizard {
+    width: min(100%, 560px) !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+  }
+
+  .app-w.show {
+    min-height: 100dvh !important;
+    height: auto !important;
+    flex-direction: column !important;
+    overflow: visible !important;
+  }
+
+  .side {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .main {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  .app-topbar {
+    height: auto !important;
+    min-height: 60px;
+    padding: 12px 16px !important;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .t-a {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .t-s {
+    width: 100% !important;
+    flex: 1 0 100%;
+  }
+
+  .content {
+    padding: 18px 16px !important;
+    overflow: visible !important;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .foot-grid,
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  [style*="grid-template-columns:1fr 1fr"],
+  [style*="grid-template-columns:1.05fr"],
+  [style*="grid-template-columns:1.1fr"],
+  [style*="grid-template-columns:1.2fr"],
+  [style*="grid-template-columns:1.4fr"],
+  [style*="grid-template-columns:repeat(2"],
+  [style*="grid-template-columns:repeat(3"],
+  [style*="grid-template-columns:repeat(4"],
+  [style*="grid-template-columns:repeat(5"],
+  [style*="grid-template-columns:repeat(6"],
+  [style*="grid-template-columns:minmax"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-grid,
+  #product-container,
+  .deal-grid,
+  .store-grid,
+  .catalog-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  h1,
+  .h1,
+  .hero-title,
+  .auth-h-title {
+    font-size: clamp(1.9rem, 10vw, 2.8rem) !important;
+    line-height: 1.12 !important;
+    overflow-wrap: break-word;
+  }
+
+  h2,
+  .h2,
+  .section-title,
+  .auth-h {
+    font-size: clamp(1.45rem, 7vw, 2.2rem) !important;
+    line-height: 1.18 !important;
+    overflow-wrap: break-word;
+  }
+
+  .hero-actions .btn,
+  .hero-actions button,
+  .cta-strip .btn,
+  .cta-strip button {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar > .wrap,
+  .topbar-main > .wrap,
+  .mission-strip > .wrap,
+  footer .wrap,
+  .site-footer .wrap {
+    width: min(calc(100% - 20px), 100%) !important;
+  }
+
+  #publicActions,
+  #userActions {
+    gap: 6px !important;
+  }
+
+  #publicActions .btn,
+  #userActions .btn {
+    min-height: 40px !important;
+    padding-inline: 12px !important;
+    font-size: 12px !important;
+  }
+
+  #userActions .icon-btn,
+  .icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+    flex: 0 0 40px;
+  }
+
+  .brand-word,
+  .wordmark,
+  .foot-brand {
+    font-size: clamp(18px, 7vw, 24px) !important;
+  }
+
+  .brand-word::before,
+  .wordmark::before,
+  .foot-brand::before {
+    right: -.28em !important;
+  }
+
+  .hero-visual,
+  .food-collage,
+  .banner-art,
+  .platform-stage,
+  .featured-mosaic {
+    max-width: 100% !important;
+  }
+
+  .product-art,
+  .product-image,
+  .product-photo,
+  .donation-img,
+  .card-img {
+    aspect-ratio: 1.22 / 1;
+  }
+
+  .store-cover,
+  .banner-art,
+  .hero-media,
+  .piece-img {
+    aspect-ratio: 4 / 3;
+  }
+
+  .food-orb,
+  .food-item {
+    width: clamp(58px, 21vw, 88px) !important;
+    height: clamp(58px, 21vw, 88px) !important;
+  }
+
+  .food-orb.f3,
+  .food-5 {
+    width: clamp(82px, 30vw, 118px) !important;
+    height: clamp(82px, 30vw, 118px) !important;
+  }
+
+  .founder-photo {
+    width: clamp(124px, 42vw, 180px) !important;
+    height: clamp(124px, 42vw, 180px) !important;
+  }
+
+  #cookie-banner {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    max-width: calc(100vw - 20px) !important;
+    padding: 14px !important;
+    flex-wrap: wrap;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  #cookie-banner > div:nth-child(2) {
+    flex: 1 1 100% !important;
+  }
+
+  #cookie-banner button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  #float-help {
+    width: 52px !important;
+    height: 52px !important;
+    right: 12px !important;
+    bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-tagline {
+    display: none !important;
+  }
+
+  .topbar .brand {
+    flex-basis: min-content;
+  }
+
+  #publicActions .btn,
+  #userActions .btn {
+    padding-inline: 10px !important;
+  }
+
+  .modal-footer,
+  .drawer-foot,
+  .partner-wizard-actions,
+  .wizard-actions,
+  .sticky-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modal-footer .btn,
+  .drawer-foot .btn,
+  .partner-wizard-actions .btn,
+  .wizard-actions .btn,
+  .sticky-actions .btn {
+    width: 100% !important;
   }
 }
