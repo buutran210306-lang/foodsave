@@ -710,6 +710,548 @@
     .badge-emo { font-size: 30px; line-height: 1; margin-bottom: 6px; }
     .badge-name { font-size: 11px; font-weight: 800; color: var(--green-950); }
 
+    /* ============ TREE REPUTATION GAME ============ */
+    .tree-game-card {
+      padding: 0;
+      border-color: rgba(22, 163, 74, .26);
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    .tree-game-card:after { display: none; }
+    .tree-game-grid {
+      display: grid;
+      grid-template-columns: minmax(320px, .95fr) minmax(0, 1.05fr);
+      min-height: 470px;
+    }
+    .tree-farm-scene {
+      position: relative;
+      min-height: 470px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, #fff7b2 0 28px, rgba(255,247,178,.35) 29px 45px, transparent 46px),
+        linear-gradient(180deg, #3ec7e8 0%, #baf0ff 48%, #fff6c7 68%, #70d0f2 100%);
+      isolation: isolate;
+    }
+    .tree-farm-scene:before,
+    .tree-farm-scene:after {
+      content: "";
+      position: absolute;
+      left: -9%;
+      right: -9%;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .tree-farm-scene:before {
+      top: 74px;
+      height: 118px;
+      background:
+        radial-gradient(ellipse at 12% 72%, rgba(255,255,255,.72) 0 48px, transparent 49px),
+        radial-gradient(ellipse at 26% 42%, rgba(255,255,255,.68) 0 56px, transparent 57px),
+        radial-gradient(ellipse at 82% 46%, rgba(255,255,255,.6) 0 64px, transparent 65px);
+      opacity: .9;
+    }
+    .tree-farm-scene:after {
+      bottom: -4px;
+      height: 110px;
+      background:
+        radial-gradient(ellipse at 16% 20%, rgba(255,255,255,.2) 0 70px, transparent 72px),
+        linear-gradient(180deg, rgba(40, 189, 227, .95), #16a8dc);
+    }
+    .tree-star {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #fde047;
+      clip-path: polygon(50% 0, 62% 34%, 98% 35%, 69% 56%, 79% 91%, 50% 70%, 21% 91%, 31% 56%, 2% 35%, 38% 34%);
+      filter: drop-shadow(0 4px 8px rgba(202,138,4,.22));
+      z-index: 2;
+      opacity: .9;
+      animation: treeTwinkle 2.8s ease-in-out infinite;
+    }
+    .tree-star.one { left: 22%; top: 26px; }
+    .tree-star.two { right: 28%; top: 96px; animation-delay: .8s; transform: scale(.75); }
+    .tree-star.three { right: 12%; top: 52px; animation-delay: 1.3s; transform: scale(1.15); }
+    .tree-tool-stack,
+    .tree-event-chip,
+    .tree-boost-chip {
+      position: absolute;
+      z-index: 7;
+    }
+    .tree-tool-stack { left: 16px; top: 18px; display: grid; gap: 10px; }
+    .tree-tool-btn,
+    .tree-event-chip,
+    .tree-boost-chip {
+      border: 2px solid rgba(255,255,255,.8);
+      box-shadow: 0 10px 24px rgba(8,72,52,.16);
+      font-weight: 900;
+    }
+    .tree-tool-btn {
+      min-width: 92px;
+      height: 38px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      justify-content: center;
+      color: #fff;
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      font-size: 12px;
+      padding: 0 12px;
+    }
+    .tree-tool-btn:nth-child(2) { background: linear-gradient(135deg, #facc15, #f97316); color: #7c2d12; }
+    .tree-event-chip {
+      right: 16px;
+      top: 28px;
+      height: 42px;
+      border-radius: 999px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      font-size: 12px;
+    }
+    .tree-boost-chip {
+      left: 50%;
+      top: 34px;
+      transform: translateX(-50%);
+      min-width: 210px;
+      height: 42px;
+      border-radius: 999px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      background: rgba(20, 83, 45, .9);
+      color: #fff;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .tree-boost-chip strong {
+      display: grid;
+      place-items: center;
+      min-width: 45px;
+      height: 28px;
+      border-radius: 999px;
+      color: #dc2626;
+      background: #fff;
+      font-family: "Plus Jakarta Sans";
+      font-size: 18px;
+    }
+    .tree-island {
+      position: absolute;
+      left: 50%;
+      bottom: 74px;
+      width: min(420px, 88%);
+      height: 146px;
+      transform: translateX(-50%);
+      z-index: 3;
+      border-radius: 52% 48% 48% 52% / 62% 60% 40% 38%;
+      background:
+        radial-gradient(ellipse at 50% 22%, rgba(255,255,255,.46), transparent 58%),
+        linear-gradient(180deg, #ffe58b 0%, #fbbf24 72%, #f59e0b 100%);
+      box-shadow: 0 20px 42px rgba(146,64,14,.16), inset 0 -12px rgba(202,138,4,.14);
+    }
+    .tree-island:before,
+    .tree-island:after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(255,255,255,.35);
+      height: 7px;
+    }
+    .tree-island:before { width: 98px; left: 30px; top: 36px; }
+    .tree-island:after { width: 70px; right: 36px; top: 56px; }
+    .tree-soil {
+      position: absolute;
+      left: 50%;
+      bottom: 62px;
+      width: 116px;
+      height: 38px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 20% 42%, #7c2d12 0 8px, transparent 9px),
+        radial-gradient(circle at 42% 35%, #92400e 0 9px, transparent 10px),
+        radial-gradient(circle at 66% 43%, #78350f 0 8px, transparent 9px),
+        linear-gradient(180deg, #a16207, #78350f);
+      box-shadow: 0 8px 14px rgba(120,53,15,.24);
+      z-index: 5;
+    }
+    .tree-plant {
+      --tree-scale: .46;
+      position: absolute;
+      left: 50%;
+      bottom: 126px;
+      width: 230px;
+      height: 264px;
+      transform: translateX(-50%);
+      transform-origin: 50% 100%;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .tree-trunk {
+      position: absolute;
+      left: 50%;
+      bottom: 7px;
+      width: 28px;
+      height: calc(86px + var(--tree-scale, .46) * 42px);
+      transform: translateX(-50%) scaleX(calc(.78 + var(--tree-scale, .46) * .28));
+      transform-origin: 50% 100%;
+      border-radius: 18px 18px 7px 7px;
+      background: linear-gradient(90deg, #7c2d12, #a16207 54%, #854d0e);
+      box-shadow: inset 6px 0 rgba(255,255,255,.16);
+      transition: height .55s var(--ease-out), transform .55s var(--ease-out);
+    }
+    .tree-canopy {
+      position: absolute;
+      left: 50%;
+      bottom: 98px;
+      width: 184px;
+      height: 160px;
+      transform: translateX(-50%) scale(var(--tree-scale, .46));
+      transform-origin: 50% 100%;
+      transition: transform .6s var(--ease-out), filter .6s var(--ease-out), opacity .4s var(--ease-out);
+      filter: saturate(calc(.86 + var(--tree-scale, .46) * .34));
+    }
+    .tree-leaf,
+    .tree-fruit {
+      position: absolute;
+      border-radius: 999px;
+      box-shadow: inset 8px -8px rgba(255,255,255,.16), 0 12px 24px rgba(21,128,61,.18);
+    }
+    .tree-leaf {
+      background: linear-gradient(135deg, #16a34a, #65a30d);
+    }
+    .tree-leaf.one { width: 92px; height: 92px; left: 8px; top: 54px; }
+    .tree-leaf.two { width: 106px; height: 106px; right: 4px; top: 42px; }
+    .tree-leaf.three { width: 108px; height: 108px; left: 42px; top: 2px; }
+    .tree-leaf.four { width: 82px; height: 82px; left: 58px; bottom: 0; background: linear-gradient(135deg, #22c55e, #15803d); }
+    .tree-fruit {
+      width: 18px;
+      height: 24px;
+      background: linear-gradient(180deg, #fde047, #f59e0b);
+      border-radius: 46% 46% 50% 50%;
+      opacity: 0;
+      transform: translateY(8px) scale(.82);
+      transition: opacity .4s var(--ease-out), transform .45s var(--ease-out);
+      box-shadow: 0 8px 16px rgba(245,158,11,.25);
+    }
+    .tree-fruit.one { left: 76px; top: 54px; }
+    .tree-fruit.two { left: 118px; top: 84px; transition-delay: .08s; }
+    .tree-fruit.three { left: 96px; top: 112px; transition-delay: .16s; }
+    .tree-plant[data-stage="sprout"] .tree-canopy { opacity: .16; }
+    .tree-plant[data-stage="sprout"] .tree-trunk { height: 54px; width: 16px; }
+    .tree-plant[data-stage="bud"] .tree-canopy { opacity: .72; }
+    .tree-plant[data-stage="ready"] .tree-fruit { opacity: 1; transform: translateY(0) scale(1); }
+    .tree-plant[data-stage="ready"] { animation: treeReadyBounce 2.2s ease-in-out infinite; }
+    .tree-sign {
+      position: absolute;
+      right: 12%;
+      bottom: 144px;
+      z-index: 6;
+      width: 92px;
+      min-height: 58px;
+      padding: 8px 8px 9px;
+      border-radius: 8px;
+      background: #fff7ed;
+      border: 3px solid #b45309;
+      box-shadow: 0 10px 18px rgba(120,53,15,.18);
+      text-align: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: #92400e;
+    }
+    .tree-sign:after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      width: 9px;
+      height: 42px;
+      transform: translateX(-50%);
+      background: #92400e;
+      border-radius: 0 0 5px 5px;
+      z-index: -1;
+    }
+    .tree-sign span { display: block; color: var(--green-800); font-size: 11px; }
+    .tree-water-dock {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      width: min(430px, calc(100% - 28px));
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: minmax(110px, .8fr) minmax(128px, 1fr) minmax(96px, .7fr);
+      gap: 10px;
+      align-items: center;
+      z-index: 8;
+    }
+    .tree-water-reserve,
+    .tree-water-button {
+      height: 58px;
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,.86);
+      box-shadow: 0 14px 28px rgba(8,72,52,.16);
+    }
+    .tree-water-reserve {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      align-items: center;
+      column-gap: 8px;
+      padding: 0 12px;
+      color: #075985;
+      background: rgba(240,249,255,.94);
+    }
+    .tree-water-reserve i { font-size: 28px; color: #0ea5e9; }
+    .tree-water-reserve strong {
+      display: block;
+      font-family: "Plus Jakarta Sans";
+      font-size: 20px;
+      line-height: 1;
+      color: #075985;
+    }
+    .tree-water-reserve span {
+      display: block;
+      font-size: 10px;
+      line-height: 1.2;
+      color: #0369a1;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .tree-water-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      transition: transform .2s var(--ease), filter .2s var(--ease), opacity .2s var(--ease);
+      white-space: nowrap;
+    }
+    .tree-water-button:hover { transform: translateY(-2px); filter: saturate(1.08); }
+    .tree-water-button:disabled { opacity: .58; cursor: not-allowed; transform: none; filter: grayscale(.15); }
+    .tree-water-button.secondary { color: var(--green-950); background: linear-gradient(135deg, #fff7ed, #facc15); }
+    .tree-ripple {
+      position: absolute;
+      left: 50%;
+      bottom: 80px;
+      width: 180px;
+      height: 22px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      border: 2px solid rgba(14,165,233,.38);
+      z-index: 4;
+      opacity: 0;
+    }
+    .tree-farm-scene.is-watering .tree-ripple { animation: treeRipple .85s var(--ease-out); }
+    .tree-farm-scene.is-watering .tree-drop {
+      opacity: 1;
+      animation: treeDropFall .82s ease-in forwards;
+    }
+    .tree-drop {
+      position: absolute;
+      left: 50%;
+      top: 92px;
+      width: 28px;
+      height: 38px;
+      border-radius: 55% 45% 55% 45%;
+      background: linear-gradient(145deg, #bae6fd, #0ea5e9);
+      transform: translateX(-50%) rotate(12deg);
+      box-shadow: 0 10px 22px rgba(14,165,233,.24);
+      opacity: 0;
+      z-index: 8;
+      pointer-events: none;
+    }
+    .tree-game-copy {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      background:
+        radial-gradient(circle at 100% 0, rgba(250,204,21,.16), transparent 230px),
+        linear-gradient(135deg, #fff 0%, #f7fee7 100%);
+    }
+    .tree-game-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .tree-game-head h2 { font-size: 25px; margin: 0; }
+    .tree-level-badge {
+      flex: 0 0 auto;
+      min-width: 74px;
+      padding: 9px 12px;
+      border-radius: 16px;
+      color: var(--green-900);
+      background: #fff;
+      border: 1px solid rgba(22,163,74,.16);
+      box-shadow: 0 10px 22px rgba(11,52,36,.07);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .tree-level-badge strong { display: block; font-family: "Plus Jakarta Sans"; font-size: 22px; line-height: 1; color: var(--orange-600); }
+    .tree-progress-block { display: grid; gap: 9px; }
+    .tree-meter-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-end;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .tree-meter-meta strong {
+      display: block;
+      font-family: "Plus Jakarta Sans";
+      font-size: 23px;
+      color: var(--green-900);
+      line-height: 1.1;
+    }
+    .tree-progress-track {
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(20,97,61,.12);
+      overflow: hidden;
+      box-shadow: inset 0 2px 5px rgba(20,83,45,.1);
+    }
+    .tree-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e 0%, #84cc16 52%, #facc15 100%);
+      box-shadow: 0 0 18px rgba(34,197,94,.24);
+      transition: width .6s var(--ease-out);
+    }
+    .tree-next-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+    .tree-stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .tree-stat-pill {
+      min-height: 74px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(22, 163, 74, .14);
+      box-shadow: 0 10px 20px rgba(11,52,36,.05);
+    }
+    .tree-stat-pill strong {
+      display: block;
+      font-family: "Plus Jakarta Sans";
+      font-size: 20px;
+      color: var(--green-900);
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+    .tree-stat-pill span {
+      display: block;
+      font-size: 10.5px;
+      line-height: 1.25;
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .tree-mission-list { display: grid; gap: 9px; }
+    .tree-mission {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 58px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(229,231,235,.78);
+    }
+    .tree-mission-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: var(--green-900);
+      background: var(--green-100);
+      font-size: 21px;
+    }
+    .tree-mission strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.25;
+      color: var(--green-950);
+    }
+    .tree-mission span {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      line-height: 1.3;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .tree-mission .tag { white-space: nowrap; }
+    .tree-reward-card {
+      display: none;
+      max-width: 720px;
+      margin: 0 auto 26px;
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #e0f2fe, #fff 48%, var(--green-100));
+      border: 1px solid rgba(14, 165, 233, .2);
+      text-align: left;
+    }
+    @keyframes treeTwinkle {
+      0%, 100% { opacity: .58; transform: scale(.86) rotate(0); }
+      50% { opacity: 1; transform: scale(1.08) rotate(8deg); }
+    }
+    @keyframes treeDropFall {
+      0% { opacity: 0; transform: translate(-50%, -20px) rotate(12deg) scale(.72); }
+      18% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, 190px) rotate(12deg) scale(1.08); }
+    }
+    @keyframes treeRipple {
+      0% { opacity: .7; transform: translateX(-50%) scale(.55); }
+      100% { opacity: 0; transform: translateX(-50%) scale(1.45); }
+    }
+    @keyframes treeReadyBounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-5px); }
+    }
+    @media (max-width: 980px) {
+      .tree-game-grid { grid-template-columns: 1fr; }
+      .tree-game-copy { padding: 24px; }
+    }
+    @media (max-width: 620px) {
+      .tree-farm-scene { min-height: 430px; }
+      .tree-boost-chip { top: 78px; min-width: 190px; font-size: 10px; }
+      .tree-event-chip { right: 12px; top: 18px; }
+      .tree-tool-stack { left: 12px; top: 14px; }
+      .tree-tool-btn { min-width: 44px; width: 44px; padding: 0; }
+      .tree-tool-btn span { display: none; }
+      .tree-sign { right: 8%; transform: scale(.88); }
+      .tree-water-dock { grid-template-columns: 1fr 1fr; }
+      .tree-water-reserve { grid-column: 1 / -1; }
+      .tree-game-head { flex-direction: column; }
+      .tree-stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tree-mission { grid-template-columns: 38px minmax(0, 1fr); }
+      .tree-mission .tag { grid-column: 2; justify-self: start; }
+    }
+
     /* ============ CHART BARS ============ */
     .chart-bars { display: flex; align-items: flex-end; gap: 12px; height: 180px; padding: 0 8px; }
     .chart-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -1730,8 +2272,8 @@
         </div>
         <div class="card">
           <div class="card-icon"><i class="ti ti-trophy"></i></div>
-          <h3>Tích điểm uy tín</h3>
-          <p>Đặt hàng đều đặn, nhận đúng giờ – mở khóa voucher độc quyền và quyền ưu tiên.</p>
+          <h3>Giữ điểm uy tín</h3>
+          <p>Khởi đầu 100 điểm, nhận hàng thành công +5; lấy trễ -10 và bỏ đơn -15.</p>
         </div>
       </div>
     </div>
@@ -1885,7 +2427,6 @@
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px">
           <span style="font-size:12px;font-weight:900;color:var(--muted)">CHỌN CÁCH ĐĂNG NHẬP</span>
-          <span style="font-size:11px;font-weight:800;color:var(--green)">Google và Facebook riêng biệt</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px">
           <button class="btn btn-ghost" type="button" data-oauth-provider="google" onclick="socialLogin('google')" aria-label="Đăng nhập bằng Google" style="background:#fff;border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;min-height:66px;padding:10px 12px">
@@ -2042,9 +2583,9 @@
                   </div>
                   <div class="signup-legal">
                     Bằng việc tiếp tục, bạn đồng ý với
-                    <a href="chinh-sach.html">chính sách</a>
+                    <a href="chinh-sach.html?source=user">chính sách bảo mật</a>
                     và
-                    <a href="dieu-khoan.html">điều khoản sử dụng</a>
+                    <a href="dieu-khoan.html?source=user">điều khoản dịch vụ</a>
                     của FoodSave.
                   </div>
                   <div class="signup-actions">
@@ -2105,7 +2646,7 @@
                 <div class="field">
                   <label style="display:flex;align-items:flex-start;gap:10px;line-height:1.5;color:var(--ink);font-weight:700">
                     <input type="checkbox" id="signup-detail-terms" name="terms" style="width:18px;min-height:18px;height:18px;padding:0;margin-top:2px;accent-color:var(--green-700);flex:0 0 auto">
-                    <span>Tôi đã đọc và đồng ý với <a href="chinh-sach.html" style="color:var(--green-700);font-weight:900;text-decoration:none">chính sách</a> và <a href="dieu-khoan.html" style="color:var(--green-700);font-weight:900;text-decoration:none">điều khoản sử dụng</a> của FoodSave.</span>
+                    <span>Tôi đã đọc và đồng ý với <a href="chinh-sach.html?source=user" style="color:var(--green-700);font-weight:900;text-decoration:none">chính sách bảo mật</a> và <a href="dieu-khoan.html?source=user" style="color:var(--green-700);font-weight:900;text-decoration:none">điều khoản dịch vụ</a> của FoodSave.</span>
                   </label>
                 </div>
                 <div class="field-error" id="signup-detail-error"></div>
@@ -2229,7 +2770,7 @@
 
             <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:14px 0 10px;cursor:pointer">
               <input type="checkbox" id="reg-terms" style="accent-color:var(--green-700);margin-top:2px" required>
-              <span class="text-muted">Tôi đồng ý với <a onclick="openLegal('terms')" style="cursor:pointer">Điều khoản dịch vụ</a> và <a onclick="openLegal('privacy')" style="cursor:pointer">Chính sách bảo mật</a> của FoodSave.</span>
+              <span class="text-muted">Tôi đồng ý với <a href="dieu-khoan.html?source=user" style="cursor:pointer">Điều khoản dịch vụ</a> và <a href="chinh-sach.html?source=user" style="cursor:pointer">Chính sách bảo mật</a> của FoodSave.</span>
             </label>
             <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;margin-bottom:18px;cursor:pointer">
               <input type="checkbox" id="reg-marketing" style="accent-color:var(--green-700);margin-top:2px">
@@ -2499,7 +3040,7 @@
       <div>
         <div class="section-head">
           <div><h2 style="font-size:22px">Cửa hàng gần bạn</h2></div>
-          <button class="btn-link" onclick="navTo('map')"><i class="ti ti-map"></i> Xem bản đồ</button>
+          <button class="btn-link" onclick="getUserLocation(); navTo('map');"><i class="ti ti-map"></i> Xem bản đồ</button>
         </div>
         <div class="grid-3" id="home-stores"></div>
       </div>
@@ -2529,8 +3070,8 @@
           <div class="filter-section">
             <h4>Nhãn sản phẩm</h4>
             <label class="check-row"><input type="checkbox" class="flt-label" value="green" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#10b981"></span> Xanh 3-5 ngày</span></label>
-            <label class="check-row"><input type="checkbox" class="flt-label" value="yellow" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></span> Vàng ≤24 giờ</span></label>
-            <label class="check-row"><input type="checkbox" class="flt-label" value="red" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span> Đỏ ≤12 giờ</span></label>
+            <label class="check-row"><input type="checkbox" class="flt-label" value="yellow" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></span> Vàng 48h</span></label>
+            <label class="check-row"><input type="checkbox" class="flt-label" value="red" onchange="renderMarket()"> <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span> Đỏ 24h</span></label>
           </div>
           <div class="filter-section">
             <h4>Danh mục</h4>
@@ -3028,6 +3569,20 @@
       <p class="text-muted" style="font-size:15px;margin-bottom:6px">Mã đơn hàng: <strong style="color:var(--orange-500);font-family:'Plus Jakarta Sans';font-size:18px" id="success-id">#FS-0000</strong></p>
       <p class="text-muted" id="success-message" style="font-size:14px;margin-bottom:36px">Hóa đơn điện tử &amp; mã QR đã gửi tới <strong style="color:var(--green-900)" id="success-email">bt.buutran@gmail.com</strong></p>
 
+      <div class="tree-reward-card" id="success-tree-reward">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:54px;height:54px;border-radius:16px;background:#dcfce7;color:var(--green-800);display:grid;place-items:center;font-size:28px;flex-shrink:0"><i class="ti ti-plant-2"></i></div>
+          <div style="flex:1;min-width:220px">
+            <h3 id="success-tree-title" style="margin:0 0 4px;font-size:17px">Bạn nhận được nước tưới cây</h3>
+            <p id="success-tree-desc" class="text-muted" style="font-size:12.5px;margin:0;line-height:1.6">Nước đã được thêm vào bình sau đơn hàng này.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" data-tree-water-button onclick="waterTreeFromSuccess()"><i class="ti ti-droplet-up"></i> <span data-tree-water-button-text>Tưới ngay</span></button>
+            <button class="btn btn-ghost btn-sm" onclick="navTo('impact')"><i class="ti ti-leaf"></i> Xem vườn cây</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card" style="padding:32px;display:inline-block;margin-bottom:24px;text-align:center">
         <h3 style="margin-bottom:6px">Mã QR nhận hàng tại cửa hàng</h3>
         <p class="text-muted" style="font-size:12px;margin-bottom:18px">Đến cửa hàng đúng khung giờ – đưa QR này cho nhân viên là nhận được hàng</p>
@@ -3257,6 +3812,74 @@
         </div>
       </div>
 
+      <!-- Tree reputation game -->
+      <div class="card tree-game-card" style="margin-bottom:32px">
+        <div class="tree-game-grid">
+          <div class="tree-farm-scene" data-tree-scene>
+            <span class="tree-star one" aria-hidden="true"></span>
+            <span class="tree-star two" aria-hidden="true"></span>
+            <span class="tree-star three" aria-hidden="true"></span>
+            <div class="tree-tool-stack">
+              <button class="tree-tool-btn" title="Đổi giống cây" onclick="toast('Bộ sưu tập giống cây sẽ mở ở mùa kế tiếp','info')"><i class="ti ti-replace"></i><span>Đổi cây</span></button>
+              <button class="tree-tool-btn" title="Vật phẩm vườn" onclick="toast('Vật phẩm chăm cây sẽ được đổi bằng điểm xanh','info')"><i class="ti ti-gift"></i><span>Vật phẩm</span></button>
+            </div>
+            <div class="tree-boost-chip"><strong>x2</strong><span>tốc độ lớn khi có sự kiện</span></div>
+            <button class="tree-event-chip" title="Sự kiện xanh" onclick="toast('Sự kiện cuối tuần: cứu 3 đơn nhận thêm 1 bình nước','info')"><i class="ti ti-confetti"></i> Sự kiện</button>
+            <div class="tree-drop" aria-hidden="true"></div>
+            <div class="tree-plant" data-tree-plant data-stage="sprout" aria-hidden="true">
+              <div class="tree-canopy" data-tree-canopy>
+                <span class="tree-leaf one"></span>
+                <span class="tree-leaf two"></span>
+                <span class="tree-leaf three"></span>
+                <span class="tree-leaf four"></span>
+                <span class="tree-fruit one"></span>
+                <span class="tree-fruit two"></span>
+                <span class="tree-fruit three"></span>
+              </div>
+              <div class="tree-trunk"></div>
+            </div>
+            <div class="tree-island" aria-hidden="true"><div class="tree-soil"></div></div>
+            <div class="tree-sign">Quỹ cây xanh<span>#<span data-tree-current>1</span></span></div>
+            <div class="tree-ripple" aria-hidden="true"></div>
+            <div class="tree-water-dock">
+              <div class="tree-water-reserve"><i class="ti ti-droplet-filled"></i><div><strong data-tree-reserve>0</strong><span>giọt nước</span></div></div>
+              <button class="tree-water-button" data-tree-water-button onclick="waterTrustTree('impact')"><i class="ti ti-droplet-up"></i><span data-tree-water-button-text>Tưới ngay</span></button>
+              <button class="tree-water-button secondary" onclick="navTo('market')"><i class="ti ti-shopping-bag-plus"></i> Cứu thêm</button>
+            </div>
+          </div>
+          <div class="tree-game-copy">
+            <div class="eyebrow" style="margin-bottom:10px"><i class="ti ti-droplet"></i> Trò chơi cây uy tín</div>
+            <div class="tree-game-head">
+              <h2>Giải cứu thực phẩm để lấy nước tưới cây</h2>
+              <div class="tree-level-badge">Cây hiện tại<strong>#<span data-tree-current>1</span></strong></div>
+            </div>
+            <p class="text-muted" style="font-size:13.5px;line-height:1.7">Mỗi đơn hàng thành công tạo 25 giọt nước. Dùng nước để nuôi cây uy tín; cây trưởng thành 100% sẽ được ghi nhận vào quỹ cây xanh FoodSave.</p>
+            <div class="tree-progress-block">
+              <div class="tree-meter-meta">
+                <div>
+                  <span>Giai đoạn</span>
+                  <strong><span data-tree-stage>Mầm xanh</span></strong>
+                </div>
+                <strong style="color:var(--orange-600)"><span data-tree-water>0</span>%</strong>
+              </div>
+              <div class="tree-progress-track"><div class="tree-progress-fill" data-tree-meter></div></div>
+              <p class="tree-next-copy"><span data-tree-next>Cần thêm 4 lần tưới để cây trưởng thành.</span></p>
+            </div>
+            <div class="tree-stat-row">
+              <div class="tree-stat-pill"><strong data-tree-reserve>0</strong><span>Giọt nước đang có</span></div>
+              <div class="tree-stat-pill"><strong data-tree-waterings>0</strong><span>Lần đã tưới</span></div>
+              <div class="tree-stat-pill"><strong data-tree-donated>0</strong><span>Cây đã góp quỹ</span></div>
+              <div class="tree-stat-pill"><strong>+<span data-tree-reputation>0</span></strong><span>Điểm uy tín xanh</span></div>
+            </div>
+            <div class="tree-mission-list">
+              <div class="tree-mission"><div class="tree-mission-icon"><i class="ti ti-shopping-bag-check"></i></div><div><strong>Cứu thực phẩm để nhận nước</strong><span><span data-tree-orders>0</span> đơn đã tạo nước cho vườn</span></div><span class="tag tag-green">+25 giọt/đơn</span></div>
+              <div class="tree-mission"><div class="tree-mission-icon" style="background:#e0f2fe;color:#0369a1"><i class="ti ti-droplet-up"></i></div><div><strong>Tưới cây mỗi khi có nước</strong><span><span data-tree-reserve-doses>0</span> lượt tưới đang sẵn sàng</span></div><span class="tag" style="background:#e0f2fe;color:#0369a1">25 giọt/lần</span></div>
+              <div class="tree-mission"><div class="tree-mission-icon" style="background:#fef3c7;color:#92400e"><i class="ti ti-award"></i></div><div><strong>Phần thưởng trưởng thành</strong><span data-tree-next-reward>Hoàn thành cây để góp quỹ xanh</span></div><span class="tag tag-orange">+25 điểm</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Chart -->
       <div class="card" style="margin-bottom:32px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
@@ -3453,7 +4076,7 @@
 
               <!-- Profile completion progress -->
               <div style="background:linear-gradient(135deg,var(--orange-100),#fff8ed);border:1px solid var(--orange-500);border-radius:14px;padding:14px;margin-bottom:20px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:14px"><i class="ti ti-progress"></i> Hồ sơ hoàn thiện: <span style="color:var(--orange-500)">40%</span></strong><span class="text-muted" style="font-size:12px">+50 điểm khi đạt 100%</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:14px"><i class="ti ti-progress"></i> Hồ sơ hoàn thiện: <span style="color:var(--orange-500)">40%</span></strong><span class="text-muted" style="font-size:12px">Bổ sung để bảo vệ tài khoản</span></div>
                 <div style="height:8px;background:#fff;border-radius:4px;overflow:hidden"><div style="width:40%;height:100%;background:linear-gradient(90deg,var(--green-700),var(--orange-500))"></div></div>
               </div>
 
@@ -3556,38 +4179,105 @@
           <!-- Reputation -->
           <div class="acc-tab" data-tab="reputation" style="display:none">
             <div class="card text-center" style="background:linear-gradient(135deg,#fef3c7,#fff)">
-              <div style="font-family:'Plus Jakarta Sans';font-size:48px;font-weight:800;color:#b45309;line-height:1;margin-bottom:8px">— <span style="font-size:24px">⭐</span></div>
-              <h3>Hạng: Người mới 🌱</h3>
-              <p class="text-muted" style="font-size:13px">Hoàn thành đơn hàng đầu tiên để nhận hạng Đồng và bắt đầu tích điểm uy tín</p>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:12px"><span class="text-muted">Đồng</span><span class="text-muted">Bạc</span><span class="text-muted">Vàng</span><span class="text-muted">Kim Cương</span></div>
-              <div style="height:8px;background:var(--soft);border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:5%;height:100%;background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div>
-              <p class="text-muted" style="font-size:11px;margin-top:8px">0/100 điểm để lên hạng Đồng</p>
+              <div style="font-family:'Plus Jakarta Sans';font-size:48px;font-weight:800;color:#b45309;line-height:1;margin-bottom:8px"><span data-points>0</span> <span style="font-size:24px">⭐</span></div>
+              <h3>Hạng: <span data-rank>Tin cậy</span></h3>
+              <p class="text-muted" style="font-size:13px">Khởi đầu 100 điểm · nhận hàng thành công +5 · lấy trễ -10 · bỏ đơn -15</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:12px"><span class="text-muted">Chặn &lt;40</span><span class="text-muted">Hạn chế 40-84</span><span class="text-muted">Tin cậy ≥85</span></div>
+              <div style="height:8px;background:var(--soft);border-radius:4px;margin-top:6px;overflow:hidden"><div data-rank-progress style="width:5%;height:100%;background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div>
+              <p class="text-muted" style="font-size:11px;margin-top:8px"><span data-points>0</span> điểm uy tín hiện có</p>
+            </div>
+
+            <div class="card tree-game-card" style="margin-top:14px">
+              <div class="tree-game-grid">
+                <div class="tree-farm-scene" data-tree-scene>
+                  <span class="tree-star one" aria-hidden="true"></span>
+                  <span class="tree-star two" aria-hidden="true"></span>
+                  <span class="tree-star three" aria-hidden="true"></span>
+                  <div class="tree-tool-stack">
+                    <button class="tree-tool-btn" title="Đổi giống cây" onclick="toast('Bộ sưu tập giống cây sẽ mở ở mùa kế tiếp','info')"><i class="ti ti-replace"></i><span>Đổi cây</span></button>
+                    <button class="tree-tool-btn" title="Vật phẩm vườn" onclick="toast('Vật phẩm chăm cây sẽ được đổi bằng điểm xanh','info')"><i class="ti ti-gift"></i><span>Vật phẩm</span></button>
+                  </div>
+                  <div class="tree-boost-chip"><strong>x2</strong><span>tốc độ lớn khi có sự kiện</span></div>
+                  <button class="tree-event-chip" title="Sự kiện xanh" onclick="toast('Sự kiện cuối tuần: cứu 3 đơn nhận thêm 1 bình nước','info')"><i class="ti ti-confetti"></i> Sự kiện</button>
+                  <div class="tree-drop" aria-hidden="true"></div>
+                  <div class="tree-plant" data-tree-plant data-stage="sprout" aria-hidden="true">
+                    <div class="tree-canopy" data-tree-canopy>
+                      <span class="tree-leaf one"></span>
+                      <span class="tree-leaf two"></span>
+                      <span class="tree-leaf three"></span>
+                      <span class="tree-leaf four"></span>
+                      <span class="tree-fruit one"></span>
+                      <span class="tree-fruit two"></span>
+                      <span class="tree-fruit three"></span>
+                    </div>
+                    <div class="tree-trunk"></div>
+                  </div>
+                  <div class="tree-island" aria-hidden="true"><div class="tree-soil"></div></div>
+                  <div class="tree-sign">Quỹ cây xanh<span>#<span data-tree-current>1</span></span></div>
+                  <div class="tree-ripple" aria-hidden="true"></div>
+                  <div class="tree-water-dock">
+                    <div class="tree-water-reserve"><i class="ti ti-droplet-filled"></i><div><strong data-tree-reserve>0</strong><span>giọt nước</span></div></div>
+                    <button class="tree-water-button" data-tree-water-button onclick="waterTrustTree('account')"><i class="ti ti-droplet-up"></i><span data-tree-water-button-text>Tưới ngay</span></button>
+                    <button class="tree-water-button secondary" onclick="navTo('market')"><i class="ti ti-shopping-bag-plus"></i> Cứu thêm</button>
+                  </div>
+                </div>
+                <div class="tree-game-copy">
+                  <div class="eyebrow" style="margin-bottom:10px"><i class="ti ti-droplet"></i> Trò chơi cây uy tín</div>
+                  <div class="tree-game-head">
+                    <h2>Giải cứu thực phẩm để lấy nước tưới cây</h2>
+                    <div class="tree-level-badge">Cây hiện tại<strong>#<span data-tree-current>1</span></strong></div>
+                  </div>
+                  <p class="text-muted" style="font-size:13.5px;line-height:1.7">Sau mỗi đơn hàng giải cứu thành công, tài khoản nhận 25 giọt nước. Tưới đủ 100% sẽ hoàn thành một cây và góp vào quỹ xanh.</p>
+                  <div class="tree-progress-block">
+                    <div class="tree-meter-meta">
+                      <div>
+                        <span>Giai đoạn</span>
+                        <strong><span data-tree-stage>Mầm xanh</span></strong>
+                      </div>
+                      <strong style="color:var(--orange-600)"><span data-tree-water>0</span>%</strong>
+                    </div>
+                    <div class="tree-progress-track"><div class="tree-progress-fill" data-tree-meter></div></div>
+                    <p class="tree-next-copy"><span data-tree-next>Cần thêm 4 lần tưới để cây trưởng thành.</span></p>
+                  </div>
+                  <div class="tree-stat-row">
+                    <div class="tree-stat-pill"><strong data-tree-reserve>0</strong><span>Giọt nước đang có</span></div>
+                    <div class="tree-stat-pill"><strong data-tree-waterings>0</strong><span>Lần đã tưới</span></div>
+                    <div class="tree-stat-pill"><strong data-tree-donated>0</strong><span>Cây đã góp quỹ</span></div>
+                    <div class="tree-stat-pill"><strong>+<span data-tree-reputation>0</span></strong><span>Điểm uy tín xanh</span></div>
+                  </div>
+                  <div class="tree-mission-list">
+                    <div class="tree-mission"><div class="tree-mission-icon"><i class="ti ti-shopping-bag-check"></i></div><div><strong>Cứu thực phẩm để nhận nước</strong><span><span data-tree-orders>0</span> đơn đã tạo nước cho vườn</span></div><span class="tag tag-green">+25 giọt/đơn</span></div>
+                    <div class="tree-mission"><div class="tree-mission-icon" style="background:#e0f2fe;color:#0369a1"><i class="ti ti-droplet-up"></i></div><div><strong>Tưới cây mỗi khi có nước</strong><span><span data-tree-reserve-doses>0</span> lượt tưới đang sẵn sàng</span></div><span class="tag" style="background:#e0f2fe;color:#0369a1">25 giọt/lần</span></div>
+                    <div class="tree-mission"><div class="tree-mission-icon" style="background:#fef3c7;color:#92400e"><i class="ti ti-award"></i></div><div><strong>Phần thưởng trưởng thành</strong><span data-tree-next-reward>Hoàn thành cây để góp quỹ xanh</span></div><span class="tag tag-orange">+25 điểm</span></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="card" style="margin-top:14px">
-              <h3>Cách tăng điểm uy tín</h3>
-              <p class="text-muted" style="font-size:12.5px;margin:0 0 12px">Đồng bộ tự động với hoạt động đặt hàng, lấy hàng và đánh giá của bạn</p>
+              <h3>Quy tắc điểm uy tín</h3>
+              <p class="text-muted" style="font-size:12.5px;margin:0 0 12px">Đồng bộ tự động với hành vi nhận hàng theo đúng bộ luật mới</p>
               <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px" id="reputation-rules">
-                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-shopping-bag" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Đặt đơn hàng</div><div style="font-size:11.5px;color:var(--muted)">+2 điểm khi đặt · +10 khi hoàn thành</div></div><span class="tag" id="rep-orders" style="background:var(--green-100);color:var(--green-800);padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">0 đơn</span></div>
-                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-clock-check" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Nhận hàng đúng giờ</div><div style="font-size:11.5px;color:var(--muted)">+5 điểm/lần (trong khung giờ đã chọn)</div></div><span class="tag" id="rep-ontime" style="background:var(--green-100);color:var(--green-800);padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">0 lần</span></div>
-                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-star" style="font-size:24px;color:var(--orange-500)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Đánh giá đơn hàng</div><div style="font-size:11.5px;color:var(--muted)">+5 điểm · Bonus +5 nếu có ảnh</div></div><span class="tag" id="rep-reviews" style="background:var(--orange-100);color:var(--orange-600);padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">0 đánh giá</span></div>
-                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:#fef2f2;border-radius:11px;border:1px solid #fee2e2"><i class="ti ti-x" style="font-size:24px;color:#dc2626"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px;color:#0a0a0a">Hủy đơn / Vắng mặt</div><div style="font-size:11.5px;color:#dc2626">−3 điểm tự hủy muộn · −15 điểm vắng mặt</div></div><span class="tag" id="rep-cancels" style="background:#fee2e2;color:#dc2626;padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">0 lần</span></div>
-                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-friends" style="font-size:24px;color:#6d28d9"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Mời bạn bè tham gia</div><div style="font-size:11.5px;color:var(--muted)">+20 điểm/người · Cả 2 nhận voucher 30K</div></div><button class="btn btn-primary btn-sm" onclick="toast('Link đã sao chép: foodsave.vn/r/U12345','info')">Mời ngay</button></div>
-                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-check" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Hoàn thiện hồ sơ 100%</div><div style="font-size:11.5px;color:var(--muted)">+50 điểm (1 lần)</div></div><button class="btn btn-primary btn-sm" id="rep-profile-btn" onclick="accTab('profile',document.querySelector('#page-account .side-link'))">Hoàn thiện</button></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-shopping-bag" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Nhận hàng thành công</div><div style="font-size:11.5px;color:var(--muted)">+5 điểm khi đơn được xác nhận nhận hàng thành công</div></div><span class="tag" id="rep-orders" style="background:var(--green-100);color:var(--green-800);padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">+5</span></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--green-50);border-radius:11px;border:1px solid var(--green-100)"><i class="ti ti-plant-2" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Tưới cây xanh sau mua hàng</div><div style="font-size:11.5px;color:var(--muted)">Tính điểm cây xanh riêng, không ảnh hưởng hạng uy tín</div></div><span class="tag tag-green" style="padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px"><span data-tree-donated>0</span> cây</span></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-clock-check" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Lấy hàng trễ giờ</div><div style="font-size:11.5px;color:var(--muted)">-10 điểm khi đến nhận sau khung giờ đã cam kết</div></div><span class="tag" id="rep-ontime" style="background:var(--red-100);color:var(--red);padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">-10</span></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-star" style="font-size:24px;color:var(--orange-500)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Đánh giá đơn hàng</div><div style="font-size:11.5px;color:var(--muted)">Giúp kiểm soát chất lượng, không cộng điểm uy tín</div></div><span class="tag" id="rep-reviews" style="background:var(--orange-100);color:var(--orange-600);padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">0 đánh giá</span></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:#fef2f2;border-radius:11px;border:1px solid #fee2e2"><i class="ti ti-x" style="font-size:24px;color:#dc2626"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px;color:#0a0a0a">Không đến lấy hàng</div><div style="font-size:11.5px;color:#dc2626">-15 điểm khi bỏ đơn hoặc không đến nhận hàng</div></div><span class="tag" id="rep-cancels" style="background:#fee2e2;color:#dc2626;padding:4px 10px;border-radius:8px;font-weight:800;font-size:11px">-15</span></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-friends" style="font-size:24px;color:#6d28d9"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Mời bạn bè tham gia</div><div style="font-size:11.5px;color:var(--muted)">Cả 2 nhận voucher 30K, không cộng điểm uy tín</div></div><button class="btn btn-primary btn-sm" onclick="toast('Link đã sao chép: foodsave.vn/r/U12345','info')">Mời ngay</button></div>
+                <div style="display:flex;align-items:center;gap:12px;padding:11px;background:var(--soft);border-radius:11px"><i class="ti ti-check" style="font-size:24px;color:var(--green-700)"></i><div style="flex:1"><div style="font-weight:800;font-size:13.5px">Hoàn thiện hồ sơ 100%</div><div style="font-size:11.5px;color:var(--muted)">Tăng bảo mật tài khoản, không thay đổi điểm uy tín</div></div><button class="btn btn-primary btn-sm" id="rep-profile-btn" onclick="accTab('profile',document.querySelector('#page-account .side-link'))">Hoàn thiện</button></div>
               </div>
               <div style="margin-top:14px;padding:12px 14px;background:linear-gradient(135deg,var(--green-50,#f0fdf4),#fef9c3);border-radius:12px;border:1px solid var(--green-100);font-size:11.5px;color:var(--green-800);font-weight:600;line-height:1.6"><i class="ti ti-info-circle" style="color:var(--green-700)"></i> Điểm uy tín cập nhật <strong>tự động</strong> sau mỗi hành động — không cần claim/manual.</div>
             </div>
 
             <div class="card" style="margin-top:14px">
-              <h3>Bảng so sánh hạng thành viên</h3>
+              <h3>Bảng phân hạng tài khoản</h3>
               <div style="overflow-x:auto;margin-top:14px">
-                <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:480px">
-                  <thead><tr style="border-bottom:2px solid var(--line)"><th style="text-align:left;padding:10px 8px;font-weight:800">Quyền lợi</th><th style="text-align:center;padding:10px 8px;color:#b45309">🥉 Đồng</th><th style="text-align:center;padding:10px 8px;color:#737373">🥈 Bạc</th><th style="text-align:center;padding:10px 8px;color:var(--orange-500)">🥇 Vàng</th><th style="text-align:center;padding:10px 8px;color:#06b6d4">💎 KC</th></tr></thead>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:420px">
+                  <thead><tr style="border-bottom:2px solid var(--line)"><th style="text-align:left;padding:10px 8px;font-weight:800">Hạng</th><th style="text-align:center;padding:10px 8px;color:var(--green-700)">Điểm</th><th style="text-align:left;padding:10px 8px">Trạng thái</th></tr></thead>
                   <tbody>
-                    <tr style="border-bottom:1px solid var(--line)"><td style="padding:10px 8px">Đặt nhãn đỏ donation</td><td style="text-align:center;color:var(--muted)">—</td><td style="text-align:center"><i class="ti ti-check" style="color:var(--green-700)"></i></td><td style="text-align:center"><i class="ti ti-check" style="color:var(--green-700)"></i></td><td style="text-align:center"><i class="ti ti-check" style="color:var(--green-700)"></i></td></tr>
-                    <tr style="border-bottom:1px solid var(--line)"><td style="padding:10px 8px">Voucher hàng tháng</td><td style="text-align:center">1</td><td style="text-align:center">3</td><td style="text-align:center">6</td><td style="text-align:center">Không giới hạn</td></tr>
-                    <tr style="border-bottom:1px solid var(--line)"><td style="padding:10px 8px">Miễn phí dịch vụ</td><td style="text-align:center;color:var(--muted)">—</td><td style="text-align:center">1 đơn</td><td style="text-align:center">3 đơn</td><td style="text-align:center">Mọi đơn</td></tr>
-                    <tr><td style="padding:10px 8px">Hỗ trợ ưu tiên</td><td style="text-align:center;color:var(--muted)">Giờ HC</td><td style="text-align:center">12h/ngày</td><td style="text-align:center">24/7</td><td style="text-align:center">VIP 24/7</td></tr>
+                    <tr style="border-bottom:1px solid var(--line)"><td style="padding:10px 8px;font-weight:900;color:var(--green-800)">Tin cậy</td><td style="text-align:center">≥85</td><td style="padding:10px 8px">Tài khoản vận hành bình thường, ưu tiên giữ đơn.</td></tr>
+                    <tr style="border-bottom:1px solid var(--line)"><td style="padding:10px 8px;font-weight:900;color:var(--orange-600)">Hạn chế</td><td style="text-align:center">40-84</td><td style="padding:10px 8px">Giới hạn một số quyền giữ chỗ cho đến khi cải thiện điểm.</td></tr>
+                    <tr><td style="padding:10px 8px;font-weight:900;color:var(--red)">Chặn</td><td style="text-align:center">&lt;40</td><td style="padding:10px 8px">Tạm khóa theo quy trình xử lý tài khoản.</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3952,7 +4642,7 @@
     <div class="wrap">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="FOODSAVE_BRAND.html" class="foot-brand-link" title="Về trang chủ FoodSave Brand">
+          <a href="index.html" class="foot-brand-link" title="Về trang chủ FoodSave Brand">
             <div class="brand"><span class="wordmark" style="font-size:28px;color:#fff;text-shadow:none">FOOD<span>SAVE</span></span></div>
             <div class="foot-brand-hint"><i class="ti ti-arrow-left"></i> Về trang chủ FoodSave</div>
           </a>
@@ -4029,8 +4719,8 @@ const FAQS = [
   { q: 'Có những phương thức thanh toán nào?', a: 'Hỗ trợ 5 phương thức online: Ví MoMo, ZaloPay, VNPay QR, thẻ tín dụng/ghi nợ (Visa, Master, JCB) và COD (trả tiền mặt khi đến cửa hàng nhận hàng). Toàn bộ thanh toán bảo mật SSL 256-bit, tuân thủ chuẩn PCI DSS.' },
   { q: 'Có giao tận nhà không?', a: 'Hiện FoodSave chỉ hỗ trợ nhận tại cửa hàng (pickup) để giữ giá thấp nhất – tránh phí vận chuyển. Chúng tôi đang nghiên cứu dịch vụ giao hàng cho đơn từ 100.000đ, dự kiến ra mắt cuối 2026.' },
   { q: 'Tôi có thể trả lại / đổi hàng không?', a: 'Nếu sản phẩm có lỗi (hư hỏng, sai hạn, không đúng mô tả), bạn báo trong vòng 1 giờ sau khi nhận – FoodSave sẽ hoàn tiền 100% vào tài khoản đã thanh toán trong 1-3 ngày làm việc. Vui lòng giữ lại bao bì và mã QR.' },
-  { q: 'Điểm uy tín dùng để làm gì?', a: 'Điểm uy tín tăng khi bạn nhận hàng đúng giờ, đánh giá có hình ảnh và mời bạn bè. Điểm cao mở khóa voucher độc quyền, quyền nhận sản phẩm donation và miễn phí dịch vụ. 4 hạng: Đồng → Bạc → Vàng → Kim Cương.' },
-  { q: 'Sản phẩm donation (miễn phí) hoạt động như nào?', a: 'Nhãn đỏ có thời gian rất ngắn (dưới 72h). Để tránh lãng phí, một số sản phẩm chuyển sang chế độ donation - miễn phí cho người dùng có điểm uy tín ≥ 4.0. Bạn vẫn cần đặt cọc nhỏ (hoàn lại) để giữ chỗ.' }
+  { q: 'Điểm uy tín dùng để làm gì?', a: 'Người dùng mới khởi đầu 100 điểm. Nhận hàng thành công +5, lấy trễ -10, không đến lấy hàng -15. Hạng Tin cậy áp dụng từ 85 điểm, Hạn chế từ 40 đến dưới 85 điểm.' },
+  { q: 'Sản phẩm donation (miễn phí) hoạt động như nào?', a: 'Nhãn Đỏ là nhóm còn 24h. Để tránh lãng phí, một số sản phẩm chuyển sang chế độ donation - miễn phí cho người dùng đủ điều kiện theo hạng tài khoản. Bạn vẫn cần đặt cọc nhỏ (hoàn lại) để giữ chỗ.' }
 ];
 
 // ============ STATE ============
@@ -4184,13 +4874,13 @@ function expiresText(hrs) {
 function labelFromExpiresHrs(hrs, fallback='green') {
   const value = Number(hrs);
   if (!Number.isFinite(value)) return fallback;
-  if (value <= 12) return 'red';
-  if (value <= 24) return 'yellow';
+  if (value <= 24) return 'red';
+  if (value <= 48) return 'yellow';
   return 'green';
 }
 
 function labelText(label) {
-  return { green: '🟢 3-5 ngày', yellow: '🟡 ≤24 giờ', red: '🔴 ≤12 giờ' }[label];
+  return { green: '🟢 3-5 ngày', yellow: '🟡 48h', red: '🔴 24h' }[label];
 }
 
 function labelTag(label) {
@@ -5277,7 +5967,7 @@ async function placeOrder() {
 
   // Populate payment-confirm page (Step 3)
   populatePaymentConfirm({id:order.id, items:order.items, store, slotKey:slot, slotText:slotMap[slot], payMethod:payMap[pay], payCode:pay, subtotal, discount, donation, total, note, qr:order.paymentQr, payUrl:order.payUrl});
-  
+
   // Store for success page (after confirmation)
   window.__pendingOrder = {
     id:order.id,
@@ -5353,7 +6043,7 @@ function populatePaymentConfirm(d) {
   }
   if ($('#pc-confirm-btn')) $('#pc-confirm-btn').innerHTML = d.payCode === 'cash' ? '<i class="ti ti-check"></i> Xác nhận đặt hàng' : '<i class="ti ti-check"></i> Đã thanh toán';
   if ($('#pc-cancel-btn')) $('#pc-cancel-btn').innerHTML = d.payCode === 'cash' ? '<i class="ti ti-x"></i> Hủy đặt hàng' : '<i class="ti ti-x"></i> Hủy thanh toán';
-  
+
   // Items list
   $('#pc-items-list').innerHTML = d.items.map(it=>{
     const p = productFromCartItem(it);
@@ -5591,6 +6281,265 @@ async function insertSupabaseOrderOnConfirm(o, localOrder, isCash) {
   return data;
 }
 
+// ============ TREE REPUTATION GAME ============
+const TREE_GAME_STORAGE_KEY = 'foodsave.treeGame.v1';
+const TREE_GAME_CREDITED_KEY = 'foodsave.treeGame.creditedOrders.v1';
+const TREE_FULL_GROWTH = 100;
+const TREE_WATER_PER_ORDER = 25;
+const TREE_WATER_COST = 25;
+const TREE_POINTS_PER_WATER = 5;
+const TREE_POINTS_PER_DONATION = 25;
+
+function defaultTreeGameState() {
+  return {
+    currentTree: 1,
+    water: 0,
+    waterReserve: 0,
+    donatedTrees: 0,
+    totalWaterings: 0,
+    totalOrdersCredited: 0,
+    totalReputation: 0,
+    lastOrderId: '',
+    lastWaterEarnedAt: '',
+    lastWateredAt: '',
+    lastDonatedAt: ''
+  };
+}
+
+function toTreeNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeTreeGameState(state) {
+  const base = { ...defaultTreeGameState(), ...(state || {}) };
+  return {
+    ...base,
+    currentTree: Math.max(1, Math.floor(toTreeNumber(base.currentTree, 1))),
+    water: Math.max(0, Math.min(TREE_FULL_GROWTH, toTreeNumber(base.water, 0))),
+    waterReserve: Math.max(0, Math.floor(toTreeNumber(base.waterReserve, 0))),
+    donatedTrees: Math.max(0, Math.floor(toTreeNumber(base.donatedTrees, 0))),
+    totalWaterings: Math.max(0, Math.floor(toTreeNumber(base.totalWaterings, 0))),
+    totalOrdersCredited: Math.max(0, Math.floor(toTreeNumber(base.totalOrdersCredited, 0))),
+    totalReputation: Math.max(0, Math.floor(toTreeNumber(base.totalReputation, 0)))
+  };
+}
+
+function readTreeGameState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TREE_GAME_STORAGE_KEY) || 'null');
+    return normalizeTreeGameState(saved);
+  } catch (error) {
+    return defaultTreeGameState();
+  }
+}
+
+function saveTreeGameState(state) {
+  try {
+    localStorage.setItem(TREE_GAME_STORAGE_KEY, JSON.stringify(normalizeTreeGameState(state)));
+  } catch (error) {
+    console.warn('[FoodSave] Khong luu duoc tien do cay xanh:', error);
+  }
+}
+
+function readTreeCreditedOrders() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TREE_GAME_CREDITED_KEY) || '[]');
+    return Array.isArray(saved) ? saved.map(String) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveTreeCreditedOrders(orderIds) {
+  try {
+    localStorage.setItem(TREE_GAME_CREDITED_KEY, JSON.stringify(orderIds.slice(-80)));
+  } catch (error) {
+    console.warn('[FoodSave] Khong luu duoc danh sach don da tuoi cay:', error);
+  }
+}
+
+function treeStageLabel(water) {
+  const progress = Math.max(0, Math.min(TREE_FULL_GROWTH, Number(water) || 0));
+  if (progress >= 75) return 'Sắp ra quả';
+  if (progress >= 50) return 'Cây non khỏe mạnh';
+  if (progress >= 25) return 'Chồi xanh';
+  return 'Mầm xanh';
+}
+
+function treeStageKey(water) {
+  const progress = Math.max(0, Math.min(TREE_FULL_GROWTH, Number(water) || 0));
+  if (progress >= 75) return 'ready';
+  if (progress >= 50) return 'young';
+  if (progress >= 25) return 'bud';
+  return 'sprout';
+}
+
+function treeNextText(state) {
+  const progress = Math.max(0, Math.min(TREE_FULL_GROWTH, Number(state.water) || 0));
+  const reserve = Math.max(0, Number(state.waterReserve) || 0);
+  const doses = Math.floor(reserve / TREE_WATER_COST);
+  const remaining = Math.max(0, TREE_FULL_GROWTH - progress);
+  const wateringsNeeded = Math.ceil(remaining / TREE_WATER_COST);
+  if (doses > 0) return `Đang có ${doses} lượt tưới sẵn sàng. Bấm Tưới ngay để cây lớn thêm.`;
+  return `Cần thêm ${wateringsNeeded} lượt tưới để cây trưởng thành. Cứu thêm đơn hàng để nhận nước.`;
+}
+
+function treeNextRewardText(state) {
+  const progress = Math.max(0, Math.min(TREE_FULL_GROWTH, Number(state.water) || 0));
+  const remaining = Math.max(0, TREE_FULL_GROWTH - progress);
+  const wateringsNeeded = Math.ceil(remaining / TREE_WATER_COST);
+  if (wateringsNeeded <= 1) return 'Tưới thêm 1 lần để hoàn thành cây và nhận +25 điểm xanh.';
+  return `Tưới thêm ${wateringsNeeded} lần để hoàn thành cây và nhận +25 điểm xanh.`;
+}
+
+function addTreeReputationPoints(points) {
+  if (!points) return;
+  if (typeof updateReputationUI === 'function') updateReputationUI();
+}
+
+function updateTreeGameUI() {
+  const state = readTreeGameState();
+  const progress = Math.max(0, Math.min(TREE_FULL_GROWTH, Number(state.water) || 0));
+  const reserve = Math.max(0, Number(state.waterReserve) || 0);
+  const reserveDoses = Math.floor(reserve / TREE_WATER_COST);
+  const stage = treeStageKey(progress);
+  const scale = (0.36 + progress / TREE_FULL_GROWTH * 0.64).toFixed(2);
+  document.querySelectorAll('[data-tree-current]').forEach(el => { el.textContent = state.currentTree; });
+  document.querySelectorAll('[data-tree-stage]').forEach(el => { el.textContent = treeStageLabel(progress); });
+  document.querySelectorAll('[data-tree-water]').forEach(el => { el.textContent = Math.round(progress); });
+  document.querySelectorAll('[data-tree-reserve]').forEach(el => { el.textContent = Math.round(reserve); });
+  document.querySelectorAll('[data-tree-reserve-doses]').forEach(el => { el.textContent = reserveDoses; });
+  document.querySelectorAll('[data-tree-orders]').forEach(el => { el.textContent = state.totalOrdersCredited; });
+  document.querySelectorAll('[data-tree-donated]').forEach(el => { el.textContent = state.donatedTrees; });
+  document.querySelectorAll('[data-tree-waterings]').forEach(el => { el.textContent = state.totalWaterings; });
+  document.querySelectorAll('[data-tree-reputation]').forEach(el => { el.textContent = state.totalReputation; });
+  document.querySelectorAll('[data-tree-next]').forEach(el => { el.textContent = treeNextText(state); });
+  document.querySelectorAll('[data-tree-next-reward]').forEach(el => { el.textContent = treeNextRewardText(state); });
+  document.querySelectorAll('[data-tree-meter]').forEach(el => { el.style.width = progress + '%'; });
+  document.querySelectorAll('[data-tree-canopy]').forEach(el => { el.style.setProperty('--tree-scale', scale); });
+  document.querySelectorAll('[data-tree-plant]').forEach(el => {
+    el.dataset.stage = stage;
+    el.style.setProperty('--tree-scale', scale);
+  });
+  document.querySelectorAll('[data-tree-scene]').forEach(el => {
+    el.dataset.stage = stage;
+    el.classList.toggle('has-water', reserve >= TREE_WATER_COST);
+  });
+  document.querySelectorAll('[data-tree-water-button]').forEach(button => {
+    const canWater = reserve >= TREE_WATER_COST;
+    button.disabled = !canWater;
+    button.title = canWater ? 'Tưới cây bằng 25 giọt nước' : 'Cứu thêm đơn hàng để nhận nước';
+  });
+  document.querySelectorAll('[data-tree-water-button-text]').forEach(el => {
+    el.textContent = reserve >= TREE_WATER_COST ? 'Tưới ngay' : 'Thiếu nước';
+  });
+}
+
+function triggerTreeWaterAnimation(donatedNow = 0) {
+  document.querySelectorAll('[data-tree-scene]').forEach(scene => {
+    scene.classList.remove('is-watering', 'is-harvest');
+    void scene.offsetWidth;
+    scene.classList.add('is-watering');
+    if (donatedNow > 0) scene.classList.add('is-harvest');
+    setTimeout(() => scene.classList.remove('is-watering', 'is-harvest'), 950);
+  });
+}
+
+function updateSuccessTreeReward(result) {
+  const wrap = $('#success-tree-reward');
+  if (!wrap) return;
+  if (!result || !result.credited) {
+    wrap.style.display = 'none';
+    return;
+  }
+  const title = $('#success-tree-title');
+  const desc = $('#success-tree-desc');
+  const state = result.state;
+  wrap.style.display = 'block';
+  if (result.type === 'watered' && result.donatedNow > 0) {
+    if (title) title.textContent = 'Cây đã trưởng thành và được góp vào quỹ xanh';
+    if (desc) desc.textContent = `+${result.earnedPoints} điểm cây xanh. Bạn đã góp ${state.donatedTrees} cây và bắt đầu chăm cây #${state.currentTree}.`;
+  } else if (result.type === 'watered') {
+    if (title) title.textContent = `Đã tưới cây uy tín +${TREE_WATER_COST}%`;
+    if (desc) desc.textContent = `+${result.earnedPoints} điểm cây xanh. Cây #${state.currentTree} hiện đạt ${Math.round(state.water)}% trưởng thành.`;
+  } else {
+    if (title) title.textContent = `Bạn nhận được ${result.earnedDrops || TREE_WATER_PER_ORDER} giọt nước`;
+    if (desc) desc.textContent = `Đang có ${state.waterReserve} giọt nước trong bình. Vào vườn hoặc bấm Tưới ngay để chăm cây #${state.currentTree}.`;
+  }
+  updateTreeGameUI();
+}
+
+function waterTreeForOrder(order) {
+  const orderId = String(order?.id || order?.backendId || order?.backendOrderNumber || '');
+  if (!orderId) return { credited: false, state: readTreeGameState() };
+
+  const creditedOrders = readTreeCreditedOrders();
+  if (creditedOrders.includes(orderId)) {
+    return { credited: false, state: readTreeGameState() };
+  }
+
+  const state = readTreeGameState();
+  state.waterReserve = (Number(state.waterReserve) || 0) + TREE_WATER_PER_ORDER;
+  state.totalOrdersCredited = (Number(state.totalOrdersCredited) || 0) + 1;
+  state.lastOrderId = orderId;
+  state.lastWaterEarnedAt = new Date().toISOString();
+
+  saveTreeGameState(state);
+  saveTreeCreditedOrders([...creditedOrders, orderId]);
+  updateTreeGameUI();
+
+  return { credited: true, type: 'earned_water', earnedDrops: TREE_WATER_PER_ORDER, state };
+}
+
+function waterTrustTree(source = 'game') {
+  const state = readTreeGameState();
+  if ((Number(state.waterReserve) || 0) < TREE_WATER_COST) {
+    updateTreeGameUI();
+    if (typeof toast === 'function') toast('Bạn chưa có nước. Hãy giải cứu thêm thực phẩm để nhận 25 giọt nước.', 'info');
+    return { credited: false, type: 'watered', state };
+  }
+
+  state.waterReserve = Math.max(0, (Number(state.waterReserve) || 0) - TREE_WATER_COST);
+  let nextWater = (Number(state.water) || 0) + TREE_WATER_COST;
+  let donatedNow = 0;
+  while (nextWater >= TREE_FULL_GROWTH) {
+    donatedNow += 1;
+    nextWater -= TREE_FULL_GROWTH;
+  }
+
+  const earnedPoints = TREE_POINTS_PER_WATER + donatedNow * TREE_POINTS_PER_DONATION;
+  state.water = nextWater;
+  state.currentTree = Math.max(1, Number(state.currentTree) || 1) + donatedNow;
+  state.donatedTrees = (Number(state.donatedTrees) || 0) + donatedNow;
+  state.totalWaterings = (Number(state.totalWaterings) || 0) + 1;
+  state.totalReputation = (Number(state.totalReputation) || 0) + earnedPoints;
+  state.lastWateredAt = new Date().toISOString();
+  if (donatedNow > 0) state.lastDonatedAt = state.lastWateredAt;
+
+  saveTreeGameState(state);
+  addTreeReputationPoints(earnedPoints);
+  updateTreeGameUI();
+  triggerTreeWaterAnimation(donatedNow);
+
+  const result = { credited: true, type: 'watered', donatedNow, earnedPoints, state };
+  if (source === 'success') updateSuccessTreeReward(result);
+  if (typeof toast === 'function') {
+    toast(donatedNow > 0 ? 'Cây đã trưởng thành và được góp vào quỹ xanh' : `Đã tưới cây +${TREE_WATER_COST}%`, 'success');
+  }
+  return result;
+}
+
+function waterTreeFromSuccess() {
+  if (typeof navTo === 'function') navTo('impact');
+  setTimeout(() => waterTrustTree('impact'), 180);
+}
+
+window.waterTreeForOrder = waterTreeForOrder;
+window.waterTrustTree = waterTrustTree;
+window.waterTreeFromSuccess = waterTreeFromSuccess;
+window.updateTreeGameUI = updateTreeGameUI;
+
 async function confirmPaymentDone() {
   if (__pcTimerInterval) clearInterval(__pcTimerInterval);
   const o = window.__pendingOrder;
@@ -5650,6 +6599,8 @@ async function confirmPaymentDone() {
   $('#success-total').textContent = fmt(o.total);
   drawQR('qr-success', o.qr);
   $('#qr-success-code').textContent = o.qr;
+  const treeReward = waterTreeForOrder(o);
+  updateSuccessTreeReward(treeReward);
   navTo('success');
   toast(isCash ? 'Đặt hàng COD thành công · Đơn đã được giữ chỗ' : 'Thanh toán thành công · Đơn đã được xác nhận', 'info');
 }
@@ -5731,7 +6682,7 @@ function renderOrderDetail() {
     { label:'Thanh toán online thành công', time:'Đã xác nhận qua ' + o.payment, done:true },
     { label:'Cửa hàng đang chuẩn bị', time:o.status === 'pending' ? 'Bạn sẽ nhận thông báo khi sẵn sàng' : 'Đang đóng gói đơn hàng', done:o.status !== 'pending', current:o.status === 'pending' || o.status === 'preparing' },
     { label:'Đến cửa hàng quét QR', time:o.status === 'completed' ? 'Đã hoàn thành' : 'Đưa mã QR cho nhân viên cửa hàng', done:o.status === 'completed' },
-    { label:'Đánh giá &amp; tích điểm', time:o.reviewed ? '+'+(o.reviewedPts||5)+' điểm uy tín đã được cộng · ' + (o.reviewDate||'Vừa xong') : (o.status === 'completed' ? 'Hãy đánh giá để nhận +5 điểm uy tín' : 'Sau khi nhận hàng'), done:!!o.reviewed }
+    { label:'Đánh giá đơn hàng', time:o.reviewed ? 'Đã gửi đánh giá · ' + (o.reviewDate||'Vừa xong') : (o.status === 'completed' ? 'Hãy đánh giá để cải thiện chất lượng cửa hàng' : 'Sau khi nhận hàng'), done:!!o.reviewed }
   ];
   $('#od-timeline').innerHTML = steps.map((s, i) => `
     <div class="tl-item ${s.done ? 'done' : s.current ? 'current' : ''}">
@@ -5792,7 +6743,7 @@ function closeRating() { $('#rating-modal').classList.remove('active'); }
 
 function submitRating() {
   closeRating();
-  const _o=orders.find(x=>x.id===currentOrderId);if(_o){_o.reviewed=true;_o.reviewedPts=5;_o.reviewDate=new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});if(typeof userPoints!=='undefined')userPoints+=5;updateReputationUI&&updateReputationUI();}toast('✓ Cảm ơn đánh giá! +5 điểm uy tín', 'info');setTimeout(()=>navTo('order-detail'),800);
+  const _o=orders.find(x=>x.id===currentOrderId);if(_o){_o.reviewed=true;_o.reviewDate=new Date().toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});updateReputationUI&&updateReputationUI();}toast('✓ Cảm ơn đánh giá! FoodSave đã ghi nhận phản hồi', 'info');setTimeout(()=>navTo('order-detail'),800);
   setTimeout(() => navTo('orders'), 600);
 }
 
@@ -6138,6 +7089,7 @@ document.addEventListener('keydown', e => {
 function init() {
   renderLandingFaq();
   updateCartUI();
+  updateTreeGameUI();
   // Star input visual handler
   document.querySelectorAll('.star-input label').forEach(lbl => {
     lbl.addEventListener('click', () => {
@@ -6195,11 +7147,11 @@ function openLegal(t){var m=document.getElementById("legal-modal");if(!m)return;
 function _legal(t){
 var tabs='<div style="display:flex;gap:4px;padding:18px 24px 0;flex-wrap:wrap;border-bottom:1px solid #e5e7eb"><button class="legal-tab '+(t==="terms"?"on":"")+'" onclick="openLegal(\'terms\')"><i class="ti ti-file-text"></i> Điều khoản</button><button class="legal-tab '+(t==="privacy"?"on":"")+'" onclick="openLegal(\'privacy\')"><i class="ti ti-shield-lock"></i> Bảo mật</button><button class="legal-tab '+(t==="cookie"?"on":"")+'" onclick="openLegal(\'cookie\')"><i class="ti ti-cookie"></i> Cookie</button><button class="legal-tab '+(t==="refund"?"on":"")+'" onclick="openLegal(\'refund\')"><i class="ti ti-receipt-refund"></i> Hoàn tiền</button><button class="legal-tab '+(t==="help"?"on":"")+'" onclick="openLegal(\'help\')"><i class="ti ti-help"></i> Trợ giúp</button><button class="legal-tab '+(t==="contact"?"on":"")+'" onclick="openLegal(\'contact\')"><i class="ti ti-mail"></i> Liên hệ</button><button onclick="closeLegal()" style="margin-left:auto;width:36px;height:36px;border-radius:10px;background:#fafafa;border:0;color:#6b7280;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px"><i class="ti ti-x"></i></button></div>';
 var body={};
-body.terms="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">ĐIỀU KHOẢN SỬ DỤNG DỊCH VỤ FOODSAVE</h2>\n<div class=\"legal-sub\">Có hiệu lực từ ngày 15/05/2026 · Phiên bản 3.2 · Cập nhật lần cuối: 16/05/2026</div>\n<div style=\"font-size:11.5px;color:#6b7280;margin-top:8px;font-weight:600\">Áp dụng cho mọi người dùng truy cập website foodsave.vn và ứng dụng di động FoodSave</div>\n</div>\n\n<div style=\"padding:14px 18px;background:linear-gradient(135deg,#fef9c3,#fef3c7);border-radius:14px;margin-bottom:24px;border-left:4px solid #ca8a04\">\n<div style=\"font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;color:#92400e;font-size:13px;margin-bottom:6px\"><i class=\"ti ti-info-circle\"></i> LƯU Ý TRƯỚC KHI SỬ DỤNG</div>\n<p style=\"margin:0;font-size:12.5px;color:#92400e;line-height:1.65;font-weight:500\">Bằng việc truy cập, đăng ký tài khoản hoặc đặt hàng trên FoodSave, bạn xác nhận đã đọc, hiểu rõ và đồng ý <strong>không điều kiện</strong> với tất cả các điều khoản dưới đây. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng ngừng sử dụng dịch vụ ngay lập tức.</p>\n</div>\n\n<h3>ĐIỀU 1. ĐỊNH NGHĨA</h3>\n<ol style=\"padding-left:24px\">\n<li><strong>\"FoodSave\"</strong> là nền tảng thương mại điện tử kết nối thực phẩm cận hạn được vận hành bởi Công ty TNHH FoodSave Việt Nam (mã số doanh nghiệp 0317456789), có trụ sở tại 19 Nguyễn Hữu Thọ, Phường Tân Hưng, Quận 7, TP.HCM.</li>\n<li><strong>\"Người dùng\"</strong> là cá nhân từ đủ 16 tuổi trở lên hoặc tổ chức hợp pháp đã đăng ký tài khoản và sử dụng dịch vụ.</li>\n<li><strong>\"Cửa hàng đối tác\"</strong> là thương nhân có giấy phép kinh doanh hợp lệ và giấy chứng nhận An toàn thực phẩm (ATTP) còn hiệu lực, đã ký Hợp đồng đối tác với FoodSave.</li>\n<li><strong>\"Tổ chức từ thiện\"</strong> là tổ chức xã hội, từ thiện có quyết định thành lập hợp pháp đã ký Hợp đồng tài trợ với FoodSave để nhận thực phẩm donation.</li>\n<li><strong>\"Sản phẩm cận hạn\"</strong> là thực phẩm còn an toàn sử dụng nhưng có thời hạn sử dụng ngắn (dưới 5 ngày), được phân loại 3 nhãn:\n<ul style=\"padding-left:24px\"><li>🟢 <strong>Xanh:</strong> Còn ≥ 5 ngày hạn sử dụng</li><li>🟡 <strong>Vàng:</strong> Còn 1-5 ngày hạn sử dụng</li><li>🔴 <strong>Đỏ:</strong> Còn dưới 24 giờ hạn sử dụng</li></ul></li>\n<li><strong>\"Đơn hàng\"</strong> là hợp đồng mua bán điện tử giữa Người dùng và Cửa hàng đối tác thông qua nền tảng FoodSave.</li>\n<li><strong>\"Đặt cọc bảo vệ\"</strong> là khoản tiền 100% giá trị đơn hàng Người dùng thanh toán trước, được FoodSave giữ trong ví ký quỹ cho đến khi Người dùng xác nhận nhận hàng thành công.</li>\n<li><strong>\"FoodSafe Cover\"</strong> là chương trình bảo hiểm miễn phí của FoodSave cho mọi đơn hàng dưới 200.000đ, bồi thường tối đa 500.000đ cho các trường hợp hư hỏng do lỗi từ Cửa hàng.</li>\n</ol>\n\n<h3>ĐIỀU 2. ĐĂNG KÝ TÀI KHOẢN</h3>\n<p><strong>2.1.</strong> Người dùng phải cung cấp thông tin chính xác, đầy đủ khi đăng ký bao gồm: họ tên thật, email, số điện thoại di động Việt Nam, địa chỉ giao hàng. FoodSave không chấp nhận thông tin giả mạo, thông tin của người khác hoặc thông tin mượn.</p>\n<p><strong>2.2.</strong> Mỗi cá nhân chỉ được phép tạo <strong>01 (một)</strong> tài khoản trên FoodSave. Việc tạo nhiều tài khoản nhằm lạm dụng khuyến mãi, voucher hoặc đánh giá sẽ bị xử lý theo Điều 12.</p>\n<p><strong>2.3.</strong> Người dùng có trách nhiệm bảo mật thông tin đăng nhập (email, mật khẩu, mã OTP). Mọi giao dịch phát sinh từ tài khoản đều được coi là do chủ tài khoản thực hiện. FoodSave không chịu trách nhiệm với thiệt hại do mất tài khoản nếu Người dùng không thông báo kịp thời.</p>\n<p><strong>2.4.</strong> Người dùng dưới 16 tuổi cần có sự đồng ý bằng văn bản của cha mẹ/người giám hộ hợp pháp (theo Điều 9 Nghị định 13/2023/NĐ-CP về Bảo vệ Dữ liệu Cá nhân của Trẻ em).</p>\n<p><strong>2.5.</strong> Đối với Cửa hàng đối tác và Tổ chức từ thiện: bắt buộc cung cấp đầy đủ giấy phép kinh doanh/quyết định thành lập, giấy ATTP (đối với cửa hàng thực phẩm), CCCD/CMND người đại diện pháp luật. FoodSave thực hiện xác minh KYC trong 24-48 giờ qua AI + OCR + kiểm tra GPS.</p>\n\n<h3>ĐIỀU 3. DỊCH VỤ MUA HÀNG</h3>\n<p><strong>3.1. Đặt hàng:</strong> Người dùng đặt đơn hàng qua các bước:</p>\n<ul style=\"padding-left:24px\">\n<li>Bước 1: Chọn sản phẩm từ Catalog, thêm vào giỏ hàng</li>\n<li>Bước 2: Chọn cửa hàng pickup, khung giờ nhận hàng (4 lựa chọn: 30 phút, 2 giờ, tối nay, mai)</li>\n<li>Bước 3: Áp dụng voucher (nếu có), chọn phương thức thanh toán</li>\n<li>Bước 4: Thanh toán đặt cọc 100% giá trị đơn (chỉ phương thức online)</li>\n<li>Bước 5: Nhận mã QR — đến cửa hàng đưa QR để nhận sản phẩm</li>\n</ul>\n<p><strong>3.2. Hoàn tất đơn hàng:</strong> Đơn hàng được coi là hoàn tất khi (a) Người dùng quét QR tại cửa hàng và nhận sản phẩm, HOẶC (b) Cửa hàng xác nhận giao hàng thành công trên hệ thống. Tiền đặt cọc sẽ được chuyển từ ví ký quỹ FoodSave sang Cửa hàng đối tác (trừ phí hoa hồng) trong 24 giờ tiếp theo.</p>\n<p><strong>3.3. Hạn nhận hàng:</strong> Người dùng phải đến cửa hàng nhận sản phẩm trong khung giờ đã chọn. Nếu trễ hơn <strong>30 phút</strong> sau khung giờ pickup, đơn hàng sẽ bị tự động hủy và Người dùng bị áp dụng quy định Vắng mặt (Điều 9).</p>\n<p><strong>3.4. Kiểm tra sản phẩm:</strong> Người dùng có quyền và có trách nhiệm kiểm tra sản phẩm trước khi quét QR xác nhận nhận hàng. Sau khi quét QR, mọi khiếu nại về chất lượng/số lượng phải được thực hiện trong 72 giờ kèm bằng chứng (ảnh/video).</p>\n\n<h3>ĐIỀU 4. GIÁ CẢ VÀ THANH TOÁN</h3>\n<p><strong>4.1. Giá sản phẩm:</strong> Giá hiển thị trên FoodSave đã bao gồm:</p>\n<ul style=\"padding-left:24px\">\n<li>Thuế VAT 10% (đối với sản phẩm chế biến)</li>\n<li>Phí dịch vụ FoodSave: 2.000đ/đơn (cố định, không phụ thuộc giá trị)</li>\n<li>Đóng góp từ thiện tự nguyện: 1.000đ/đơn (Người dùng có thể tăng/bỏ)</li>\n</ul>\n<p><strong>4.2. Phương thức thanh toán:</strong></p>\n<ul style=\"padding-left:24px\">\n<li><strong>Ví điện tử:</strong> MoMo, ZaloPay, ShopeePay, VNPay-QR, Viettel Money</li>\n<li><strong>Thẻ ngân hàng:</strong> Thẻ ATM nội địa (Napas), thẻ tín dụng/ghi nợ quốc tế (Visa, Master, JCB, AMEX)</li>\n<li><strong>Cổng thanh toán:</strong> VNPay, OnePay, Payoo</li>\n<li><strong>Mua trước trả sau:</strong> Kredivo, FundiiN (chỉ áp dụng đơn ≥ 200.000đ)</li>\n<li><strong>COD (Cash on Delivery):</strong> Thanh toán tại cửa hàng khi nhận hàng — KHÔNG áp dụng cho đơn nhãn Đỏ</li>\n</ul>\n<p><strong>4.3. Hoá đơn điện tử:</strong> Hoá đơn VAT điện tử được phát hành tự động trong 24 giờ sau khi đơn hàng hoàn tất, gửi qua email đăng ký theo Nghị định 123/2020/NĐ-CP và Thông tư 78/2021/TT-BTC.</p>\n<p><strong>4.4. Bảo mật thanh toán:</strong> FoodSave KHÔNG lưu trữ số thẻ tín dụng đầy đủ. Toàn bộ dữ liệu thẻ được tokenize theo chuẩn PCI-DSS Level 1 và xử lý bởi các đối tác thanh toán đã được cấp phép Ngân hàng Nhà nước Việt Nam.</p>\n\n<h3>ĐIỀU 5. CHÍNH SÁCH ĐỔI TRẢ VÀ HOÀN TIỀN</h3>\n<p>Người dùng có quyền yêu cầu đổi trả/hoàn tiền theo Điều 36 Luật Bảo vệ Quyền lợi Người tiêu dùng 2023 trong các trường hợp:</p>\n<p><strong>5.1. Hoàn tiền 100% — Cửa hàng có lỗi:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Sản phẩm hết hạn sử dụng trước khi giao</li>\n<li>Sản phẩm hư hỏng, có mùi lạ, biến chất khi nhận</li>\n<li>Bao bì rách, không nguyên vẹn, có dấu hiệu nhiễm bẩn</li>\n<li>Sản phẩm sai loại, sai số lượng so với đơn hàng</li>\n<li>Cửa hàng từ chối giao hàng không lý do</li>\n</ul>\n<p><strong>5.2. Hoàn 50% — Khách hủy muộn:</strong> Người dùng hủy đơn sau <strong>5 phút</strong> kể từ khi đặt sẽ bị phạt 50% giá trị đơn (đã trừ phí dịch vụ và voucher).</p>\n<p><strong>5.3. Không hoàn tiền:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Người dùng vắng mặt 3 lần trong tháng — tài khoản bị khóa 7 ngày</li>\n<li>Sản phẩm đã được sử dụng/mở bao bì trừ trường hợp 5.1</li>\n<li>Khiếu nại sau 72 giờ kể từ khi nhận hàng</li>\n<li>Đơn hàng đã được xác nhận hoàn tất bởi Người dùng quét QR</li>\n</ul>\n<p><strong>5.4. Quy trình hoàn tiền:</strong></p>\n<ol style=\"padding-left:24px\">\n<li>Người dùng gửi yêu cầu qua chức năng \"Khiếu nại\" hoặc email <strong>support@foodsave.vn</strong> trong 72 giờ</li>\n<li>Bằng chứng kèm theo: ảnh sản phẩm (góc rộng + cận cảnh), video mở bao bì (nếu có), mã đơn hàng</li>\n<li>FoodSave xử lý trong 24 giờ làm việc</li>\n<li>Tiền hoàn về phương thức thanh toán gốc:\n<ul><li>Ví điện tử: 1-3 giờ</li><li>Thẻ ATM nội địa: 3-7 ngày làm việc</li><li>Thẻ quốc tế: 7-14 ngày làm việc</li></ul></li>\n<li>Trường hợp tranh chấp, FoodSave là trọng tài độc lập theo Điều 36.4 Luật BVQLNTD 2023</li>\n</ol>\n\n<h3>ĐIỀU 6. HUỶ ĐƠN HÀNG</h3>\n<p><strong>6.1. Người dùng huỷ:</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Thời điểm hủy</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Hoàn tiền</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Phạt</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 5 phút sau đặt</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#16a34a;font-weight:700\">100%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Không phạt</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">5 phút - 30 phút sau đặt</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#ca8a04;font-weight:700\">50%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">50% giá trị đơn</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Sau khung giờ pickup</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#dc2626;font-weight:700\">0%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">100% + cảnh cáo</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Vắng mặt 3 lần/tháng</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#dc2626;font-weight:700\">0%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khóa tài khoản 7 ngày</td></tr>\n</tbody></table>\n<p><strong>6.2. Cửa hàng hủy:</strong> Cửa hàng phải hủy đơn trước thời điểm giao 60 phút. Nếu hủy muộn hoặc không giao:</p>\n<ul style=\"padding-left:24px\">\n<li>Hoàn 100% cho Người dùng + voucher 30.000đ bồi thường</li>\n<li>Phạt Cửa hàng: trừ điểm uy tín, cảnh cáo 1 lần</li>\n<li>Vi phạm 3 lần/tháng: khoá đăng SP 7 ngày, đánh giá hạ rating</li>\n</ul>\n\n<h3>ĐIỀU 7. AN TOÀN THỰC PHẨM</h3>\n<p><strong>7.1.</strong> Cửa hàng đối tác chịu trách nhiệm toàn bộ về chất lượng và an toàn thực phẩm theo Luật An toàn Thực phẩm 2010 (sửa đổi 2018) và Nghị định 15/2018/NĐ-CP.</p>\n<p><strong>7.2. Yêu cầu bắt buộc đối với cửa hàng:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Giấy chứng nhận cơ sở đủ điều kiện An toàn Thực phẩm còn hiệu lực</li>\n<li>Nhân viên có giấy khám sức khoẻ định kỳ 6 tháng</li>\n<li>Sản phẩm có nhãn mác đầy đủ (theo Nghị định 43/2017/NĐ-CP về nhãn hàng hoá)</li>\n<li>Bảo quản đúng nhiệt độ ghi trên bao bì</li>\n<li>Cung cấp đầy đủ thông tin hạn sử dụng, ngày sản xuất, thành phần dinh dưỡng, cảnh báo dị ứng</li>\n</ul>\n<p><strong>7.3. FoodSafe Cover Insurance:</strong> Miễn phí cho mọi đơn dưới 200.000đ. Bồi thường tối đa 500.000đ/sự cố cho các trường hợp:</p>\n<ul style=\"padding-left:24px\">\n<li>Ngộ độc thực phẩm có xác nhận của cơ quan y tế</li>\n<li>Dị ứng nặng do thông tin thành phần không chính xác</li>\n<li>Sản phẩm hư hỏng nghiêm trọng gây thiệt hại tài sản</li>\n</ul>\n\n<h3>ĐIỀU 8. ĐIỂM UY TÍN</h3>\n<p>FoodSave áp dụng hệ thống Điểm uy tín để khuyến khích hành vi tích cực:</p>\n<p><strong>8.1. Cộng điểm:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Đặt đơn hàng: +2 điểm</li>\n<li>Hoàn thành đơn: +10 điểm</li>\n<li>Nhận hàng đúng giờ: +5 điểm bonus</li>\n<li>Đánh giá đơn hàng: +5 điểm</li>\n<li>Đánh giá kèm ảnh chất lượng: +5 điểm bonus</li>\n<li>Mời bạn bè đăng ký: +20 điểm (cả hai đều nhận voucher)</li>\n<li>Hoàn thiện 100% hồ sơ: +50 điểm (1 lần duy nhất)</li>\n</ul>\n<p><strong>8.2. Trừ điểm:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Huỷ đơn muộn (5-30 phút): -3 điểm</li>\n<li>Vắng mặt nhận hàng: -15 điểm/lần</li>\n<li>Khiếu nại giả mạo: -10 điểm + cảnh cáo</li>\n<li>Đánh giá phản cảm/xúc phạm: -5 điểm + xoá đánh giá</li>\n</ul>\n<p><strong>8.3. Hạng thành viên:</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Hạng</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Điểm</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Quyền lợi</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">🥉 Đồng</td><td style=\"padding:10px;border:1px solid #e5e7eb\">0-49</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Đặt mua thông thường · 1 voucher/tháng</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">🥈 Bạc</td><td style=\"padding:10px;border:1px solid #e5e7eb\">50-199</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Đặt nhãn Đỏ donation · 3 voucher/tháng · 1 đơn miễn phí dịch vụ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">🥇 Vàng</td><td style=\"padding:10px;border:1px solid #e5e7eb\">200-499</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Truy cập sớm Flash Sale · 6 voucher/tháng · 3 đơn miễn phí · Hỗ trợ 24/7</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">💎 Kim Cương</td><td style=\"padding:10px;border:1px solid #e5e7eb\">500+</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Voucher không giới hạn · Mọi đơn miễn phí dịch vụ · Hỗ trợ VIP 24/7 · Quà sinh nhật</td></tr>\n</tbody></table>\n\n<h3>ĐIỀU 9. VI PHẠM VÀ XỬ LÝ</h3>\n<p><strong>9.1. Các hành vi bị cấm:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Tạo nhiều tài khoản (multi-account fraud)</li>\n<li>Sử dụng bot, script tự động đặt đơn</li>\n<li>Lạm dụng chính sách hoàn tiền (>3 lần khiếu nại/tháng không có căn cứ)</li>\n<li>Đánh giá giả mạo, đánh giá bị mua chuộc</li>\n<li>Sử dụng voucher sai mục đích (mua đi bán lại sản phẩm)</li>\n<li>Phỉ báng, đe doạ cửa hàng/nhân viên</li>\n<li>Vi phạm bản quyền hình ảnh, nội dung</li>\n<li>Hack, can thiệp hệ thống FoodSave</li>\n</ul>\n<p><strong>9.2. Mức xử phạt:</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#fef2f2\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Mức độ</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lần đầu</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lần thứ 2</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lần thứ 3+</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Nhẹ</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Cảnh cáo + -5đ uy tín</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 24 giờ</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 7 ngày</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Trung bình</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 7 ngày + -15đ</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 30 ngày</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá vĩnh viễn</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Nghiêm trọng</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá vĩnh viễn + truy cứu pháp luật</td><td style=\"padding:10px;border:1px solid #e5e7eb\">—</td><td style=\"padding:10px;border:1px solid #e5e7eb\">—</td></tr>\n</tbody></table>\n<p><strong>9.3. Quyền khiếu nại:</strong> Người dùng bị xử phạt có quyền khiếu nại qua email <strong>legal@foodsave.vn</strong> trong 30 ngày kể từ ngày bị xử phạt, kèm theo bằng chứng. FoodSave xem xét và phản hồi trong 7 ngày làm việc.</p>\n\n<h3>ĐIỀU 10. SỞ HỮU TRÍ TUỆ</h3>\n<p><strong>10.1.</strong> Toàn bộ nội dung trên FoodSave bao gồm thiết kế, logo, hình ảnh, văn bản, code phần mềm, cơ sở dữ liệu thuộc quyền sở hữu hợp pháp của Công ty TNHH FoodSave Việt Nam, được bảo hộ theo Luật Sở hữu Trí tuệ 2005 (sửa đổi 2022).</p>\n<p><strong>10.2.</strong> Người dùng KHÔNG được sao chép, sửa đổi, phân phối, sử dụng cho mục đích thương mại bất kỳ phần nào của nền tảng FoodSave mà không có sự đồng ý bằng văn bản của Công ty.</p>\n<p><strong>10.3.</strong> Đánh giá, bình luận, ảnh do Người dùng đăng tải: Người dùng cấp cho FoodSave quyền sử dụng miễn phí, không độc quyền, có hiệu lực toàn cầu để hiển thị, sao chép, phân phối nội dung đó nhằm mục đích vận hành nền tảng và quảng bá.</p>\n\n<h3>ĐIỀU 11. GIỚI HẠN TRÁCH NHIỆM</h3>\n<p><strong>11.1.</strong> FoodSave là nền tảng trung gian kết nối Người dùng và Cửa hàng. FoodSave KHÔNG là người bán/người cung cấp dịch vụ trực tiếp đối với sản phẩm. Mọi tranh chấp về chất lượng sản phẩm, dịch vụ giao nhận sẽ được FoodSave hỗ trợ giải quyết với tư cách trung gian.</p>\n<p><strong>11.2.</strong> Tổng trách nhiệm bồi thường của FoodSave (nếu có) cho bất kỳ Người dùng nào trong 12 tháng KHÔNG vượt quá <strong>10.000.000 VNĐ</strong> hoặc tổng giá trị các đơn hàng đã đặt trong 12 tháng, tùy số nào lớn hơn.</p>\n<p><strong>11.3.</strong> FoodSave KHÔNG chịu trách nhiệm với các tổn thất gián tiếp, bao gồm: thiệt hại do gián đoạn dịch vụ, lỗi kỹ thuật, mất dữ liệu, thiệt hại uy tín cá nhân/doanh nghiệp.</p>\n\n<h3>ĐIỀU 12. THAY ĐỔI ĐIỀU KHOẢN</h3>\n<p>FoodSave có quyền sửa đổi, bổ sung Điều khoản này. Thay đổi quan trọng (ảnh hưởng tới quyền lợi Người dùng) sẽ được thông báo qua email và push notification ít nhất 15 ngày trước khi áp dụng. Việc Người dùng tiếp tục sử dụng dịch vụ sau ngày có hiệu lực được coi là chấp thuận thay đổi.</p>\n\n<h3>ĐIỀU 13. LUẬT ÁP DỤNG VÀ GIẢI QUYẾT TRANH CHẤP</h3>\n<p><strong>13.1. Luật áp dụng:</strong> Điều khoản này được điều chỉnh và giải thích theo pháp luật Việt Nam, bao gồm nhưng không giới hạn: Luật Bảo vệ Quyền lợi Người tiêu dùng 2023, Luật Giao dịch Điện tử 2023, Luật An toàn Thực phẩm 2010, Bộ luật Dân sự 2015, Luật Sở hữu Trí tuệ.</p>\n<p><strong>13.2. Cơ chế giải quyết:</strong></p>\n<ol style=\"padding-left:24px\">\n<li>Thương lượng trực tiếp giữa các bên (ưu tiên) — qua hệ thống Khiếu nại</li>\n<li>Hoà giải thông qua FoodSave với tư cách trung gian (15 ngày)</li>\n<li>Trung tâm Trọng tài Quốc tế Việt Nam (VIAC) — nếu giá trị tranh chấp ≥ 50.000.000đ</li>\n<li>Toà án Nhân dân có thẩm quyền tại TP.HCM — đối với các trường hợp khác</li>\n</ol>\n\n<h3>ĐIỀU 14. THÔNG TIN LIÊN HỆ</h3>\n<div style=\"padding:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;margin-top:14px\">\n<p style=\"margin:0 0 10px\"><strong>CÔNG TY TNHH FOODSAVE VIỆT NAM</strong></p>\n<ul style=\"padding-left:20px;margin:0\">\n<li>Mã số doanh nghiệp: 0317456789 (cấp tại Sở KH&ĐT TP.HCM ngày 15/03/2024)</li>\n<li>Giấy phép Sàn TMĐT: 1545/GP-TĐKDM cấp bởi Bộ Công Thương</li>\n<li>Trụ sở chính: 19 Nguyễn Hữu Thọ, Phường Tân Hưng, Quận 7, TP.HCM</li>\n<li>Người đại diện pháp luật: Ông Trần Bửu — Giám đốc</li>\n<li>Hotline 24/7: <strong>1900 1545</strong> (miễn phí gọi từ tất cả mạng) hoặc <strong>090 995 2120</strong></li>\n<li>Email tổng đài: <strong>hello@foodsave.vn</strong></li>\n<li>Email pháp lý: <strong>legal@foodsave.vn</strong></li>\n<li>Email khiếu nại: <strong>support@foodsave.vn</strong></li>\n<li>Email báo lỗi bảo mật: <strong>security@foodsave.vn</strong></li>\n<li>Website: <strong>https://foodsave.vn</strong></li>\n<li>Giờ làm việc: 7:00 - 22:00 (T2 - CN, kể cả ngày lễ)</li>\n</ul>\n</div>\n\n<div style=\"margin-top:24px;padding:14px;background:#fafafa;border-radius:12px;text-align:center;font-size:11.5px;color:#6b7280;font-weight:600\">\nBản Điều khoản này được lập và đăng tải công khai trên foodsave.vn ngày 15/05/2026, có hiệu lực ngay sau khi đăng tải. Nội dung bằng tiếng Việt là bản chính thức.<br><br>\n© 2026-2026 Công ty TNHH FoodSave Việt Nam. Mọi quyền được bảo lưu.\n</div>\n</div>";
+body.terms="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">ĐIỀU KHOẢN SỬ DỤNG DỊCH VỤ FOODSAVE</h2>\n<div class=\"legal-sub\">Có hiệu lực từ ngày 15/05/2026 · Phiên bản 3.2 · Cập nhật lần cuối: 16/05/2026</div>\n<div style=\"font-size:11.5px;color:#6b7280;margin-top:8px;font-weight:600\">Áp dụng cho mọi người dùng truy cập website foodsave.vn và ứng dụng di động FoodSave</div>\n</div>\n\n<div style=\"padding:14px 18px;background:linear-gradient(135deg,#fef9c3,#fef3c7);border-radius:14px;margin-bottom:24px;border-left:4px solid #ca8a04\">\n<div style=\"font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;color:#92400e;font-size:13px;margin-bottom:6px\"><i class=\"ti ti-info-circle\"></i> LƯU Ý TRƯỚC KHI SỬ DỤNG</div>\n<p style=\"margin:0;font-size:12.5px;color:#92400e;line-height:1.65;font-weight:500\">Bằng việc truy cập, đăng ký tài khoản hoặc đặt hàng trên FoodSave, bạn xác nhận đã đọc, hiểu rõ và đồng ý <strong>không điều kiện</strong> với tất cả các điều khoản dưới đây. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng ngừng sử dụng dịch vụ ngay lập tức.</p>\n</div>\n\n<h3>ĐIỀU 1. ĐỊNH NGHĨA</h3>\n<ol style=\"padding-left:24px\">\n<li><strong>\"FoodSave\"</strong> là nền tảng thương mại điện tử kết nối thực phẩm cận hạn được vận hành bởi Công ty TNHH FoodSave Việt Nam (mã số doanh nghiệp 0317456789), có trụ sở tại 19 Nguyễn Hữu Thọ, Phường Tân Hưng, Quận 7, TP.HCM.</li>\n<li><strong>\"Người dùng\"</strong> là cá nhân từ đủ 16 tuổi trở lên hoặc tổ chức hợp pháp đã đăng ký tài khoản và sử dụng dịch vụ.</li>\n<li><strong>\"Cửa hàng đối tác\"</strong> là thương nhân có giấy phép kinh doanh hợp lệ và giấy chứng nhận An toàn thực phẩm (ATTP) còn hiệu lực, đã ký Hợp đồng đối tác với FoodSave.</li>\n<li><strong>\"Tổ chức từ thiện\"</strong> là tổ chức xã hội, từ thiện có quyết định thành lập hợp pháp đã ký Hợp đồng tài trợ với FoodSave để nhận thực phẩm donation.</li>\n<li><strong>\"Sản phẩm cận hạn\"</strong> là thực phẩm còn an toàn sử dụng nhưng có thời hạn sử dụng ngắn (dưới 5 ngày), được phân loại 3 nhãn:\n<ul style=\"padding-left:24px\"><li>🟢 <strong>Xanh:</strong> Còn 3-5 ngày hạn sử dụng</li><li>🟡 <strong>Vàng:</strong> Còn 48h hạn sử dụng</li><li>🔴 <strong>Đỏ:</strong> Còn 24h hạn sử dụng</li></ul></li>\n<li><strong>\"Đơn hàng\"</strong> là hợp đồng mua bán điện tử giữa Người dùng và Cửa hàng đối tác thông qua nền tảng FoodSave.</li>\n<li><strong>\"Đặt cọc bảo vệ\"</strong> là khoản tiền 100% giá trị đơn hàng Người dùng thanh toán trước, được FoodSave giữ trong ví ký quỹ cho đến khi Người dùng xác nhận nhận hàng thành công.</li>\n<li><strong>\"FoodSafe Cover\"</strong> là chương trình bảo hiểm miễn phí của FoodSave cho mọi đơn hàng dưới 200.000đ, bồi thường tối đa 500.000đ cho các trường hợp hư hỏng do lỗi từ Cửa hàng.</li>\n</ol>\n\n<h3>ĐIỀU 2. ĐĂNG KÝ TÀI KHOẢN</h3>\n<p><strong>2.1.</strong> Người dùng phải cung cấp thông tin chính xác, đầy đủ khi đăng ký bao gồm: họ tên thật, email, số điện thoại di động Việt Nam, địa chỉ giao hàng. FoodSave không chấp nhận thông tin giả mạo, thông tin của người khác hoặc thông tin mượn.</p>\n<p><strong>2.2.</strong> Mỗi cá nhân chỉ được phép tạo <strong>01 (một)</strong> tài khoản trên FoodSave. Việc tạo nhiều tài khoản nhằm lạm dụng khuyến mãi, voucher hoặc đánh giá sẽ bị xử lý theo Điều 12.</p>\n<p><strong>2.3.</strong> Người dùng có trách nhiệm bảo mật thông tin đăng nhập (email, mật khẩu, mã OTP). Mọi giao dịch phát sinh từ tài khoản đều được coi là do chủ tài khoản thực hiện. FoodSave không chịu trách nhiệm với thiệt hại do mất tài khoản nếu Người dùng không thông báo kịp thời.</p>\n<p><strong>2.4.</strong> Người dùng dưới 16 tuổi cần có sự đồng ý bằng văn bản của cha mẹ/người giám hộ hợp pháp (theo Điều 9 Nghị định 13/2023/NĐ-CP về Bảo vệ Dữ liệu Cá nhân của Trẻ em).</p>\n<p><strong>2.5.</strong> Đối với Cửa hàng đối tác và Tổ chức từ thiện: bắt buộc cung cấp đầy đủ giấy phép kinh doanh/quyết định thành lập, giấy ATTP (đối với cửa hàng thực phẩm), CCCD/CMND người đại diện pháp luật. FoodSave thực hiện xác minh KYC trong 24-48 giờ qua AI + OCR + kiểm tra GPS.</p>\n\n<h3>ĐIỀU 3. DỊCH VỤ MUA HÀNG</h3>\n<p><strong>3.1. Đặt hàng:</strong> Người dùng đặt đơn hàng qua các bước:</p>\n<ul style=\"padding-left:24px\">\n<li>Bước 1: Chọn sản phẩm từ Catalog, thêm vào giỏ hàng</li>\n<li>Bước 2: Chọn cửa hàng pickup, khung giờ nhận hàng (4 lựa chọn: 30 phút, 2 giờ, tối nay, mai)</li>\n<li>Bước 3: Áp dụng voucher (nếu có), chọn phương thức thanh toán</li>\n<li>Bước 4: Thanh toán đặt cọc 100% giá trị đơn (chỉ phương thức online)</li>\n<li>Bước 5: Nhận mã QR — đến cửa hàng đưa QR để nhận sản phẩm</li>\n</ul>\n<p><strong>3.2. Hoàn tất đơn hàng:</strong> Đơn hàng được coi là hoàn tất khi (a) Người dùng quét QR tại cửa hàng và nhận sản phẩm, HOẶC (b) Cửa hàng xác nhận giao hàng thành công trên hệ thống. Tiền đặt cọc sẽ được chuyển từ ví ký quỹ FoodSave sang Cửa hàng đối tác (trừ phí hoa hồng) trong 24 giờ tiếp theo.</p>\n<p><strong>3.3. Hạn nhận hàng:</strong> Người dùng phải đến cửa hàng nhận sản phẩm trong khung giờ đã chọn. Nếu trễ hơn <strong>30 phút</strong> sau khung giờ pickup, đơn hàng sẽ bị tự động hủy và Người dùng bị áp dụng quy định Vắng mặt (Điều 9).</p>\n<p><strong>3.4. Kiểm tra sản phẩm:</strong> Người dùng có quyền và có trách nhiệm kiểm tra sản phẩm trước khi quét QR xác nhận nhận hàng. Sau khi quét QR, mọi khiếu nại về chất lượng/số lượng phải được thực hiện trong 72 giờ kèm bằng chứng (ảnh/video).</p>\n\n<h3>ĐIỀU 4. GIÁ CẢ VÀ THANH TOÁN</h3>\n<p><strong>4.1. Giá sản phẩm:</strong> Giá hiển thị trên FoodSave đã bao gồm:</p>\n<ul style=\"padding-left:24px\">\n<li>Thuế VAT 10% (đối với sản phẩm chế biến)</li>\n<li>Phí dịch vụ FoodSave: 2.000đ/đơn (cố định, không phụ thuộc giá trị)</li>\n<li>Đóng góp từ thiện tự nguyện: 1.000đ/đơn (Người dùng có thể tăng/bỏ)</li>\n</ul>\n<p><strong>4.2. Phương thức thanh toán:</strong></p>\n<ul style=\"padding-left:24px\">\n<li><strong>Ví điện tử:</strong> MoMo, ZaloPay, ShopeePay, VNPay-QR, Viettel Money</li>\n<li><strong>Thẻ ngân hàng:</strong> Thẻ ATM nội địa (Napas), thẻ tín dụng/ghi nợ quốc tế (Visa, Master, JCB, AMEX)</li>\n<li><strong>Cổng thanh toán:</strong> VNPay, OnePay, Payoo</li>\n<li><strong>Mua trước trả sau:</strong> Kredivo, FundiiN (chỉ áp dụng đơn ≥ 200.000đ)</li>\n<li><strong>COD (Cash on Delivery):</strong> Thanh toán tại cửa hàng khi nhận hàng — KHÔNG áp dụng cho đơn nhãn Đỏ</li>\n</ul>\n<p><strong>4.3. Hoá đơn điện tử:</strong> Hoá đơn VAT điện tử được phát hành tự động trong 24 giờ sau khi đơn hàng hoàn tất, gửi qua email đăng ký theo Nghị định 123/2020/NĐ-CP và Thông tư 78/2021/TT-BTC.</p>\n<p><strong>4.4. Bảo mật thanh toán:</strong> FoodSave KHÔNG lưu trữ số thẻ tín dụng đầy đủ. Toàn bộ dữ liệu thẻ được tokenize theo chuẩn PCI-DSS Level 1 và xử lý bởi các đối tác thanh toán đã được cấp phép Ngân hàng Nhà nước Việt Nam.</p>\n\n<h3>ĐIỀU 5. CHÍNH SÁCH ĐỔI TRẢ VÀ HOÀN TIỀN</h3>\n<p>Người dùng có quyền yêu cầu đổi trả/hoàn tiền theo Điều 36 Luật Bảo vệ Quyền lợi Người tiêu dùng 2023 trong các trường hợp:</p>\n<p><strong>5.1. Hoàn tiền 100% — Cửa hàng có lỗi:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Sản phẩm hết hạn sử dụng trước khi giao</li>\n<li>Sản phẩm hư hỏng, có mùi lạ, biến chất khi nhận</li>\n<li>Bao bì rách, không nguyên vẹn, có dấu hiệu nhiễm bẩn</li>\n<li>Sản phẩm sai loại, sai số lượng so với đơn hàng</li>\n<li>Cửa hàng từ chối giao hàng không lý do</li>\n</ul>\n<p><strong>5.2. Hoàn 50% — Khách hủy muộn:</strong> Người dùng hủy đơn sau <strong>5 phút</strong> kể từ khi đặt sẽ bị phạt 50% giá trị đơn (đã trừ phí dịch vụ và voucher).</p>\n<p><strong>5.3. Không hoàn tiền:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Không đến lấy hàng: -15 điểm uy tín/lần; dưới 40 điểm có thể bị chặn theo Điều 8</li>\n<li>Sản phẩm đã được sử dụng/mở bao bì trừ trường hợp 5.1</li>\n<li>Khiếu nại sau 72 giờ kể từ khi nhận hàng</li>\n<li>Đơn hàng đã được xác nhận hoàn tất bởi Người dùng quét QR</li>\n</ul>\n<p><strong>5.4. Quy trình hoàn tiền:</strong></p>\n<ol style=\"padding-left:24px\">\n<li>Người dùng gửi yêu cầu qua chức năng \"Khiếu nại\" hoặc email <strong>support@foodsave.vn</strong> trong 72 giờ</li>\n<li>Bằng chứng kèm theo: ảnh sản phẩm (góc rộng + cận cảnh), video mở bao bì (nếu có), mã đơn hàng</li>\n<li>FoodSave xử lý trong 24 giờ làm việc</li>\n<li>Tiền hoàn về phương thức thanh toán gốc:\n<ul><li>Ví điện tử: 1-3 giờ</li><li>Thẻ ATM nội địa: 3-7 ngày làm việc</li><li>Thẻ quốc tế: 7-14 ngày làm việc</li></ul></li>\n<li>Trường hợp tranh chấp, FoodSave là trọng tài độc lập theo Điều 36.4 Luật BVQLNTD 2023</li>\n</ol>\n\n<h3>ĐIỀU 6. HUỶ ĐƠN HÀNG</h3>\n<p><strong>6.1. Người dùng huỷ:</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Thời điểm hủy</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Hoàn tiền</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Phạt</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 5 phút sau đặt</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#16a34a;font-weight:700\">100%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Không phạt</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">5 phút - 30 phút sau đặt</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#ca8a04;font-weight:700\">50%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">50% giá trị đơn</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Sau khung giờ pickup</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#dc2626;font-weight:700\">0%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">-10 điểm uy tín nếu đến trễ; -15 điểm nếu bỏ đơn</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Không đến lấy hàng</td><td style=\"padding:10px;border:1px solid #e5e7eb;color:#dc2626;font-weight:700\">0%</td><td style=\"padding:10px;border:1px solid #e5e7eb\">-15 điểm uy tín/lần</td></tr>\n</tbody></table>\n<p><strong>6.2. Cửa hàng hủy:</strong> Cửa hàng phải hủy đơn trước thời điểm giao 60 phút. Nếu hủy muộn hoặc không giao:</p>\n<ul style=\"padding-left:24px\">\n<li>Hoàn 100% cho Người dùng + voucher 30.000đ bồi thường</li>\n<li>Phạt Cửa hàng: trừ điểm uy tín, cảnh cáo 1 lần</li>\n<li>Vi phạm 3 lần/tháng: khoá đăng SP 7 ngày, đánh giá hạ rating</li>\n</ul>\n\n<h3>ĐIỀU 7. AN TOÀN THỰC PHẨM</h3>\n<p><strong>7.1.</strong> Cửa hàng đối tác chịu trách nhiệm toàn bộ về chất lượng và an toàn thực phẩm theo Luật An toàn Thực phẩm 2010 (sửa đổi 2018) và Nghị định 15/2018/NĐ-CP.</p>\n<p><strong>7.2. Yêu cầu bắt buộc đối với cửa hàng:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Giấy chứng nhận cơ sở đủ điều kiện An toàn Thực phẩm còn hiệu lực</li>\n<li>Nhân viên có giấy khám sức khoẻ định kỳ 6 tháng</li>\n<li>Sản phẩm có nhãn mác đầy đủ (theo Nghị định 43/2017/NĐ-CP về nhãn hàng hoá)</li>\n<li>Bảo quản đúng nhiệt độ ghi trên bao bì</li>\n<li>Cung cấp đầy đủ thông tin hạn sử dụng, ngày sản xuất, thành phần dinh dưỡng, cảnh báo dị ứng</li>\n</ul>\n<p><strong>7.3. FoodSafe Cover Insurance:</strong> Miễn phí cho mọi đơn dưới 200.000đ. Bồi thường tối đa 500.000đ/sự cố cho các trường hợp:</p>\n<ul style=\"padding-left:24px\">\n<li>Ngộ độc thực phẩm có xác nhận của cơ quan y tế</li>\n<li>Dị ứng nặng do thông tin thành phần không chính xác</li>\n<li>Sản phẩm hư hỏng nghiêm trọng gây thiệt hại tài sản</li>\n</ul>\n\n<h3>ĐIỀU 8. ĐIỂM UY TÍN</h3>\n<p>FoodSave áp dụng hệ thống Điểm uy tín để khuyến khích hành vi tích cực:</p>\n<p><strong>8.1. Cộng điểm:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Nhận hàng thành công: +5 điểm</li>\n</ul>\n<p><strong>8.2. Trừ điểm:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Lấy trễ giờ so với khung giờ đã cam kết: -10 điểm</li>\n<li>Không đến lấy hàng/bỏ đơn: -15 điểm/lần</li>\n</ul>\n<p><strong>8.3. Hạng thành viên:</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Hạng</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Điểm</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Quyền lợi</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Tin cậy</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≥85</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Tài khoản vận hành bình thường, được ưu tiên giữ đơn.</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hạn chế</td><td style=\"padding:10px;border:1px solid #e5e7eb\">40 đến dưới 85</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Một số quyền giữ chỗ/ưu tiên có thể bị giới hạn cho đến khi điểm được cải thiện.</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Chặn</td><td style=\"padding:10px;border:1px solid #e5e7eb\">&lt;40</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Tài khoản bị chặn hoặc tạm khóa theo quy trình xử lý vi phạm.</td></tr>\n</tbody></table>\n\n<h3>ĐIỀU 9. VI PHẠM VÀ XỬ LÝ</h3>\n<p><strong>9.1. Các hành vi bị cấm:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Tạo nhiều tài khoản (multi-account fraud)</li>\n<li>Sử dụng bot, script tự động đặt đơn</li>\n<li>Lạm dụng chính sách hoàn tiền (>3 lần khiếu nại/tháng không có căn cứ)</li>\n<li>Đánh giá giả mạo, đánh giá bị mua chuộc</li>\n<li>Sử dụng voucher sai mục đích (mua đi bán lại sản phẩm)</li>\n<li>Phỉ báng, đe doạ cửa hàng/nhân viên</li>\n<li>Vi phạm bản quyền hình ảnh, nội dung</li>\n<li>Hack, can thiệp hệ thống FoodSave</li>\n</ul>\n<p><strong>9.2. Mức xử phạt:</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#fef2f2\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Mức độ</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lần đầu</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lần thứ 2</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lần thứ 3+</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Nhẹ</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Cảnh cáo hành vi</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 24 giờ</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 7 ngày</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Trung bình</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 7 ngày; trừ điểm theo Điều 8 nếu là lấy trễ/bỏ đơn</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá 30 ngày</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá vĩnh viễn</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Nghiêm trọng</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Khoá vĩnh viễn + truy cứu pháp luật</td><td style=\"padding:10px;border:1px solid #e5e7eb\">—</td><td style=\"padding:10px;border:1px solid #e5e7eb\">—</td></tr>\n</tbody></table>\n<p><strong>9.3. Quyền khiếu nại:</strong> Người dùng bị xử phạt có quyền khiếu nại qua email <strong>legal@foodsave.vn</strong> trong 30 ngày kể từ ngày bị xử phạt, kèm theo bằng chứng. FoodSave xem xét và phản hồi trong 7 ngày làm việc.</p>\n\n<h3>ĐIỀU 10. SỞ HỮU TRÍ TUỆ</h3>\n<p><strong>10.1.</strong> Toàn bộ nội dung trên FoodSave bao gồm thiết kế, logo, hình ảnh, văn bản, code phần mềm, cơ sở dữ liệu thuộc quyền sở hữu hợp pháp của Công ty TNHH FoodSave Việt Nam, được bảo hộ theo Luật Sở hữu Trí tuệ 2005 (sửa đổi 2022).</p>\n<p><strong>10.2.</strong> Người dùng KHÔNG được sao chép, sửa đổi, phân phối, sử dụng cho mục đích thương mại bất kỳ phần nào của nền tảng FoodSave mà không có sự đồng ý bằng văn bản của Công ty.</p>\n<p><strong>10.3.</strong> Đánh giá, bình luận, ảnh do Người dùng đăng tải: Người dùng cấp cho FoodSave quyền sử dụng miễn phí, không độc quyền, có hiệu lực toàn cầu để hiển thị, sao chép, phân phối nội dung đó nhằm mục đích vận hành nền tảng và quảng bá.</p>\n\n<h3>ĐIỀU 11. GIỚI HẠN TRÁCH NHIỆM</h3>\n<p><strong>11.1.</strong> FoodSave là nền tảng trung gian kết nối Người dùng và Cửa hàng. FoodSave KHÔNG là người bán/người cung cấp dịch vụ trực tiếp đối với sản phẩm. Mọi tranh chấp về chất lượng sản phẩm, dịch vụ giao nhận sẽ được FoodSave hỗ trợ giải quyết với tư cách trung gian.</p>\n<p><strong>11.2.</strong> Tổng trách nhiệm bồi thường của FoodSave (nếu có) cho bất kỳ Người dùng nào trong 12 tháng KHÔNG vượt quá <strong>10.000.000 VNĐ</strong> hoặc tổng giá trị các đơn hàng đã đặt trong 12 tháng, tùy số nào lớn hơn.</p>\n<p><strong>11.3.</strong> FoodSave KHÔNG chịu trách nhiệm với các tổn thất gián tiếp, bao gồm: thiệt hại do gián đoạn dịch vụ, lỗi kỹ thuật, mất dữ liệu, thiệt hại uy tín cá nhân/doanh nghiệp.</p>\n\n<h3>ĐIỀU 12. THAY ĐỔI ĐIỀU KHOẢN</h3>\n<p>FoodSave có quyền sửa đổi, bổ sung Điều khoản này. Thay đổi quan trọng (ảnh hưởng tới quyền lợi Người dùng) sẽ được thông báo qua email và push notification ít nhất 15 ngày trước khi áp dụng. Việc Người dùng tiếp tục sử dụng dịch vụ sau ngày có hiệu lực được coi là chấp thuận thay đổi.</p>\n\n<h3>ĐIỀU 13. LUẬT ÁP DỤNG VÀ GIẢI QUYẾT TRANH CHẤP</h3>\n<p><strong>13.1. Luật áp dụng:</strong> Điều khoản này được điều chỉnh và giải thích theo pháp luật Việt Nam, bao gồm nhưng không giới hạn: Luật Bảo vệ Quyền lợi Người tiêu dùng 2023, Luật Giao dịch Điện tử 2023, Luật An toàn Thực phẩm 2010, Bộ luật Dân sự 2015, Luật Sở hữu Trí tuệ.</p>\n<p><strong>13.2. Cơ chế giải quyết:</strong></p>\n<ol style=\"padding-left:24px\">\n<li>Thương lượng trực tiếp giữa các bên (ưu tiên) — qua hệ thống Khiếu nại</li>\n<li>Hoà giải thông qua FoodSave với tư cách trung gian (15 ngày)</li>\n<li>Trung tâm Trọng tài Quốc tế Việt Nam (VIAC) — nếu giá trị tranh chấp ≥ 50.000.000đ</li>\n<li>Toà án Nhân dân có thẩm quyền tại TP.HCM — đối với các trường hợp khác</li>\n</ol>\n\n<h3>ĐIỀU 14. THÔNG TIN LIÊN HỆ</h3>\n<div style=\"padding:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;margin-top:14px\">\n<p style=\"margin:0 0 10px\"><strong>CÔNG TY TNHH FOODSAVE VIỆT NAM</strong></p>\n<ul style=\"padding-left:20px;margin:0\">\n<li>Mã số doanh nghiệp: 0317456789 (cấp tại Sở KH&ĐT TP.HCM ngày 15/03/2024)</li>\n<li>Giấy phép Sàn TMĐT: 1545/GP-TĐKDM cấp bởi Bộ Công Thương</li>\n<li>Trụ sở chính: 19 Nguyễn Hữu Thọ, Phường Tân Hưng, Quận 7, TP.HCM</li>\n<li>Người đại diện pháp luật: Ông Trần Bửu — Giám đốc</li>\n<li>Hotline 24/7: <strong>1900 1545</strong> (miễn phí gọi từ tất cả mạng) hoặc <strong>090 995 2120</strong></li>\n<li>Email tổng đài: <strong>hello@foodsave.vn</strong></li>\n<li>Email pháp lý: <strong>legal@foodsave.vn</strong></li>\n<li>Email khiếu nại: <strong>support@foodsave.vn</strong></li>\n<li>Email báo lỗi bảo mật: <strong>security@foodsave.vn</strong></li>\n<li>Website: <strong>https://foodsave.vn</strong></li>\n<li>Giờ làm việc: 7:00 - 22:00 (T2 - CN, kể cả ngày lễ)</li>\n</ul>\n</div>\n\n<div style=\"margin-top:24px;padding:14px;background:#fafafa;border-radius:12px;text-align:center;font-size:11.5px;color:#6b7280;font-weight:600\">\nBản Điều khoản này được lập và đăng tải công khai trên foodsave.vn ngày 15/05/2026, có hiệu lực ngay sau khi đăng tải. Nội dung bằng tiếng Việt là bản chính thức.<br><br>\n© 2026-2026 Công ty TNHH FoodSave Việt Nam. Mọi quyền được bảo lưu.\n</div>\n</div>";
 body.privacy="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">CHÍNH SÁCH BẢO MẬT VÀ XỬ LÝ DỮ LIỆU CÁ NHÂN</h2>\n<div class=\"legal-sub\">Có hiệu lực từ 01/07/2024 · Cập nhật: 16/05/2026 · Phiên bản 4.1</div>\n<div style=\"font-size:11.5px;color:#6b7280;margin-top:8px;font-weight:600\">Tuân thủ Nghị định 13/2023/NĐ-CP về Bảo vệ Dữ liệu Cá nhân</div>\n</div>\n\n<div style=\"padding:14px 18px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border-radius:14px;margin-bottom:24px;border-left:4px solid #16a34a\">\n<div style=\"font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;color:#16a34a;font-size:13px;margin-bottom:6px\"><i class=\"ti ti-shield-check\"></i> CAM KẾT CỦA FOODSAVE</div>\n<p style=\"margin:0;font-size:12.5px;color:#0a0a0a;line-height:1.65;font-weight:500\">FoodSave cam kết bảo vệ tuyệt đối quyền riêng tư và dữ liệu cá nhân của Bạn theo Nghị định 13/2023/NĐ-CP. Chúng tôi áp dụng tiêu chuẩn bảo mật <strong>ISO/IEC 27001</strong>, mã hoá <strong>AES-256</strong> và <strong>TLS 1.3</strong> cho mọi dữ liệu, đồng thời tuân thủ quy tắc \"Privacy by Design\" trong mọi sản phẩm.</p>\n</div>\n\n<h3>ĐIỀU 1. GIỚI THIỆU</h3>\n<p>Chính sách Bảo mật này quy định cách Công ty TNHH FoodSave Việt Nam (\"<strong>FoodSave</strong>\", \"<strong>chúng tôi</strong>\") thu thập, sử dụng, lưu trữ, chia sẻ, bảo vệ và xử lý <strong>Dữ liệu Cá nhân</strong> của Bạn khi sử dụng website foodsave.vn, ứng dụng FoodSave và các dịch vụ liên quan.</p>\n<p>Chúng tôi xử lý dữ liệu theo nguyên tắc:</p>\n<ul style=\"padding-left:24px\">\n<li><strong>Hợp pháp, công bằng và minh bạch</strong> — Bạn luôn biết dữ liệu của mình được dùng cho mục đích gì</li>\n<li><strong>Giới hạn mục đích</strong> — Chỉ thu thập đúng mục đích đã thông báo</li>\n<li><strong>Tối thiểu hoá dữ liệu</strong> — Chỉ thu thập thông tin cần thiết</li>\n<li><strong>Chính xác</strong> — Cập nhật và sửa lỗi khi cần</li>\n<li><strong>Giới hạn lưu trữ</strong> — Không lưu trữ lâu hơn cần thiết</li>\n<li><strong>Toàn vẹn và bảo mật</strong> — Bảo vệ chống truy cập trái phép</li>\n<li><strong>Trách nhiệm giải trình</strong> — Sẵn sàng chứng minh tuân thủ</li>\n</ul>\n\n<h3>ĐIỀU 2. DỮ LIỆU CÁ NHÂN CHÚNG TÔI THU THẬP</h3>\n<p><strong>2.1. Dữ liệu Cá nhân Cơ bản:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Họ tên đầy đủ</li>\n<li>Số điện thoại di động Việt Nam</li>\n<li>Địa chỉ email</li>\n<li>Địa chỉ giao hàng (đường, phường/xã, quận/huyện, tỉnh/thành)</li>\n<li>Ngày tháng năm sinh (tùy chọn — để xác nhận tuổi)</li>\n<li>Giới tính (tùy chọn)</li>\n<li>Hình ảnh đại diện (tùy chọn)</li>\n</ul>\n<p><strong>2.2. Dữ liệu Cá nhân Nhạy cảm:</strong> Chúng tôi <strong>KHÔNG</strong> thu thập dữ liệu nhạy cảm như tôn giáo, dân tộc, tình trạng sức khoẻ, định hướng giới tính, quan điểm chính trị TRỪ thông tin dị ứng thực phẩm (nếu Bạn tự khai báo để đảm bảo an toàn).</p>\n<p><strong>2.3. Dữ liệu Tài chính:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Phương thức thanh toán (loại ví, ngân hàng — KHÔNG lưu số thẻ đầy đủ)</li>\n<li>Token thanh toán (tokenize theo PCI-DSS Level 1)</li>\n<li>Lịch sử giao dịch (mã đơn, số tiền, thời gian)</li>\n</ul>\n<p><strong>2.4. Dữ liệu Vị trí:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>GPS chính xác (chỉ khi Bạn cho phép) — để tìm cửa hàng gần nhất</li>\n<li>Vị trí gần đúng (dựa trên IP) — để hiển thị nội dung phù hợp khu vực</li>\n</ul>\n<p><strong>2.5. Dữ liệu Thiết bị:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Loại thiết bị (iPhone, Android, máy tính)</li>\n<li>Hệ điều hành và phiên bản</li>\n<li>Trình duyệt và phiên bản</li>\n<li>Địa chỉ IP (mã hoá sau 90 ngày)</li>\n<li>Mã định danh thiết bị quảng cáo (IDFA/AAID — có thể tắt trong cài đặt thiết bị)</li>\n<li>Ngôn ngữ và múi giờ</li>\n</ul>\n<p><strong>2.6. Dữ liệu Sử dụng:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Lịch sử duyệt sản phẩm</li>\n<li>Sản phẩm yêu thích</li>\n<li>Lịch sử mua hàng và đánh giá</li>\n<li>Tương tác với thông báo, voucher</li>\n<li>Thời gian sử dụng ứng dụng</li>\n<li>Heatmap (anonymized — không gắn với danh tính cá nhân)</li>\n</ul>\n<p><strong>2.7. Dữ liệu từ bên thứ ba:</strong> Nếu Bạn đăng nhập bằng Google, Facebook, Zalo, Apple ID, chúng tôi nhận: tên, email, ảnh đại diện (theo quyền Bạn cấp).</p>\n\n<h3>ĐIỀU 3. MỤC ĐÍCH XỬ LÝ DỮ LIỆU</h3>\n<p><strong>3.1. Vận hành dịch vụ cốt lõi (Cơ sở pháp lý: thực hiện hợp đồng):</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Tạo và quản lý tài khoản của Bạn</li>\n<li>Xử lý đơn hàng và thanh toán</li>\n<li>Liên hệ về tình trạng đơn hàng</li>\n<li>Hỗ trợ khách hàng và giải quyết khiếu nại</li>\n<li>Phát hành hoá đơn VAT điện tử</li>\n</ul>\n<p><strong>3.2. Bảo mật và chống gian lận (Cơ sở pháp lý: lợi ích hợp pháp):</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Xác thực đăng nhập và 2FA</li>\n<li>Phát hiện và ngăn chặn gian lận, lạm dụng</li>\n<li>Audit log mọi hành vi quan trọng</li>\n<li>Tuân thủ yêu cầu pháp luật, cơ quan chức năng</li>\n</ul>\n<p><strong>3.3. Cải thiện sản phẩm (Cơ sở pháp lý: lợi ích hợp pháp, có thể opt-out):</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Phân tích sử dụng để cải thiện UI/UX</li>\n<li>A/B testing tính năng mới</li>\n<li>Nghiên cứu thị trường (dữ liệu ẩn danh)</li>\n</ul>\n<p><strong>3.4. Marketing và Quảng cáo (Cơ sở pháp lý: đồng ý — bạn có thể tắt bất cứ lúc nào):</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Gửi email khuyến mãi, voucher</li>\n<li>Push notification về flash sale</li>\n<li>Cá nhân hóa nội dung trên FoodSave</li>\n<li>Remarketing trên Facebook/Google (chỉ với cookie marketing đã đồng ý)</li>\n</ul>\n\n<h3>ĐIỀU 4. THỜI GIAN LƯU TRỮ DỮ LIỆU</h3>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Loại dữ liệu</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Thời gian lưu</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Lý do</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Thông tin tài khoản</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Trong thời gian tài khoản còn hoạt động + 30 ngày sau khi xoá</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Vận hành dịch vụ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Lịch sử giao dịch</td><td style=\"padding:10px;border:1px solid #e5e7eb\">10 năm</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Theo Luật Kế toán 2015</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoá đơn VAT</td><td style=\"padding:10px;border:1px solid #e5e7eb\">10 năm</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Theo Thông tư 78/2021/TT-BTC</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">IP và log truy cập</td><td style=\"padding:10px;border:1px solid #e5e7eb\">12 tháng (đầy đủ) · 24 tháng (ẩn danh)</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Bảo mật + phân tích</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Dữ liệu marketing</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Đến khi Bạn rút lại đồng ý</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Cần sự đồng ý liên tục</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Đánh giá sản phẩm</td><td style=\"padding:10px;border:1px solid #e5e7eb\">5 năm sau khi đăng</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Tham khảo cho người dùng khác</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Khiếu nại</td><td style=\"padding:10px;border:1px solid #e5e7eb\">3 năm sau khi giải quyết</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Đối chiếu khi cần</td></tr>\n</tbody></table>\n\n<h3>ĐIỀU 5. CHIA SẺ VỚI BÊN THỨ BA</h3>\n<p>FoodSave <strong>KHÔNG bán</strong> dữ liệu cá nhân của Bạn. Chúng tôi CHỈ chia sẻ trong các trường hợp:</p>\n<p><strong>5.1. Cửa hàng đối tác:</strong> Khi Bạn đặt đơn, chúng tôi chia sẻ:</p>\n<ul style=\"padding-left:24px\">\n<li>Tên hiển thị (có thể là biệt danh)</li>\n<li>4 chữ số cuối SĐT (ẩn các số trước với dấu *)</li>\n<li>Khung giờ pickup đã chọn</li>\n<li>Ghi chú đơn hàng (nếu có)</li>\n<li><strong>KHÔNG</strong> chia sẻ: email, địa chỉ, lịch sử đơn khác</li>\n</ul>\n<p><strong>5.2. Đơn vị thanh toán:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>MoMo, ZaloPay, VNPay, OnePay, Payoo</li>\n<li>Chia sẻ: mã đơn, số tiền, mã token thẻ (không phải số thẻ thật)</li>\n<li>Theo chuẩn PCI-DSS Level 1</li>\n</ul>\n<p><strong>5.3. Đơn vị logistic:</strong> Trong tương lai (khi có dịch vụ giao hàng) — Giao Hàng Nhanh, Ahamove, GrabExpress.</p>\n<p><strong>5.4. Đơn vị phân tích:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Google Analytics 4 (dữ liệu ẩn danh)</li>\n<li>Mixpanel (event tracking, không kèm PII)</li>\n<li>Hotjar (heatmap ẩn danh)</li>\n</ul>\n<p><strong>5.5. Cơ quan pháp luật:</strong> Theo yêu cầu hợp pháp bằng văn bản từ:</p>\n<ul style=\"padding-left:24px\">\n<li>Cơ quan điều tra (Công an, VKS)</li>\n<li>Toà án</li>\n<li>Cơ quan thuế</li>\n<li>Ngân hàng Nhà nước (khi có nghi vấn rửa tiền)</li>\n<li>Bộ Công Thương (giám sát TMĐT)</li>\n</ul>\n<p>Trong mọi trường hợp, FoodSave sẽ thông báo cho Bạn trừ khi việc thông báo bị cấm theo luật.</p>\n\n<h3>ĐIỀU 6. CHUYỂN DỮ LIỆU RA NGOÀI VIỆT NAM</h3>\n<p><strong>6.1.</strong> Toàn bộ dữ liệu chính của FoodSave được lưu trữ tại Việt Nam (Viettel IDC Hoà Lạc + FPT IDC Tân Thuận) theo Điều 26 Nghị định 13/2023/NĐ-CP.</p>\n<p><strong>6.2.</strong> Một số dịch vụ phụ trợ có thể xử lý tạm thời tại nước ngoài:</p>\n<ul style=\"padding-left:24px\">\n<li>Google Cloud (Singapore) — phân tích GA4</li>\n<li>AWS (Singapore) — backup dự phòng (encrypted)</li>\n<li>Sentry (USA) — báo lỗi (không gồm PII)</li>\n</ul>\n<p><strong>6.3.</strong> Việc chuyển dữ liệu ra nước ngoài tuân thủ Điều 26-28 Nghị định 13/2023/NĐ-CP, có Đánh giá Tác động Bảo vệ Dữ liệu (DPIA) đầy đủ.</p>\n\n<h3>ĐIỀU 7. QUYỀN CỦA BẠN THEO NGHỊ ĐỊNH 13/2023</h3>\n<p><strong>Theo Điều 9 Nghị định 13/2023/NĐ-CP, Bạn có các quyền sau:</strong></p>\n<ol style=\"padding-left:24px\">\n<li><strong>Quyền được biết:</strong> Biết về việc xử lý dữ liệu của mình</li>\n<li><strong>Quyền đồng ý:</strong> Đồng ý hoặc không đồng ý việc xử lý dữ liệu</li>\n<li><strong>Quyền truy cập:</strong> Xem dữ liệu cá nhân của mình tại \"Tài khoản → Dữ liệu của tôi\"</li>\n<li><strong>Quyền rút lại đồng ý:</strong> Bất cứ lúc nào, qua cài đặt hoặc email DPO</li>\n<li><strong>Quyền xoá dữ liệu:</strong> Yêu cầu xoá toàn bộ dữ liệu (trừ dữ liệu bắt buộc lưu theo luật)</li>\n<li><strong>Quyền hạn chế xử lý:</strong> Yêu cầu tạm dừng xử lý</li>\n<li><strong>Quyền cung cấp dữ liệu:</strong> Tải xuống dữ liệu của Bạn (định dạng JSON)</li>\n<li><strong>Quyền phản đối xử lý:</strong> Phản đối việc xử lý cho mục đích marketing</li>\n<li><strong>Quyền khiếu nại, tố cáo, khởi kiện:</strong> Khiếu nại lên Cục An toàn Thông tin (Bộ TT&TT) hoặc khởi kiện ra Toà án</li>\n<li><strong>Quyền yêu cầu bồi thường thiệt hại:</strong> Khi có vi phạm gây thiệt hại</li>\n<li><strong>Quyền tự bảo vệ:</strong> Yêu cầu các biện pháp khẩn cấp</li>\n</ol>\n<p><strong>Cách thực hiện quyền:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Trong app: <strong>Tài khoản → Quyền riêng tư → Quản lý dữ liệu</strong></li>\n<li>Email: <strong>dpo@foodsave.vn</strong> — Data Protection Officer</li>\n<li>Hotline DPO: <strong>090 995 2120</strong> (T2-T6, 9h-17h)</li>\n<li>Bằng văn bản: gửi về trụ sở 19 Nguyễn Hữu Thọ, Q.7, TP.HCM</li>\n</ul>\n<p>FoodSave sẽ phản hồi trong <strong>30 ngày</strong> kể từ ngày nhận yêu cầu. Trường hợp phức tạp, thời hạn có thể kéo dài thêm 30 ngày kèm thông báo.</p>\n\n<h3>ĐIỀU 8. BIỆN PHÁP BẢO MẬT</h3>\n<p><strong>8.1. Bảo mật kỹ thuật:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Mã hoá AES-256 cho dữ liệu lưu trữ</li>\n<li>TLS 1.3 cho mọi kết nối</li>\n<li>Token JWT cho xác thực, hết hạn sau 24 giờ</li>\n<li>Mã hoá mật khẩu: bcrypt cost 12</li>\n<li>Tokenize thẻ thanh toán theo PCI-DSS Level 1</li>\n<li>WAF (Web Application Firewall) Cloudflare</li>\n<li>Anti-DDoS</li>\n<li>Rate limiting để chống brute force</li>\n</ul>\n<p><strong>8.2. Bảo mật vận hành:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Truy cập dữ liệu hạn chế theo nguyên tắc \"least privilege\"</li>\n<li>2FA bắt buộc cho mọi nhân viên</li>\n<li>Audit log mọi truy cập dữ liệu</li>\n<li>Đào tạo bảo mật định kỳ cho nhân viên</li>\n<li>NDA với mọi nhân viên và nhà cung cấp</li>\n<li>Penetration testing 2 lần/năm</li>\n<li>Bug bounty program</li>\n</ul>\n<p><strong>8.3. Chuẩn tuân thủ:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>ISO/IEC 27001:2022 — Hệ thống Quản lý An toàn Thông tin</li>\n<li>PCI-DSS Level 1 — Bảo mật dữ liệu thẻ thanh toán</li>\n<li>Nghị định 13/2023/NĐ-CP — Bảo vệ Dữ liệu Cá nhân Việt Nam</li>\n<li>Thông tư 09/2020/TT-NHNN — Bảo mật ngân hàng</li>\n</ul>\n\n<h3>ĐIỀU 9. VI PHẠM DỮ LIỆU</h3>\n<p><strong>9.1.</strong> Trong trường hợp xảy ra vi phạm dữ liệu (data breach) ảnh hưởng tới quyền riêng tư của Bạn, FoodSave sẽ:</p>\n<ul style=\"padding-left:24px\">\n<li>Thông báo Cục An toàn Thông tin (Bộ TT&TT) trong <strong>72 giờ</strong></li>\n<li>Thông báo cho Bạn qua email và push notification trong <strong>72 giờ</strong></li>\n<li>Cung cấp đầy đủ thông tin: loại dữ liệu bị ảnh hưởng, hậu quả có thể, biện pháp khắc phục</li>\n<li>Hỗ trợ Bạn các biện pháp bảo vệ (đổi mật khẩu, hủy thẻ nếu cần)</li>\n</ul>\n<p><strong>9.2.</strong> Email khẩn cấp báo cáo lỗ hổng bảo mật: <strong>security@foodsave.vn</strong> (PGP key có sẵn)</p>\n\n<h3>ĐIỀU 10. COOKIES VÀ CÔNG NGHỆ TƯƠNG TỰ</h3>\n<p>Việc sử dụng cookies được quy định chi tiết tại <strong>Chính sách Cookie</strong> riêng — có thể truy cập tại tab \"Cookie\" trên đầu modal này hoặc qua link \"Cookie\" ở chân trang.</p>\n<p>Tóm tắt 3 loại cookies:</p>\n<ul style=\"padding-left:24px\">\n<li><strong>Essential (bắt buộc):</strong> Luôn bật — cần cho hoạt động</li>\n<li><strong>Analytics (tuỳ chọn):</strong> Mặc định bật, có thể tắt</li>\n<li><strong>Marketing (tuỳ chọn):</strong> Mặc định tắt, cần Bạn đồng ý</li>\n</ul>\n\n<h3>ĐIỀU 11. TRẺ EM</h3>\n<p><strong>11.1.</strong> FoodSave KHÔNG cung cấp dịch vụ trực tiếp cho trẻ em dưới 16 tuổi.</p>\n<p><strong>11.2.</strong> Trẻ em 13-16 tuổi có thể sử dụng tài khoản với sự đồng ý bằng văn bản và giám sát của cha mẹ/người giám hộ hợp pháp theo Điều 9 Nghị định 13/2023/NĐ-CP.</p>\n<p><strong>11.3.</strong> Nếu phát hiện thu thập dữ liệu trẻ em dưới 13 tuổi không có đồng ý, chúng tôi sẽ xoá ngay lập tức và thông báo cho cha mẹ.</p>\n\n<h3>ĐIỀU 12. THAY ĐỔI CHÍNH SÁCH</h3>\n<p>Mọi thay đổi quan trọng (ảnh hưởng tới quyền lợi Bạn) sẽ được:</p>\n<ul style=\"padding-left:24px\">\n<li>Thông báo qua email <strong>30 ngày</strong> trước khi áp dụng</li>\n<li>Push notification 7 ngày trước</li>\n<li>Banner trên ứng dụng ngày có hiệu lực</li>\n<li>Bạn có quyền không đồng ý — nếu vậy, có thể xoá tài khoản trước ngày hiệu lực</li>\n</ul>\n\n<h3>ĐIỀU 13. LIÊN HỆ DATA PROTECTION OFFICER (DPO)</h3>\n<div style=\"padding:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px\">\n<p style=\"margin:0 0 10px\"><strong>DPO của FoodSave Việt Nam:</strong></p>\n<ul style=\"padding-left:20px;margin:0\">\n<li>Tên: Bà Nguyễn Thị Phương Anh — Trưởng phòng Pháp chế và Tuân thủ</li>\n<li>Email: <strong>dpo@foodsave.vn</strong></li>\n<li>Hotline: <strong>090 995 2120</strong> (máy nhánh DPO: 102)</li>\n<li>Giờ làm việc: T2-T6, 9h-17h</li>\n<li>Thời gian phản hồi: 30 ngày làm việc</li>\n</ul>\n<p style=\"margin:14px 0 0;font-size:11.5px;color:#16a34a;font-weight:700\">Nếu không hài lòng với phản hồi của DPO, Bạn có quyền khiếu nại lên Cục An toàn Thông tin — Bộ Thông tin và Truyền thông: <strong>https://www.ais.gov.vn</strong></p>\n</div>\n\n<div style=\"margin-top:24px;padding:14px;background:#fafafa;border-radius:12px;text-align:center;font-size:11.5px;color:#6b7280;font-weight:600\">\nChính sách này được lập theo Nghị định 13/2023/NĐ-CP (có hiệu lực từ 01/07/2023) và các văn bản pháp luật liên quan của Việt Nam.<br><br>\n© 2026-2026 Công ty TNHH FoodSave Việt Nam · MSDN 0317456789\n</div>\n</div>";
 body.cookie="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">CHÍNH SÁCH COOKIE</h2>\n<div class=\"legal-sub\">Có hiệu lực từ 01/07/2024 · Cập nhật: 16/05/2026</div>\n</div>\n\n<h3>1. COOKIE LÀ GÌ?</h3>\n<p>Cookie là các tệp văn bản nhỏ được lưu trên thiết bị của Bạn khi truy cập website. Cookie giúp website ghi nhớ thông tin về phiên truy cập (như đăng nhập, giỏ hàng) và cải thiện trải nghiệm.</p>\n<p>FoodSave sử dụng cả \"cookies phiên\" (xoá khi đóng trình duyệt) và \"cookies bền vững\" (lưu lại sau khi đóng).</p>\n\n<h3>2. PHÂN LOẠI COOKIES</h3>\n<p><strong>2.1. Cookies Bắt buộc (Essential — không thể tắt):</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0\">\n<thead><tr style=\"background:#dcfce7\"><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Tên</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Mục đích</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Thời hạn</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">fs_session</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Duy trì phiên đăng nhập</td><td style=\"padding:9px;border:1px solid #e5e7eb\">24 giờ</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">fs_cart</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Lưu giỏ hàng</td><td style=\"padding:9px;border:1px solid #e5e7eb\">30 ngày</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">fs_csrf</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Chống tấn công CSRF</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Session</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">fs_consent</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Lưu lựa chọn cookie</td><td style=\"padding:9px;border:1px solid #e5e7eb\">365 ngày</td></tr>\n</tbody></table>\n<p><strong>2.2. Cookies Phân tích (Analytics — bạn có thể tắt):</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0\">\n<thead><tr style=\"background:#dbeafe\"><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Tên</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Đơn vị</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Mục đích</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Thời hạn</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">_ga, _gid</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Google Analytics 4</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Đo số người truy cập</td><td style=\"padding:9px;border:1px solid #e5e7eb\">2 năm</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">_hjid, _hjses</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Hotjar</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Heatmap, session replay</td><td style=\"padding:9px;border:1px solid #e5e7eb\">1 năm</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">mp_*</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Mixpanel</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Event tracking</td><td style=\"padding:9px;border:1px solid #e5e7eb\">1 năm</td></tr>\n</tbody></table>\n<p><strong>2.3. Cookies Marketing (mặc định TẮT — cần Bạn bật):</strong></p>\n<table style=\"width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0\">\n<thead><tr style=\"background:#fef9c3\"><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Tên</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Đơn vị</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Mục đích</th><th style=\"padding:9px;text-align:left;border:1px solid #e5e7eb\">Thời hạn</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">_fbp, _fbc</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Facebook Pixel</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Remarketing FB Ads</td><td style=\"padding:9px;border:1px solid #e5e7eb\">90 ngày</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">IDE, NID</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Google Ads</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Đo conversion, remarketing</td><td style=\"padding:9px;border:1px solid #e5e7eb\">390 ngày</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">_ttp</td><td style=\"padding:9px;border:1px solid #e5e7eb\">TikTok Pixel</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Remarketing TikTok Ads</td><td style=\"padding:9px;border:1px solid #e5e7eb\">390 ngày</td></tr>\n<tr><td style=\"padding:9px;border:1px solid #e5e7eb\">zlg_*</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Zalo Pixel</td><td style=\"padding:9px;border:1px solid #e5e7eb\">Remarketing Zalo</td><td style=\"padding:9px;border:1px solid #e5e7eb\">90 ngày</td></tr>\n</tbody></table>\n\n<h3>3. CÁCH QUẢN LÝ COOKIES</h3>\n<p><strong>3.1. Trong app FoodSave:</strong> Bạn có thể bật/tắt cookies Analytics và Marketing bất cứ lúc nào tại \"Tài khoản → Quyền riêng tư → Cài đặt Cookie\" hoặc qua banner Cookie ở footer.</p>\n<p><strong>3.2. Trong trình duyệt:</strong> Bạn cũng có thể xoá hoặc chặn cookies qua cài đặt trình duyệt:</p>\n<ul style=\"padding-left:24px\">\n<li><strong>Chrome:</strong> Cài đặt → Quyền riêng tư và bảo mật → Cookies và dữ liệu trang web khác</li>\n<li><strong>Safari:</strong> Preferences → Privacy → Manage Website Data</li>\n<li><strong>Firefox:</strong> Options → Privacy & Security → Cookies</li>\n<li><strong>Edge:</strong> Settings → Site Permissions → Cookies and site data</li>\n</ul>\n<p><strong>3.3. Hậu quả khi tắt cookies bắt buộc:</strong> Một số tính năng cốt lõi sẽ không hoạt động (đăng nhập, giỏ hàng).</p>\n\n<h3>4. COOKIES CỦA BÊN THỨ BA</h3>\n<p>Một số nội dung trên FoodSave (như video YouTube, bản đồ Google Maps) có thể đặt cookies của bên thứ ba. Chúng tôi không kiểm soát các cookies này. Tham khảo chính sách của:</p>\n<ul style=\"padding-left:24px\">\n<li>Google: <a style=\"color:#22c55e\">https://policies.google.com/privacy</a></li>\n<li>Facebook: <a style=\"color:#22c55e\">https://www.facebook.com/policy.php</a></li>\n<li>TikTok: <a style=\"color:#22c55e\">https://www.tiktok.com/legal/privacy-policy</a></li>\n</ul>\n\n<h3>5. TRÌNH BÀY ĐỒNG Ý</h3>\n<p>Banner xin đồng ý cookies hiện ra lần đầu Bạn truy cập, theo mô hình \"Opt-in\" (mặc định Marketing TẮT). Lựa chọn của Bạn được lưu 365 ngày. Sau đó banner sẽ hiện lại để cập nhật.</p>\n\n<h3>6. CẬP NHẬT</h3>\n<p>Chúng tôi có thể thay đổi danh sách cookies. Mọi thay đổi sẽ được thông báo qua banner cập nhật.</p>\n\n<h3>7. LIÊN HỆ</h3>\n<p>Mọi câu hỏi về cookies: <strong>dpo@foodsave.vn</strong> hoặc Hotline DPO <strong>090 995 2120</strong> (máy nhánh 102).</p>\n\n<div style=\"margin-top:24px;padding:14px;background:#fafafa;border-radius:12px;text-align:center;font-size:11.5px;color:#6b7280;font-weight:600\">© 2026-2026 Công ty TNHH FoodSave Việt Nam</div>\n</div>";
-body.refund="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">CHÍNH SÁCH ĐỔI TRẢ VÀ HOÀN TIỀN</h2>\n<div class=\"legal-sub\">Theo Luật Bảo vệ Quyền lợi Người tiêu dùng 2023 (Điều 36-39)</div>\n</div>\n\n<div style=\"padding:14px 18px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border-radius:14px;margin-bottom:24px;border-left:4px solid #16a34a\">\n<p style=\"margin:0;font-size:12.5px;color:#0a0a0a;line-height:1.65;font-weight:500\"><strong>FoodSave cam kết:</strong> Hoàn tiền 100% nếu sản phẩm có lỗi từ Cửa hàng · Xử lý khiếu nại trong 24h · Bồi thường thêm voucher 30K nếu lỗi nghiêm trọng · Bảo hiểm FoodSafe Cover miễn phí cho mọi đơn dưới 200K.</p>\n</div>\n\n<h3>1. CÁC TRƯỜNG HỢP ĐƯỢC HOÀN TIỀN</h3>\n<p><strong>1.1. Hoàn 100% — Cửa hàng có lỗi:</strong></p>\n<ul style=\"padding-left:24px\">\n<li><strong>Sản phẩm hết hạn sử dụng</strong> trước khi giao — kèm ảnh nhãn HSD</li>\n<li><strong>Sản phẩm hư hỏng, có mùi lạ, biến chất</strong> khi nhận — kèm ảnh + video</li>\n<li><strong>Bao bì rách, nhiễm bẩn</strong>, không nguyên vẹn — kèm ảnh</li>\n<li><strong>Sản phẩm sai loại, sai số lượng</strong> — kèm ảnh hoá đơn + sản phẩm</li>\n<li><strong>Cửa hàng từ chối giao hàng</strong> không lý do hợp lệ</li>\n<li><strong>Sản phẩm có dị vật</strong> (côn trùng, tóc, vật lạ)</li>\n<li><strong>Ngộ độc thực phẩm</strong> có xác nhận của cơ sở y tế</li>\n</ul>\n<p><strong>1.2. Hoàn 50% — Khách hủy muộn:</strong> Đặt rồi hủy sau 5 phút.</p>\n<p><strong>1.3. KHÔNG hoàn tiền:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Khách vắng mặt 3 lần/tháng (tài khoản bị khoá 7 ngày)</li>\n<li>Sản phẩm đã sử dụng/mở bao bì (trừ trường hợp 1.1)</li>\n<li>Khiếu nại sau 72 giờ kể từ khi nhận hàng</li>\n<li>Đơn đã xác nhận hoàn tất bởi Người dùng quét QR</li>\n<li>Sản phẩm donation miễn phí (chỉ hoàn ký quỹ)</li>\n</ul>\n\n<h3>2. QUY TRÌNH KHIẾU NẠI</h3>\n<p><strong>Bước 1:</strong> Vào \"Đơn hàng → Chi tiết đơn → Khiếu nại\"</p>\n<p><strong>Bước 2:</strong> Chọn loại khiếu nại (6 loại):</p>\n<ul style=\"padding-left:24px\">\n<li>Chất lượng sản phẩm</li>\n<li>Thiếu sản phẩm</li>\n<li>HSD sai mô tả</li>\n<li>Thái độ nhân viên</li>\n<li>Vấn đề thanh toán</li>\n<li>Khác</li>\n</ul>\n<p><strong>Bước 3:</strong> Mô tả chi tiết (tối thiểu 10 ký tự) + upload ảnh/video bằng chứng (tối đa 5 ảnh, 1 video 30s)</p>\n<p><strong>Bước 4:</strong> Hệ thống tự động fill thông tin: mã đơn, sản phẩm, thời gian, cửa hàng</p>\n<p><strong>Bước 5:</strong> Gửi → FoodSave nhận khiếu nại trong vòng 5 phút</p>\n\n<h3>3. THỜI GIAN XỬ LÝ</h3>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Bước</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Thời gian</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Phản hồi đầu tiên</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 2 giờ làm việc</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Cửa hàng xác minh</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 24 giờ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Quyết định cuối</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 72 giờ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoàn tiền vào ví điện tử</td><td style=\"padding:10px;border:1px solid #e5e7eb\">1-3 giờ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoàn vào thẻ ATM nội địa</td><td style=\"padding:10px;border:1px solid #e5e7eb\">3-7 ngày làm việc</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoàn vào thẻ quốc tế</td><td style=\"padding:10px;border:1px solid #e5e7eb\">7-14 ngày làm việc</td></tr>\n</tbody></table>\n\n<h3>4. FOODSAFE COVER — BẢO HIỂM MIỄN PHÍ</h3>\n<p>FoodSave hợp tác với Tổng Công ty Bảo hiểm Bảo Việt cung cấp bảo hiểm miễn phí cho mọi đơn dưới 200.000đ.</p>\n<p><strong>4.1. Phạm vi bồi thường:</strong> Tối đa <strong>500.000đ</strong>/sự cố:</p>\n<ul style=\"padding-left:24px\">\n<li>Ngộ độc thực phẩm cần điều trị y tế</li>\n<li>Dị ứng nặng do thông tin thành phần không chính xác</li>\n<li>Hư hỏng tài sản do sản phẩm lỗi</li>\n</ul>\n<p><strong>4.2. Điều kiện:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Yêu cầu trong 7 ngày kể từ sự cố</li>\n<li>Có xác nhận y tế (nếu là ngộ độc/dị ứng)</li>\n<li>Đơn đã thanh toán thành công</li>\n</ul>\n<p><strong>4.3. Quy trình bồi thường FoodSafe Cover:</strong></p>\n<ol style=\"padding-left:24px\">\n<li>Khiếu nại trên app + đánh dấu \"Yêu cầu FoodSafe Cover\"</li>\n<li>Upload: bệnh án/đơn thuốc/hoá đơn y tế</li>\n<li>Bảo Việt xử lý trong 7-14 ngày làm việc</li>\n<li>Tiền chuyển vào tài khoản ngân hàng đã đăng ký</li>\n</ol>\n\n<h3>5. GIẢI QUYẾT TRANH CHẤP</h3>\n<p>Nếu Bạn không hài lòng với quyết định khiếu nại:</p>\n<p><strong>Cấp 1:</strong> Khiếu nại lên Trưởng phòng Chăm sóc Khách hàng — <strong>complaints-l2@foodsave.vn</strong> · 7 ngày làm việc</p>\n<p><strong>Cấp 2:</strong> Hội đồng Giải quyết Tranh chấp Nội bộ FoodSave — bao gồm DPO + Pháp chế + đại diện Người dùng · 14 ngày làm việc</p>\n<p><strong>Cấp 3:</strong> Hoà giải qua:</p>\n<ul style=\"padding-left:24px\">\n<li>Cục Cạnh tranh và Bảo vệ Người tiêu dùng (Bộ Công Thương): <strong>https://vcca.gov.vn</strong></li>\n<li>Hội Bảo vệ Quyền lợi Người tiêu dùng TP.HCM: <strong>028 3930 1141</strong></li>\n<li>Tổng đài hỗ trợ NTD: <strong>1800 6838</strong></li>\n</ul>\n<p><strong>Cấp 4:</strong> Khởi kiện tại Toà án Nhân dân có thẩm quyền theo quy định pháp luật</p>\n\n<h3>6. LIÊN HỆ</h3>\n<div style=\"padding:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px\">\n<ul style=\"padding-left:20px;margin:0\">\n<li>Hotline khiếu nại: <strong>1900 1545</strong> (miễn phí, 24/7)</li>\n<li>Email: <strong>support@foodsave.vn</strong></li>\n<li>Chat live: trong app, 8h-22h hàng ngày</li>\n<li>Khiếu nại nghiêm trọng: <strong>complaints-l2@foodsave.vn</strong></li>\n</ul>\n</div>\n</div>";
-body.help="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">TRUNG TÂM TRỢ GIÚP FOODSAVE</h2>\n<div class=\"legal-sub\">Tìm câu trả lời nhanh chóng — chính xác — chuyên nghiệp</div>\n</div>\n\n<!-- Search bar -->\n<div style=\"position:relative;margin-bottom:24px\"><i class=\"ti ti-search\" style=\"position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:20px\"></i><input placeholder=\"Tìm: cách đặt hàng, hoàn tiền, voucher, đánh giá...\" style=\"width:100%;padding:16px 18px 16px 50px;border:1.5px solid #e5e7eb;border-radius:16px;font-size:14.5px;font-family:inherit;outline:none\" onfocus=\"this.style.borderColor='#22c55e'\" onblur=\"this.style.borderColor='#e5e7eb'\"></div>\n\n<!-- Top FAQ -->\n<h3>Câu hỏi phổ biến nhất</h3>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px\">\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-shopping-bag\"></i></div><div><h4>Tôi đặt hàng như thế nào?</h4><p>5 bước: Chọn SP → Cửa hàng → Khung giờ → Thanh toán → Đến cửa hàng quét QR</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-credit-card\"></i></div><div><h4>Có hỗ trợ thanh toán COD không?</h4><p>Có — chỉ áp dụng cho nhãn Xanh & Vàng. Nhãn Đỏ phải thanh toán online.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-qrcode\"></i></div><div><h4>Tôi quên mang theo mã QR?</h4><p>Đưa số điện thoại đăng ký + CMND/CCCD cho nhân viên, họ sẽ tra cứu được.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-clock-bolt\"></i></div><div><h4>Tôi đến muộn khung giờ pickup?</h4><p>Hệ thống cho phép trễ 30 phút. Sau đó đơn tự huỷ và bạn bị tính 1 lần vắng mặt.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-receipt-refund\"></i></div><div><h4>Sản phẩm có vấn đề, hoàn tiền không?</h4><p>Có — chụp ảnh + khiếu nại trong 72h. Hoàn tiền 100% nếu lỗi cửa hàng.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-star\"></i></div><div><h4>Đánh giá nhận được gì?</h4><p>+5 điểm uy tín · +5 bonus nếu có ảnh chất lượng. Tích điểm lên hạng nhận voucher.</p></div></div>\n</div>\n\n<!-- Categories -->\n<h3>Trợ giúp theo chủ đề</h3>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px\">\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-shopping-cart\"></i></div><div><h4>Đặt hàng & Mua sắm <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 24 bài viết</span></h4><p>Cách đặt, hủy đơn, theo dõi, áp voucher, mua donation 0đ, recently viewed</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-wallet\"></i></div><div><h4>Thanh toán & Hoàn tiền <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 18 bài viết</span></h4><p>MoMo, ZaloPay, VNPay, thẻ ngân hàng, COD, mua trước trả sau, hoàn tiền</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-truck-delivery\"></i></div><div><h4>Nhận hàng & Pickup <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 15 bài viết</span></h4><p>Quy trình QR, khung giờ, đổi cửa hàng, vắng mặt, kiểm tra trước khi nhận</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-user-circle\"></i></div><div><h4>Tài khoản & Bảo mật <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 22 bài viết</span></h4><p>Đăng ký, đổi mật khẩu, 2FA, xoá tài khoản, đăng nhập đa thiết bị, GDPR</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-shield-check\"></i></div><div><h4>An toàn thực phẩm <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 12 bài viết</span></h4><p>Nhãn HSD 3 màu, bảo quản, dị ứng, FoodSafe Cover, ngộ độc, khiếu nại</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-medal\"></i></div><div><h4>Điểm uy tín & Hạng <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 14 bài viết</span></h4><p>Cộng/trừ điểm, 4 hạng thành viên, voucher độc quyền, mời bạn bè</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-heart\"></i></div><div><h4>Tổ chức từ thiện <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 16 bài viết</span></h4><p>Đăng ký, nhận donation, điều phối TNV, báo cáo ESG, cộng đồng</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-building-store\"></i></div><div><h4>Cửa hàng đối tác <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 28 bài viết</span></h4><p>Đăng ký KYC, đăng SP, hoa hồng, payout, tích hợp POS, AI gợi ý</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-gift\"></i></div><div><h4>Voucher & Khuyến mãi <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 10 bài viết</span></h4><p>Cách áp dụng, hết hạn, không sử dụng được, flash sale, referral</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-message-circle-2\"></i></div><div><h4>Liên hệ hỗ trợ <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 8 bài viết</span></h4><p>Hotline, email, live chat, mạng xã hội, gặp trực tiếp, văn phòng</p></div></div>\n</div>\n\n<!-- Big banner CTA -->\n<div style=\"margin-top:24px;padding:24px;background:linear-gradient(135deg,#0a0a0a,#16a34a);border-radius:18px;color:#fff;display:flex;align-items:center;gap:18px\">\n<div style=\"width:64px;height:64px;border-radius:18px;background:#facc15;color:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0\"><i class=\"ti ti-headset\"></i></div>\n<div style=\"flex:1\"><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:18px;font-weight:900;margin-bottom:5px\">Không tìm thấy câu trả lời?</div><div style=\"font-size:13px;color:rgba(255,255,255,.85);font-weight:500;line-height:1.6\">Hotline 24/7: <strong>1900 1545</strong> (miễn phí) · Chat live trong app 8h-22h · Email phản hồi trong 2h</div></div>\n<button onclick=\"openLegal('contact')\" style=\"padding:14px 24px;background:#facc15;color:#0a0a0a;border:0;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit\"><i class=\"ti ti-mail\"></i> Liên hệ ngay</button>\n</div>\n\n<!-- Status & uptime -->\n<div style=\"margin-top:18px;padding:14px 18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px\">\n<div style=\"display:flex;align-items:center;gap:8px\"><span style=\"display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;animation:pulse 1.6s infinite\"></span><span style=\"font-weight:800;color:#16a34a\">Hệ thống hoạt động bình thường</span></div>\n<div style=\"color:#16a34a;font-weight:700\">Uptime 30 ngày: 99.98% · <a style=\"text-decoration:underline;cursor:pointer\">status.foodsave.vn</a></div>\n</div>\n</div>";
+body.refund="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">CHÍNH SÁCH ĐỔI TRẢ VÀ HOÀN TIỀN</h2>\n<div class=\"legal-sub\">Theo Luật Bảo vệ Quyền lợi Người tiêu dùng 2023 (Điều 36-39)</div>\n</div>\n\n<div style=\"padding:14px 18px;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border-radius:14px;margin-bottom:24px;border-left:4px solid #16a34a\">\n<p style=\"margin:0;font-size:12.5px;color:#0a0a0a;line-height:1.65;font-weight:500\"><strong>FoodSave cam kết:</strong> Hoàn tiền 100% nếu sản phẩm có lỗi từ Cửa hàng · Xử lý khiếu nại trong 24h · Bồi thường thêm voucher 30K nếu lỗi nghiêm trọng · Bảo hiểm FoodSafe Cover miễn phí cho mọi đơn dưới 200K.</p>\n</div>\n\n<h3>1. CÁC TRƯỜNG HỢP ĐƯỢC HOÀN TIỀN</h3>\n<p><strong>1.1. Hoàn 100% — Cửa hàng có lỗi:</strong></p>\n<ul style=\"padding-left:24px\">\n<li><strong>Sản phẩm hết hạn sử dụng</strong> trước khi giao — kèm ảnh nhãn HSD</li>\n<li><strong>Sản phẩm hư hỏng, có mùi lạ, biến chất</strong> khi nhận — kèm ảnh + video</li>\n<li><strong>Bao bì rách, nhiễm bẩn</strong>, không nguyên vẹn — kèm ảnh</li>\n<li><strong>Sản phẩm sai loại, sai số lượng</strong> — kèm ảnh hoá đơn + sản phẩm</li>\n<li><strong>Cửa hàng từ chối giao hàng</strong> không lý do hợp lệ</li>\n<li><strong>Sản phẩm có dị vật</strong> (côn trùng, tóc, vật lạ)</li>\n<li><strong>Ngộ độc thực phẩm</strong> có xác nhận của cơ sở y tế</li>\n</ul>\n<p><strong>1.2. Hoàn 50% — Khách hủy muộn:</strong> Đặt rồi hủy sau 5 phút.</p>\n<p><strong>1.3. KHÔNG hoàn tiền:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Không đến lấy hàng: -15 điểm uy tín/lần; dưới 40 điểm có thể bị chặn</li>\n<li>Sản phẩm đã sử dụng/mở bao bì (trừ trường hợp 1.1)</li>\n<li>Khiếu nại sau 72 giờ kể từ khi nhận hàng</li>\n<li>Đơn đã xác nhận hoàn tất bởi Người dùng quét QR</li>\n<li>Sản phẩm donation miễn phí (chỉ hoàn ký quỹ)</li>\n</ul>\n\n<h3>2. QUY TRÌNH KHIẾU NẠI</h3>\n<p><strong>Bước 1:</strong> Vào \"Đơn hàng → Chi tiết đơn → Khiếu nại\"</p>\n<p><strong>Bước 2:</strong> Chọn loại khiếu nại (6 loại):</p>\n<ul style=\"padding-left:24px\">\n<li>Chất lượng sản phẩm</li>\n<li>Thiếu sản phẩm</li>\n<li>HSD sai mô tả</li>\n<li>Thái độ nhân viên</li>\n<li>Vấn đề thanh toán</li>\n<li>Khác</li>\n</ul>\n<p><strong>Bước 3:</strong> Mô tả chi tiết (tối thiểu 10 ký tự) + upload ảnh/video bằng chứng (tối đa 5 ảnh, 1 video 30s)</p>\n<p><strong>Bước 4:</strong> Hệ thống tự động fill thông tin: mã đơn, sản phẩm, thời gian, cửa hàng</p>\n<p><strong>Bước 5:</strong> Gửi → FoodSave nhận khiếu nại trong vòng 5 phút</p>\n\n<h3>3. THỜI GIAN XỬ LÝ</h3>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:12px 0\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Bước</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Thời gian</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Phản hồi đầu tiên</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 2 giờ làm việc</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Cửa hàng xác minh</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 24 giờ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Quyết định cuối</td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 72 giờ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoàn tiền vào ví điện tử</td><td style=\"padding:10px;border:1px solid #e5e7eb\">1-3 giờ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoàn vào thẻ ATM nội địa</td><td style=\"padding:10px;border:1px solid #e5e7eb\">3-7 ngày làm việc</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hoàn vào thẻ quốc tế</td><td style=\"padding:10px;border:1px solid #e5e7eb\">7-14 ngày làm việc</td></tr>\n</tbody></table>\n\n<h3>4. FOODSAFE COVER — BẢO HIỂM MIỄN PHÍ</h3>\n<p>FoodSave hợp tác với Tổng Công ty Bảo hiểm Bảo Việt cung cấp bảo hiểm miễn phí cho mọi đơn dưới 200.000đ.</p>\n<p><strong>4.1. Phạm vi bồi thường:</strong> Tối đa <strong>500.000đ</strong>/sự cố:</p>\n<ul style=\"padding-left:24px\">\n<li>Ngộ độc thực phẩm cần điều trị y tế</li>\n<li>Dị ứng nặng do thông tin thành phần không chính xác</li>\n<li>Hư hỏng tài sản do sản phẩm lỗi</li>\n</ul>\n<p><strong>4.2. Điều kiện:</strong></p>\n<ul style=\"padding-left:24px\">\n<li>Yêu cầu trong 7 ngày kể từ sự cố</li>\n<li>Có xác nhận y tế (nếu là ngộ độc/dị ứng)</li>\n<li>Đơn đã thanh toán thành công</li>\n</ul>\n<p><strong>4.3. Quy trình bồi thường FoodSafe Cover:</strong></p>\n<ol style=\"padding-left:24px\">\n<li>Khiếu nại trên app + đánh dấu \"Yêu cầu FoodSafe Cover\"</li>\n<li>Upload: bệnh án/đơn thuốc/hoá đơn y tế</li>\n<li>Bảo Việt xử lý trong 7-14 ngày làm việc</li>\n<li>Tiền chuyển vào tài khoản ngân hàng đã đăng ký</li>\n</ol>\n\n<h3>5. GIẢI QUYẾT TRANH CHẤP</h3>\n<p>Nếu Bạn không hài lòng với quyết định khiếu nại:</p>\n<p><strong>Cấp 1:</strong> Khiếu nại lên Trưởng phòng Chăm sóc Khách hàng — <strong>complaints-l2@foodsave.vn</strong> · 7 ngày làm việc</p>\n<p><strong>Cấp 2:</strong> Hội đồng Giải quyết Tranh chấp Nội bộ FoodSave — bao gồm DPO + Pháp chế + đại diện Người dùng · 14 ngày làm việc</p>\n<p><strong>Cấp 3:</strong> Hoà giải qua:</p>\n<ul style=\"padding-left:24px\">\n<li>Cục Cạnh tranh và Bảo vệ Người tiêu dùng (Bộ Công Thương): <strong>https://vcca.gov.vn</strong></li>\n<li>Hội Bảo vệ Quyền lợi Người tiêu dùng TP.HCM: <strong>028 3930 1141</strong></li>\n<li>Tổng đài hỗ trợ NTD: <strong>1800 6838</strong></li>\n</ul>\n<p><strong>Cấp 4:</strong> Khởi kiện tại Toà án Nhân dân có thẩm quyền theo quy định pháp luật</p>\n\n<h3>6. LIÊN HỆ</h3>\n<div style=\"padding:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px\">\n<ul style=\"padding-left:20px;margin:0\">\n<li>Hotline khiếu nại: <strong>1900 1545</strong> (miễn phí, 24/7)</li>\n<li>Email: <strong>support@foodsave.vn</strong></li>\n<li>Chat live: trong app, 8h-22h hàng ngày</li>\n<li>Khiếu nại nghiêm trọng: <strong>complaints-l2@foodsave.vn</strong></li>\n</ul>\n</div>\n</div>";
+body.help="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">TRUNG TÂM TRỢ GIÚP FOODSAVE</h2>\n<div class=\"legal-sub\">Tìm câu trả lời nhanh chóng — chính xác — chuyên nghiệp</div>\n</div>\n\n<!-- Search bar -->\n<div style=\"position:relative;margin-bottom:24px\"><i class=\"ti ti-search\" style=\"position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:20px\"></i><input placeholder=\"Tìm: cách đặt hàng, hoàn tiền, voucher, đánh giá...\" style=\"width:100%;padding:16px 18px 16px 50px;border:1.5px solid #e5e7eb;border-radius:16px;font-size:14.5px;font-family:inherit;outline:none\" onfocus=\"this.style.borderColor='#22c55e'\" onblur=\"this.style.borderColor='#e5e7eb'\"></div>\n\n<!-- Top FAQ -->\n<h3>Câu hỏi phổ biến nhất</h3>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px\">\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-shopping-bag\"></i></div><div><h4>Tôi đặt hàng như thế nào?</h4><p>5 bước: Chọn SP → Cửa hàng → Khung giờ → Thanh toán → Đến cửa hàng quét QR</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-credit-card\"></i></div><div><h4>Có hỗ trợ thanh toán COD không?</h4><p>Có — chỉ áp dụng cho nhãn Xanh & Vàng. Nhãn Đỏ phải thanh toán online.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-qrcode\"></i></div><div><h4>Tôi quên mang theo mã QR?</h4><p>Đưa số điện thoại đăng ký + CMND/CCCD cho nhân viên, họ sẽ tra cứu được.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-clock-bolt\"></i></div><div><h4>Tôi đến muộn khung giờ pickup?</h4><p>Hệ thống cho phép trễ 30 phút. Sau đó đơn tự huỷ và bạn bị tính 1 lần vắng mặt.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-receipt-refund\"></i></div><div><h4>Sản phẩm có vấn đề, hoàn tiền không?</h4><p>Có — chụp ảnh + khiếu nại trong 72h. Hoàn tiền 100% nếu lỗi cửa hàng.</p></div></div>\n<div class=\"help-card\"><div class=\"ic\"><i class=\"ti ti-star\"></i></div><div><h4>Đánh giá nhận được gì?</h4><p>Đánh giá giúp kiểm soát chất lượng, không cộng điểm uy tín.</p></div></div>\n</div>\n\n<!-- Categories -->\n<h3>Trợ giúp theo chủ đề</h3>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px\">\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-shopping-cart\"></i></div><div><h4>Đặt hàng & Mua sắm <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 24 bài viết</span></h4><p>Cách đặt, hủy đơn, theo dõi, áp voucher, mua donation 0đ, recently viewed</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-wallet\"></i></div><div><h4>Thanh toán & Hoàn tiền <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 18 bài viết</span></h4><p>MoMo, ZaloPay, VNPay, thẻ ngân hàng, COD, mua trước trả sau, hoàn tiền</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-truck-delivery\"></i></div><div><h4>Nhận hàng & Pickup <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 15 bài viết</span></h4><p>Quy trình QR, khung giờ, đổi cửa hàng, vắng mặt, kiểm tra trước khi nhận</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-user-circle\"></i></div><div><h4>Tài khoản & Bảo mật <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 22 bài viết</span></h4><p>Đăng ký, đổi mật khẩu, 2FA, xoá tài khoản, đăng nhập đa thiết bị, GDPR</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-shield-check\"></i></div><div><h4>An toàn thực phẩm <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 12 bài viết</span></h4><p>Nhãn HSD 3 màu, bảo quản, dị ứng, FoodSafe Cover, ngộ độc, khiếu nại</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-medal\"></i></div><div><h4>Điểm uy tín & Hạng <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 14 bài viết</span></h4><p>Nhận hàng thành công +5, lấy trễ -10, bỏ đơn -15</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-heart\"></i></div><div><h4>Tổ chức từ thiện <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 16 bài viết</span></h4><p>Đăng ký, nhận donation, điều phối TNV, báo cáo ESG, cộng đồng</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-building-store\"></i></div><div><h4>Cửa hàng đối tác <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 28 bài viết</span></h4><p>Đăng ký KYC, đăng SP, hoa hồng, payout, tích hợp POS, AI gợi ý</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-gift\"></i></div><div><h4>Voucher & Khuyến mãi <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 10 bài viết</span></h4><p>Cách áp dụng, hết hạn, không sử dụng được, flash sale, referral</p></div></div>\n<div class=\"help-card\" style=\"cursor:pointer\"><div class=\"ic\"><i class=\"ti ti-message-circle-2\"></i></div><div><h4>Liên hệ hỗ trợ <span style=\"font-size:11px;color:#6b7280;font-weight:600\">· 8 bài viết</span></h4><p>Hotline, email, live chat, mạng xã hội, gặp trực tiếp, văn phòng</p></div></div>\n</div>\n\n<!-- Big banner CTA -->\n<div style=\"margin-top:24px;padding:24px;background:linear-gradient(135deg,#0a0a0a,#16a34a);border-radius:18px;color:#fff;display:flex;align-items:center;gap:18px\">\n<div style=\"width:64px;height:64px;border-radius:18px;background:#facc15;color:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0\"><i class=\"ti ti-headset\"></i></div>\n<div style=\"flex:1\"><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:18px;font-weight:900;margin-bottom:5px\">Không tìm thấy câu trả lời?</div><div style=\"font-size:13px;color:rgba(255,255,255,.85);font-weight:500;line-height:1.6\">Hotline 24/7: <strong>1900 1545</strong> (miễn phí) · Chat live trong app 8h-22h · Email phản hồi trong 2h</div></div>\n<button onclick=\"openLegal('contact')\" style=\"padding:14px 24px;background:#facc15;color:#0a0a0a;border:0;border-radius:999px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit\"><i class=\"ti ti-mail\"></i> Liên hệ ngay</button>\n</div>\n\n<!-- Status & uptime -->\n<div style=\"margin-top:18px;padding:14px 18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px\">\n<div style=\"display:flex;align-items:center;gap:8px\"><span style=\"display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;animation:pulse 1.6s infinite\"></span><span style=\"font-weight:800;color:#16a34a\">Hệ thống hoạt động bình thường</span></div>\n<div style=\"color:#16a34a;font-weight:700\">Uptime 30 ngày: 99.98% · <a style=\"text-decoration:underline;cursor:pointer\">status.foodsave.vn</a></div>\n</div>\n</div>";
 body.contact="<div class=\"legal-section\" style=\"padding:32px;max-width:900px;margin:0 auto\">\n<div style=\"text-align:center;margin-bottom:28px\">\n<h2 class=\"legal-h\" style=\"font-size:32px\">LIÊN HỆ FOODSAVE</h2>\n<div class=\"legal-sub\">Chúng tôi luôn sẵn sàng hỗ trợ Bạn 24/7</div>\n</div>\n\n<!-- Company hero card -->\n<div style=\"background:linear-gradient(135deg,#0a0a0a 0%,#16a34a 60%,#22c55e 100%);color:#fff;padding:28px;border-radius:18px;margin-bottom:24px;position:relative;overflow:hidden\">\n<div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:24px;font-weight:900;letter-spacing:-.025em;margin-bottom:6px\">CÔNG TY TNHH FOODSAVE VIỆT NAM</div>\n<div style=\"font-size:13px;color:rgba(255,255,255,.85);font-weight:600;margin-bottom:14px\">Nền tảng cứu thực phẩm cận hạn hàng đầu Việt Nam</div>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px\">\n<div><span style=\"opacity:.7\">Mã số DN:</span> <strong style=\"font-family:Plus Jakarta Sans,sans-serif\">0317456789</strong></div>\n<div><span style=\"opacity:.7\">Giấy phép TMĐT:</span> <strong style=\"font-family:Plus Jakarta Sans,sans-serif\">1545/GP-TĐKDM</strong></div>\n<div><span style=\"opacity:.7\">Người đại diện:</span> <strong>Trần Bửu — CEO</strong></div>\n<div><span style=\"opacity:.7\">Thành lập:</span> <strong>15/03/2024</strong></div>\n</div>\n</div>\n\n<!-- Quick contact grid -->\n<h3 style=\"margin-top:0\">Kênh liên hệ chính</h3>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px\">\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><i class=\"ti ti-phone\" style=\"font-size:26px;color:#22c55e;margin-bottom:10px;display:block\"></i><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em\">HOTLINE TỔNG ĐÀI 24/7</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:20px;font-weight:900;color:#0a0a0a;margin-top:4px\">1900 1545</div><div style=\"font-size:11.5px;color:#16a34a;font-weight:700;margin-top:4px\">Miễn phí từ mọi mạng</div></div>\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><i class=\"ti ti-phone-call\" style=\"font-size:26px;color:#0ea5e9;margin-bottom:10px;display:block\"></i><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em\">HOTLINE DI ĐỘNG</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:20px;font-weight:900;color:#0a0a0a;margin-top:4px\">090 995 2120</div><div style=\"font-size:11.5px;color:#6b7280;font-weight:600;margin-top:4px\">Zalo · Viber · WhatsApp</div></div>\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><i class=\"ti ti-mail\" style=\"font-size:26px;color:#facc15;margin-bottom:10px;display:block\"></i><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em\">EMAIL CHUNG</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:14.5px;font-weight:900;color:#0a0a0a;margin-top:4px\">hello@foodsave.vn</div><div style=\"font-size:11.5px;color:#6b7280;font-weight:600;margin-top:4px\">Phản hồi trong 24h</div></div>\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><i class=\"ti ti-message-circle-2\" style=\"font-size:26px;color:#9333ea;margin-bottom:10px;display:block\"></i><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em\">CHAT TRỰC TUYẾN</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:14.5px;font-weight:900;color:#0a0a0a;margin-top:4px\">Trên app 8h-22h</div><div style=\"font-size:11.5px;color:#16a34a;font-weight:700;margin-top:4px\"><span style=\"display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-right:5px\"></span>3 chuyên viên đang online</div></div>\n</div>\n\n<!-- Email by purpose -->\n<h3>Email theo mục đích</h3>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 24px\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb;width:35%\">Mục đích</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Email</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Phản hồi</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Câu hỏi chung & Marketing</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>hello@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 24h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hỗ trợ khách hàng & khiếu nại</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>support@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 2h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Đối tác cửa hàng</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>partners@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 24h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Tổ chức từ thiện</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>charity@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 24h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Báo chí & truyền thông</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>press@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 48h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Pháp lý & Hợp đồng</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>legal@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 72h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Bảo vệ Dữ liệu Cá nhân (DPO)</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>dpo@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 30 ngày</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Báo cáo lỗ hổng bảo mật</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>security@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 4h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Tuyển dụng</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>careers@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 7 ngày</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Đầu tư & Tài chính</td><td style=\"padding:10px;border:1px solid #e5e7eb\"><strong>investors@foodsave.vn</strong></td><td style=\"padding:10px;border:1px solid #e5e7eb\">≤ 5 ngày</td></tr>\n</tbody></table>\n\n<!-- Office locations -->\n<h3>Văn phòng</h3>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px\">\n<div style=\"padding:18px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #bbf7d0;border-radius:14px\"><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:12px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px\"><i class=\"ti ti-building\"></i> TRỤ SỞ CHÍNH — TP.HCM</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:14.5px;font-weight:900;color:#0a0a0a;margin-bottom:4px\">19 Nguyễn Hữu Thọ</div><div style=\"font-size:12.5px;color:#374151;font-weight:600;line-height:1.5\">Phường Tân Hưng, Quận 7<br>Thành phố Hồ Chí Minh<br>Việt Nam · 70000</div><div style=\"margin-top:10px;font-size:11.5px;color:#16a34a;font-weight:700\"><i class=\"ti ti-clock\"></i> T2-T6: 8h-18h · T7: 8h-12h</div></div>\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:12px;font-weight:900;color:#0a0a0a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px\"><i class=\"ti ti-building-skyscraper\"></i> VPĐD HÀ NỘI</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:14.5px;font-weight:900;color:#0a0a0a;margin-bottom:4px\">23 Phố Huế</div><div style=\"font-size:12.5px;color:#374151;font-weight:600;line-height:1.5\">Phường Ngô Thì Nhậm, Quận Hai Bà Trưng<br>Thành phố Hà Nội<br>Việt Nam · 100000</div><div style=\"margin-top:10px;font-size:11.5px;color:#6b7280;font-weight:700\"><i class=\"ti ti-clock\"></i> T2-T6: 8h30-17h30</div></div>\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:12px;font-weight:900;color:#0a0a0a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px\"><i class=\"ti ti-building-store\"></i> VPĐD ĐÀ NẴNG</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:14.5px;font-weight:900;color:#0a0a0a;margin-bottom:4px\">47 Lê Duẩn</div><div style=\"font-size:12.5px;color:#374151;font-weight:600;line-height:1.5\">Phường Thạch Thang, Quận Hải Châu<br>Thành phố Đà Nẵng<br>Việt Nam · 550000</div><div style=\"margin-top:10px;font-size:11.5px;color:#6b7280;font-weight:700\"><i class=\"ti ti-clock\"></i> T2-T6: 8h30-17h30</div></div>\n<div style=\"padding:18px;background:#fafafa;border:1.5px solid #e5e7eb;border-radius:14px\"><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:12px;font-weight:900;color:#0a0a0a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px\"><i class=\"ti ti-building-warehouse\"></i> KHO VẬN HÀNH — BÌNH DƯƠNG</div><div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:14.5px;font-weight:900;color:#0a0a0a;margin-bottom:4px\">Lô A12, KCN VSIP 2</div><div style=\"font-size:12.5px;color:#374151;font-weight:600;line-height:1.5\">Phường Hoà Phú, Thành phố Thủ Dầu Một<br>Tỉnh Bình Dương · 820000</div><div style=\"margin-top:10px;font-size:11.5px;color:#6b7280;font-weight:700\"><i class=\"ti ti-clock\"></i> Mở cửa 6h-23h hàng ngày</div></div>\n</div>\n\n<!-- Social media -->\n<h3>Mạng xã hội & Kênh truyền thông</h3>\n<div style=\"display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px\">\n<a style=\"padding:14px;background:#1877f2;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-facebook\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">Facebook</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">@FoodSaveVN</div></a>\n<a style=\"padding:14px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-instagram\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">Instagram</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">@foodsave.vn</div></a>\n<a style=\"padding:14px;background:#000;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-tiktok\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">TikTok</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">@foodsave.vn</div></a>\n<a style=\"padding:14px;background:#ff0000;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-youtube\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">YouTube</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">FoodSave Việt Nam</div></a>\n<a style=\"padding:14px;background:#0068ff;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-zalo\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">Zalo OA</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">FoodSave Official</div></a>\n<a style=\"padding:14px;background:#0a66c2;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-linkedin\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">LinkedIn</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">FoodSave VN</div></a>\n<a style=\"padding:14px;background:#1da1f2;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-x\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">X (Twitter)</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">@foodsavevn</div></a>\n<a style=\"padding:14px;background:#5865f2;color:#fff;border-radius:13px;text-align:center;cursor:pointer;text-decoration:none\"><i class=\"ti ti-brand-discord\" style=\"font-size:26px;display:block;margin-bottom:6px\"></i><div style=\"font-size:11px;font-weight:800\">Discord</div><div style=\"font-size:10px;opacity:.85;margin-top:2px\">Community</div></a>\n</div>\n\n<!-- Banking info -->\n<h3>Thông tin tài khoản ngân hàng</h3>\n<div style=\"padding:18px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;margin-bottom:24px\">\n<div style=\"font-family:Plus Jakarta Sans,sans-serif;font-size:12px;font-weight:900;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px\"><i class=\"ti ti-info-circle\"></i> CHỈ DÙNG CHO HỢP ĐỒNG DOANH NGHIỆP — Khách hàng KHÔNG chuyển khoản trực tiếp</div>\n<table style=\"width:100%;border-collapse:collapse;font-size:12.5px\">\n<tr><td style=\"padding:6px 0;font-weight:600;color:#6b7280;width:200px\">Chủ tài khoản:</td><td style=\"padding:6px 0;font-weight:800\">CÔNG TY TNHH FOODSAVE VIỆT NAM</td></tr>\n<tr><td style=\"padding:6px 0;font-weight:600;color:#6b7280\">Ngân hàng:</td><td style=\"padding:6px 0;font-weight:800\">Vietcombank — Chi nhánh TP.HCM</td></tr>\n<tr><td style=\"padding:6px 0;font-weight:600;color:#6b7280\">Số tài khoản VNĐ:</td><td style=\"padding:6px 0;font-weight:800;font-family:JetBrains Mono,monospace\">0071 0003 145 879</td></tr>\n<tr><td style=\"padding:6px 0;font-weight:600;color:#6b7280\">SWIFT/BIC:</td><td style=\"padding:6px 0;font-weight:800;font-family:JetBrains Mono,monospace\">BFTVVNVX007</td></tr>\n<tr><td style=\"padding:6px 0;font-weight:600;color:#6b7280\">Mã số thuế:</td><td style=\"padding:6px 0;font-weight:800;font-family:JetBrains Mono,monospace\">0317456789</td></tr>\n</table>\n</div>\n\n<!-- Working hours -->\n<h3>Giờ làm việc & Tổng đài</h3>\n<table style=\"width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 24px\">\n<thead><tr style=\"background:#f0fdf4\"><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">Bộ phận</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">T2-T6</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">T7</th><th style=\"padding:10px;text-align:left;border:1px solid #e5e7eb\">CN & Lễ</th></tr></thead>\n<tbody>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Hotline 1900 1545 (CSKH)</td><td style=\"padding:10px;border:1px solid #e5e7eb\" colspan=\"3\"><strong style=\"color:#16a34a\">24/7 — Tất cả ngày trong năm</strong></td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Chat live trong app</td><td style=\"padding:10px;border:1px solid #e5e7eb\">7h-22h</td><td style=\"padding:10px;border:1px solid #e5e7eb\">8h-22h</td><td style=\"padding:10px;border:1px solid #e5e7eb\">9h-22h</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Email support</td><td style=\"padding:10px;border:1px solid #e5e7eb\" colspan=\"3\">Trả lời trong ≤ 2 giờ làm việc</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">Văn phòng TP.HCM</td><td style=\"padding:10px;border:1px solid #e5e7eb\">8h-18h</td><td style=\"padding:10px;border:1px solid #e5e7eb\">8h-12h</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Nghỉ</td></tr>\n<tr><td style=\"padding:10px;border:1px solid #e5e7eb\">DPO (Bảo vệ DLCN)</td><td style=\"padding:10px;border:1px solid #e5e7eb\">9h-17h</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Nghỉ</td><td style=\"padding:10px;border:1px solid #e5e7eb\">Nghỉ</td></tr>\n</tbody></table>\n\n<!-- Send message form -->\n<h3>Gửi tin nhắn trực tiếp</h3>\n<div style=\"background:#fafafa;padding:20px;border-radius:14px\">\n<div style=\"margin-bottom:12px\"><label style=\"display:block;font-size:11.5px;font-weight:800;color:#0a0a0a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em\">Họ tên *</label><input style=\"width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;outline:none\" placeholder=\"Người đại diện\"></div>\n<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px\">\n<div><label style=\"display:block;font-size:11.5px;font-weight:800;color:#0a0a0a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em\">Email *</label><input style=\"width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;outline:none\" placeholder=\"email@domain.com\"></div>\n<div><label style=\"display:block;font-size:11.5px;font-weight:800;color:#0a0a0a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em\">SĐT</label><input style=\"width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;outline:none\" placeholder=\"0901 234 567\"></div>\n</div>\n<div style=\"margin-bottom:12px\"><label style=\"display:block;font-size:11.5px;font-weight:800;color:#0a0a0a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em\">Chủ đề *</label><select style=\"width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;outline:none\"><option>Câu hỏi chung về dịch vụ</option><option>Tôi gặp lỗi đặt hàng/thanh toán</option><option>Khiếu nại đơn hàng cụ thể</option><option>Tôi muốn trở thành đối tác cửa hàng</option><option>Tôi đại diện tổ chức từ thiện</option><option>Đầu tư / Hợp tác chiến lược</option><option>Báo chí / Truyền thông</option><option>Vấn đề pháp lý / DPO</option><option>Tuyển dụng</option><option>Báo cáo lỗ hổng bảo mật</option><option>Khác</option></select></div>\n<div style=\"margin-bottom:14px\"><label style=\"display:block;font-size:11.5px;font-weight:800;color:#0a0a0a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.02em\">Nội dung *</label><textarea rows=\"5\" style=\"width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;outline:none;resize:none\" placeholder=\"Mô tả chi tiết vấn đề hoặc câu hỏi của bạn...\"></textarea></div>\n<div style=\"display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;font-size:12px;color:#6b7280\"><input type=\"checkbox\" id=\"cf-agree\" style=\"margin-top:3px;accent-color:#22c55e;width:16px;height:16px\"><label for=\"cf-agree\" style=\"cursor:pointer;line-height:1.5\">Tôi đồng ý cho FoodSave xử lý dữ liệu tôi cung cấp để phản hồi tin nhắn này theo <a onclick=\"openLegal(\\'privacy\\')\" style=\"color:#22c55e;font-weight:700;cursor:pointer\">Chính sách Bảo mật</a></label></div>\n<button onclick=\"closeLegal();alert(\\'Đã gửi! Phản hồi trong 24 giờ.\\')\" style=\"width:100%;padding:14px;background:#0a0a0a;color:#fff;border:0;border-radius:14px;font-weight:900;font-size:14px;cursor:pointer;font-family:inherit\"><i class=\"ti ti-send\"></i> Gửi tin nhắn</button>\n</div>\n\n<div style=\"margin-top:24px;padding:14px;background:#fafafa;border-radius:12px;text-align:center;font-size:11.5px;color:#6b7280;font-weight:600\">© 2026-2026 Công ty TNHH FoodSave Việt Nam · MSDN 0317456789 · Trụ sở 19 Nguyễn Hữu Thọ, Q.7, TP.HCM</div>\n</div>";
 return tabs+(body[t]||body.help);
 }
@@ -6294,57 +7246,57 @@ function updateCancelButton(){
 
 
 // ============ LOYALTY POINTS SYSTEM ============
-window.userPoints = window.userPoints || 142; // Starting points
+const USER_POINTS_STORAGE_KEY = 'foodsave.userPoints.v1';
+const savedUserPoints = Number.parseInt(localStorage.getItem(USER_POINTS_STORAGE_KEY) || '', 10);
+window.userPoints = Number.isFinite(savedUserPoints) ? savedUserPoints : (window.userPoints || 100); // Starting reputation score
 const POINT_RULES = {
-  order_placed: +2,
-  order_completed: +10,
-  order_on_time: +5,
-  order_review: +5,
-  order_review_with_photo: +10,
-  order_cancel_self: -3,
-  order_no_show: -15,
-  order_complaint_false: -10,
-  invite_friend: +20
+  pickup_success: +5,
+  late_pickup: -10,
+  order_no_show: -15
 };
 function addPoints(action, customAmount){
   const amount = customAmount !== undefined ? customAmount : (POINT_RULES[action] || 0);
-  userPoints += amount;
+  window.userPoints = (Number(window.userPoints) || 0) + amount;
+  try { localStorage.setItem(USER_POINTS_STORAGE_KEY, String(window.userPoints)); } catch (error) {}
   updateReputationUI();
   return amount;
 }
 function getRank(pts){
-  if (pts >= 500) return {name:'Kim Cương',color:'#9333ea',pct:Math.min(100,((pts-500)/500)*100)};
-  if (pts >= 200) return {name:'Vàng',color:'#facc15',pct:((pts-200)/300)*100};
-  if (pts >= 50) return {name:'Bạc',color:'#9ca3af',pct:((pts-50)/150)*100};
-  return {name:'Đồng',color:'#b45309',pct:(pts/50)*100};
+  if (pts >= 85) return {name:'Tin cậy',color:'#16a34a',pct:100};
+  if (pts >= 40) return {name:'Hạn chế',color:'#f59e0b',pct:Math.max(0,Math.min(100,((pts-40)/45)*100))};
+  return {name:'Chặn',color:'#dc2626',pct:Math.max(0,Math.min(100,(pts/40)*100))};
 }
 function updateReputationUI(){
-  const r = getRank(userPoints);
+  const points = Number(window.userPoints) || 0;
+  const r = getRank(points);
   // Update any rank/points display elements
-  document.querySelectorAll('[data-points]').forEach(el=>el.textContent=userPoints);
+  document.querySelectorAll('[data-points]').forEach(el=>el.textContent=points);
   document.querySelectorAll('[data-rank]').forEach(el=>{el.textContent=r.name;el.style.color=r.color;});
   document.querySelectorAll('[data-rank-progress]').forEach(el=>{el.style.width=r.pct+'%';el.style.background=r.color;});
 }
-// Hook into placeOrder: +2 points
+// Reputation is updated when an order is completed, not when it is only placed.
 (function(){
   if (typeof placeOrder === 'function') {
     const orig = placeOrder;
-    window.placeOrder = function(){
-      orig.apply(this,arguments);
-      addPoints('order_placed');
+    window.placeOrder = async function(){
+      const result = await orig.apply(this,arguments);
+      return result;
     };
   }
 })();
-// Hook into confirmPaymentDone: +5 on time
+// Hook into confirmPaymentDone: +5 when pickup is confirmed.
 (function(){
   if (typeof confirmPaymentDone === 'function') {
     const orig = confirmPaymentDone;
     window.confirmPaymentDone = function(){
-      orig.apply(this,arguments);
-      // Note: actual completion points added when order marked completed
+      const result = orig.apply(this,arguments);
+      addPoints('pickup_success');
+      return result;
     };
   }
 })();
+updateReputationUI();
+if (typeof updateTreeGameUI === 'function') updateTreeGameUI();
 
 </script>
 
@@ -6435,8 +7387,8 @@ window.USER_NOTIFS = window.USER_NOTIFS || [
   {id:4,type:'social',icon:'ti-heart',iconBg:'#fee2e2',iconColor:'#dc2626',title:'Sản phẩm yêu thích giảm giá',desc:'Bánh croissant bơ Pháp · Giảm 60% còn 18K',time:'1 giờ trước',unread:false},
   {id:5,type:'system',icon:'ti-shield-check',iconBg:'#dcfce7',iconColor:'#22c55e',title:'Đăng nhập từ thiết bị mới',desc:'iPhone 15 · TP.HCM · Nếu không phải bạn, đổi mật khẩu ngay',time:'2 giờ trước',unread:false},
   {id:6,type:'promo',icon:'ti-percentage',iconBg:'#fef9c3',iconColor:'#ca8a04',title:'Flash Sale 21:00-22:00',desc:'Giảm thêm 20% cho 50 đơn đầu tiên · Đếm ngược: 03:24',time:'3 giờ trước',unread:false},
-  {id:7,type:'order',icon:'ti-star',iconBg:'#fef9c3',iconColor:'#ca8a04',title:'Hãy đánh giá đơn #FS-2540',desc:'Tặng +5 điểm uy tín · Bonus +5 nếu có ảnh',time:'5 giờ trước',unread:false},
-  {id:8,type:'system',icon:'ti-medal',iconBg:'#e0f2fe',iconColor:'#0ea5e9',title:'Bạn đã lên hạng Vàng!',desc:'Đạt 200 điểm uy tín · Mở khoá voucher 50K hàng tuần',time:'1 ngày trước',unread:false}
+  {id:7,type:'order',icon:'ti-star',iconBg:'#fef9c3',iconColor:'#ca8a04',title:'Đơn #FS-2540 đã hoàn tất',desc:'Nhận hàng thành công · +5 điểm uy tín',time:'5 giờ trước',unread:false},
+  {id:8,type:'system',icon:'ti-medal',iconBg:'#e0f2fe',iconColor:'#0ea5e9',title:'Bạn đang ở hạng Tin cậy',desc:'Điểm uy tín từ 85 trở lên · Hãy giữ nhịp nhận hàng đúng hẹn',time:'1 ngày trước',unread:false}
 ];
 
 function toggleNotifs(){
@@ -6539,7 +7491,7 @@ function updateReputationRules(){
   const reviewCount = (typeof orders !== 'undefined' ? orders.filter(o=>o.reviewed).length : 0);
   const cancelCount = (typeof orders !== 'undefined' ? orders.filter(o=>o.status==='cancelled').length : 0);
   const onTimeCount = (typeof orders !== 'undefined' ? orders.filter(o=>o.status==='completed' && !o.late).length : 0);
-  
+
   const a=document.getElementById('rep-orders'); if(a)a.textContent=orderCount+' đơn';
   const b=document.getElementById('rep-ontime'); if(b)b.textContent=onTimeCount+' lần';
   const c=document.getElementById('rep-reviews'); if(c)c.textContent=reviewCount+' đánh giá';
@@ -6587,8 +7539,8 @@ function updateReputationRules(){
 
     if (!window.foodsaveSupabase && window.supabase?.createClient) {
       window.foodsaveSupabase = window.supabase.createClient(
-        'https://pggcbgtoxlhlgmwxupoc.supabase.co',
-        'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p'
+        'https://uqyqayrwhcicuctfnwix.supabase.co',
+        'sb_publishable_tUk1J3EpJfW4h9SkPDg_hg_FAJPOUuX'
       );
     }
 
@@ -7447,6 +8399,31 @@ function updateReputationRules(){
   })();
 
   configureOtpLoginUi();
+</script>
+<script>
+  function getUserLocation() {
+    // Xin quyền định vị của trình duyệt
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          // Lấy thành công!
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+
+          console.log("📍 Tọa độ User hiện tại:", userLat, userLng);
+          alert("Tuyệt vời! Hệ thống đã định vị được bạn. Đang quét các cửa hàng xung quanh...");
+
+        },
+        function(error) {
+          // Xử lý khi User bấm "Từ chối"
+          console.error("Lỗi định vị:", error);
+          alert("Vui lòng ấn 'Cho phép' (Allow) quyền vị trí để FoodSave tìm cửa hàng gần bạn nhất nhé!");
+        }
+      );
+    } else {
+      alert("Trình duyệt của bạn không hỗ trợ định vị.");
+    }
+  }
 </script>
 </body>
 </html>

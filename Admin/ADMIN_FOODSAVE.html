@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<meta charset="UTF-8">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-  const supabaseUrl = 'https://pggcbgtoxlhlgmxwupoc.supabase.co';
-  const supabaseKey = 'sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p'; // Dán đầy đủ key của bạn vào đây
-  
+  const supabaseUrl = 'https://uqyqayrwhcicuctfnwix.supabase.co';
+  const supabaseKey = 'sb_publishable_tUk1J3EpJfW4h9SkPDg_hg_FAJPOUuX';
+
   const foodsaveAdminSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-  
   console.log("FoodSave Admin đã kết nối Supabase thành công!");
 </script>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FoodSave — Quản trị hệ thống</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -188,8 +187,42 @@ tr{transition:all .08s;cursor:pointer}tbody tr:hover{background:var(--bg3)}
 
 .page{animation:fi .2s ease}@keyframes fi{from{opacity:0}to{opacity:1}}
 @media(max-width:1100px){.G5,.G4{grid-template-columns:repeat(2,1fr)}.G2,.G3{grid-template-columns:1fr}}
+@media(max-width:900px){
+html{font-size:13px}
+.S{position:relative;width:100%;height:auto;max-height:none;overflow:visible;padding-bottom:6px}
+.S-b{padding:12px 14px 6px}
+.S-n{display:flex;align-items:center;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 8px 8px;scrollbar-width:none}
+.S-n::-webkit-scrollbar{display:none}
+.S-s,.S-f{display:none}
+.S-i{flex:0 0 auto;white-space:nowrap;margin:4px;padding:10px 12px}
+.S-i em{margin-left:6px}
+.M{margin-left:0}
+.T{position:sticky;top:0;flex-wrap:wrap;gap:10px;padding:10px 12px}
+.T-r{width:100%;flex-wrap:wrap}
+.T-s{order:10;flex:1 0 100%;width:100%;min-width:0}
+.C{padding:14px 12px}
+.P-h{align-items:flex-start;gap:10px;flex-wrap:wrap}
+.P-a{flex-wrap:wrap}
+.bt{min-height:38px}
+.DP{width:min(100vw,560px);right:-100vw}
+.DP.open{right:0}
+.DR{display:block}
+.DR-l{width:auto;margin-bottom:4px}
+.W{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.W table{min-width:720px}
+}
+@media(max-width:800px){.G5,.G4,.G3,.G2,.hero,.split,.impact,.hero-row{grid-template-columns:1fr}.K{min-width:0}.chart{min-width:520px}.watch,.P{max-width:100%}}
+@media(max-width:480px){
+html{font-size:12.5px}
+.C{padding:12px 10px}
+.hero-main{padding:16px}
+.hero-v{font-size:clamp(1.7rem,10vw,2.1rem)}
+.T h2{font-size:.95rem}
+.T-r{gap:6px}
+.bt{flex:1 1 auto;justify-content:center}
+.DP{width:100vw}
+}
 </style>
-<link rel="stylesheet" href="../frontend/foodsave-responsive.css">
 </head>
 <body>
 
@@ -204,6 +237,7 @@ tr{transition:all .08s;cursor:pointer}tbody tr:hover{background:var(--bg3)}
 <div class="S-i" data-p="reputation">Uy tín</div>
 <div class="S-s">Đối tác</div>
 <div class="S-i" data-p="merchants">Cửa hàng <em>40</em></div>
+<div class="S-i" data-p="charities"> Tổ chức từ thiện <em>40</em></div>
 <div class="S-s">Kho hàng</div>
 <div class="S-i" data-p="inventory">Lô hàng tồn kho <em>40</em></div>
 <div class="S-s">Giao dịch</div>
@@ -231,11 +265,11 @@ tr{transition:all .08s;cursor:pointer}tbody tr:hover{background:var(--bg3)}
 <script>
 // ===== HELPERS =====
 const B=(c,t)=>`<span class="b ${c}">${t}</span>`;
-const sB=s=>{const m={active:'b-ok',approved:'b-ok',captured:'b-ok',paid:'b-ok',completed:'b-ok',picked_up:'b-ok',pending:'b-w',confirmed:'b-b',authorized:'b-b',pending_payment:'b-w',suspended:'b-o',under_review:'b-w',awaiting_evidence:'b-w',banned:'b-e',cancelled:'b-e',expired:'b-e',failed:'b-e',refunded:'b-o',disputed:'b-e',open:'b-e',frozen:'b-e',resolved_user:'b-ok',resolved_seller:'b-b',resolved_split:'b-p',escalated:'b-e',partially_sold:'b-w',sold_out:'b-ok',donated:'b-p',recalled:'b-e',discarded:'b-e',probation:'b-e'};
-const labels={active:'Hoạt động',approved:'Đã duyệt',captured:'Đã thu',paid:'Đã thanh toán',completed:'Hoàn tất',picked_up:'Đã nhận',pending:'Chờ xử lý',confirmed:'Đã xác nhận',authorized:'Đã ủy quyền',pending_payment:'Chờ thanh toán',suspended:'Tạm ngưng',under_review:'Đang xem xét',awaiting_evidence:'Chờ bằng chứng',banned:'Cấm vĩnh viễn',cancelled:'Đã hủy',expired:'Hết hạn nhận',failed:'Thất bại',refunded:'Đã hoàn tiền',disputed:'Đang tranh chấp',open:'Đang mở',frozen:'Đóng băng',resolved_user:'Hoàn người mua',resolved_seller:'Không vi phạm',resolved_split:'Chia đều',escalated:'Chuyển cấp trên',partially_sold:'Đang bán',sold_out:'Hết hàng',donated:'Đã tặng',recalled:'Thu hồi',discarded:'Tiêu hủy',probation:'Thử thách'};
+const sB=s=>{const m={active:'b-ok',approved:'b-ok',captured:'b-ok',paid:'b-ok',completed:'b-ok',picked_up:'b-ok',pending:'b-w',confirmed:'b-b',authorized:'b-b',pending_payment:'b-w',suspended:'b-o',under_review:'b-w',awaiting_evidence:'b-w',banned:'b-e',rejected:'b-e',cancelled:'b-e',expired:'b-e',failed:'b-e',refunded:'b-o',disputed:'b-e',open:'b-e',frozen:'b-e',resolved_user:'b-ok',resolved_seller:'b-b',resolved_split:'b-p',escalated:'b-e',partially_sold:'b-w',sold_out:'b-ok',donated:'b-p',recalled:'b-e',discarded:'b-e',probation:'b-e'};
+const labels={active:'Hoạt động',approved:'Đã duyệt',captured:'Đã thu',paid:'Đã thanh toán',completed:'Hoàn tất',picked_up:'Đã nhận',pending:'Chờ xử lý',confirmed:'Đã xác nhận',authorized:'Đã ủy quyền',pending_payment:'Chờ thanh toán',suspended:'Tạm ngưng',under_review:'Đang xem xét',awaiting_evidence:'Chờ bằng chứng',banned:'Cấm vĩnh viễn',rejected:'Từ chối',cancelled:'Đã hủy',expired:'Hết hạn nhận',failed:'Thất bại',refunded:'Đã hoàn tiền',disputed:'Đang tranh chấp',open:'Đang mở',frozen:'Đóng băng',resolved_user:'Hoàn người mua',resolved_seller:'Không vi phạm',resolved_split:'Chia đều',escalated:'Chuyển cấp trên',partially_sold:'Đang bán',sold_out:'Hết hàng',donated:'Đã tặng',recalled:'Thu hồi',discarded:'Tiêu hủy',probation:'Thử thách'};
 return B(m[s]||'b-m',labels[s]||s)};
 const rB=r=>{const m={super_admin:'b-e',ops_admin:'b-b',finance_admin:'b-p',support_admin:'b-ok'};const l={super_admin:'Cấp cao',ops_admin:'Vận hành',finance_admin:'Tài chính',support_admin:'Hỗ trợ'};return B(m[r]||'b-m',l[r]||r)};
-const tB=t=>{const m={enterprise:'b-ok',premium:'b-b',standard:'b-w',probation:'b-e',trusted:'b-ok',restricted:'b-o',blocked:'b-e'};const l={enterprise:'Doanh nghiệp',premium:'Cao cấp',standard:'Tiêu chuẩn',probation:'Thử thách',trusted:'Tin cậy',standard:'Bình thường',restricted:'Hạn chế',blocked:'Chặn'};return B(m[t]||'b-m',l[t]||t)};
+const tB=t=>{const m={enterprise:'b-ok',premium:'b-b',standard:'b-w',probation:'b-e',trusted:'b-ok',restricted:'b-o',blocked:'b-e'};const l={enterprise:'Doanh nghiệp',premium:'Cao cấp',standard:'Tiêu chuẩn',probation:'Thử thách',trusted:'Tin cậy',restricted:'Hạn chế',blocked:'Chặn'};return B(m[t]||'b-m',l[t]||t)};
 const scH=s=>{const c=s>=85?'background:var(--ok-bg);color:var(--ok);border:2px solid var(--ok-bd)':s>=40?'background:var(--warn-bg);color:var(--warn);border:2px solid var(--warn-bd)':'background:var(--err-bg);color:var(--err);border:2px solid var(--err-bd)';return`<span class="sc" style="${c}">${s}</span>`};
 const mn=v=>`<span class="mn">${v}</span>`;
 const payLabel=m=>({momo:'MoMo',Momo:'MoMo',zalopay:'ZaloPay',vnpay:'VNPay',card:'Visa/Mastercard',vietqr:'VietQR',cash:'COD','Tiền mặt':'COD','Đặt cọc':'Đặt cọc'}[m]||m||'—');
@@ -243,6 +277,10 @@ const payStatus=s=>({captured:'paid',authorized:'pending',pending_payment:'pendi
 const orderPaymentStatus=o=>o[8]&&['pending','paid','refunded','failed'].includes(o[8])?o[8]:o[6]==='cancelled'?'failed':['pending','pending_payment'].includes(o[6])?'pending':'paid';
 const moneyFromCents=c=>(Math.round((Number(c)||0)/100)).toLocaleString('vi-VN')+'đ';
 const timeText=v=>v?new Date(v).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+const esc=v=>String(v??'—').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const val=v=>v===undefined||v===null||v===''?'—':esc(v);
+const obj=v=>v&&typeof v==='object'?v:{};
+const jsQ=v=>String(v||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 
 // ===== DETAIL =====
 function oD(t,h){document.getElementById('dT').textContent=t;document.getElementById('dB').innerHTML=h;document.getElementById('dO').classList.add('open');document.getElementById('dP').classList.add('open')}
@@ -256,87 +294,15 @@ const Sec=(t,c,o=true)=>`<div class="DS"><div class="DS-h" onclick="tg(this)">${
 const A=[
 ['806036A1','Nguyễn Văn An','VanAn','super_admin','Toàn quyền hệ thống, chấm dứt đối tác, cấm người dùng, thay đổi cấu hình',true,true,'2023-01-15','Nhà sáng lập nền tảng'],
 ['2A080EB3','Trần Thị Bích','ThanhBich','ops_admin','Duyệt đối tác, can thiệp vận hành, phân xử tranh chấp',true,true,'2023-01-15','Trưởng vận hành'],
-['3EF9E8B3','Lê Minh Châu','MinhChau','finance_admin','Duyệt chi trả, xem doanh thu, xử lý hoàn tiền, đóng băng ký quỹ',true,true,'2023-01-15','Giám đốc tài chính'],
-['46B26B03','Phạm Hồng Đức','HongDuc','support_admin','Đọc đơn hàng, trả lời yêu cầu, chuyển lên cấp trên',true,true,'2023-01-15','Trưởng chăm sóc khách hàng'],
-['7684F6B1','Hoàng Thị Lan','HoangLan','ops_admin','Duyệt đối tác, can thiệp vận hành, phân xử tranh chấp',false,true,'2023-03-01','Vận hành khu vực Hồ Chí Minh'],
-['C33F5B55','Vũ Quang Minh','QuangMinh','ops_admin','Duyệt sản phẩm, kiểm duyệt chất lượng, phát hiện hạn sử dụng giả',false,true,'2023-03-01','Kiểm soát chất lượng'],
-['0D946AE9','Đặng Thị Nga','ThiNga','ops_admin','Phân xử tranh chấp, thu thập bằng chứng, ra phán quyết',false,true,'2023-04-10','Chuyên gia tranh chấp'],
-['4B1DC8C5','Bùi Gia Huy','GiaHuy','finance_admin','Duyệt chi trả, phân tích gian lận tài chính',false,true,'2023-04-10','Phân tích tài chính'],
-['4798A830','Ngô Xuân Trường','XuanTruong','ops_admin','Duyệt đối tác khu vực Hà Nội và miền Bắc',false,true,'2023-05-20','Vận hành khu vực Hà Nội'],
-['4FB53F37','Đỗ Thị Cẩm Ly','CamLy','support_admin','Hỗ trợ khách hàng, xử lý khiếu nại cấp 1',false,true,'2023-05-20','Chăm sóc khách hàng cấp 1'],
-['7D04CC25','Lý Thành Trung','ThanhTrung','ops_admin','Phân tích dữ liệu vận hành, cảnh báo hiệu suất đối tác',false,true,'2023-06-01','Phân tích vận hành'],
-['2426FE94','Trịnh Thị Mai','ThiMai','support_admin','Hỗ trợ đối tác mới, hướng dẫn đăng ký',false,true,'2023-06-01','Hỗ trợ đối tác'],
-['2C58C54C','Dương Quốc Hùng','QuocHung','ops_admin','Quản lý tổ chức từ thiện, phân phối quyên góp',false,true,'2023-07-15','Quản lý từ thiện'],
-['E7E227D4','Tô Thị Hằng','ThiHang','finance_admin','Xử lý hoàn tiền, kiểm tra cổng thanh toán',false,true,'2023-07-15','Kế toán hoàn tiền'],
-['2C4B5665','Phan Minh Khoa','MinhKhoa','support_admin','Hỗ trợ kỹ thuật cho đối tác, xử lý lỗi ứng dụng',false,true,'2023-08-01','Kỹ thuật đối tác'],
-['E63B4CE5','Mai Thị Phương','ThiPhuong','ops_admin','Duyệt sản phẩm khu vực Đà Nẵng và miền Trung',false,true,'2023-08-01','Vận hành miền Trung'],
-['DDE43128','Lương Văn Hải','VanHai','finance_admin','Báo cáo tài chính định kỳ, đối soát',false,false,'2023-09-10','Đã nghỉ việc'],
-['98F7502A','Cao Thị Thúy','ThiThuy','support_admin','Xử lý đánh giá tiêu cực, kiểm duyệt nội dung',false,true,'2023-09-10','Kiểm duyệt nội dung'],
-['0088EEBE','Đinh Công Sơn','CongSon','ops_admin','Giám sát hệ thống chống gian lận, phân tích bất thường',false,true,'2023-10-01','Chống gian lận'],
-['313A70F1','Hồ Thị Yến','ThiYen','support_admin','Tiếp nhận đối tác mới, kiểm tra hồ sơ pháp lý',false,true,'2023-10-01','Chuyên viên tiếp nhận'],
-['4CE0C3C9','Nguyễn Minh Hiếu','MinhHieu_NM','ops_admin','Duyệt đối tác khu vực Cần Thơ và đồng bằng',false,true,'2024-01-15','Vận hành đồng bằng sông Cửu Long'],
-['C259644A','Phạm Thị Lan Anh','LanAnh_PT','support_admin','Chăm sóc khách hàng cấp 2, xử lý khiếu nại phức tạp',false,true,'2024-01-15','Chăm sóc khách hàng cấp 2'],
-['617C5BA3','Trần Đức Dũng','DucDung_TD','finance_admin','Kiểm tra hợp đồng đối tác, điều khoản chi trả',false,true,'2024-02-10','Pháp lý tài chính'],
-['0FAB1CE3','Lê Thị Thùy Dương','ThuDuong_LT','ops_admin','Giám sát lô hàng tự động, lịch cập nhật nhãn',false,true,'2024-02-10','Kỹ thuật kho hàng'],
-['E69C85BF','Hoàng Văn Cường','VanCuong_HV','support_admin','Phân tích chất lượng phản hồi, theo dõi mức hài lòng',false,true,'2024-03-05','Chất lượng dịch vụ'],
-['925477AB','Vũ Thị Bảo Trân','BaoTran_VT','ops_admin','Phân xử tranh chấp cấp 2, vụ việc phức tạp',false,true,'2024-03-05','Tranh chấp cấp cao'],
-['894573AC','Đặng Hữu Khải','HuuKhai_DH','finance_admin','Kiểm soát mức hoa hồng, nâng/hạ cấp đối tác',false,true,'2024-04-01','Quản lý hoa hồng'],
-['89661732','Bùi Thị Cẩm Vân','CamVan_BT','ops_admin','Kiểm duyệt nội dung, kiểm duyệt ảnh sản phẩm',false,true,'2024-04-01','Kiểm duyệt nội dung'],
-['496D4284','Ngô Thị Hải Yến','HaiYen_NT','support_admin','Hỗ trợ người dùng giải quyết vấn đề nhận hàng bằng mã QR',false,true,'2024-05-15','Hỗ trợ mã QR'],
-['C1EB5E05','Đỗ Văn Nghĩa','VanNghia_DV','ops_admin','Phân tích hiệu suất đối tác, cảnh báo tự động',false,true,'2024-05-15','Phân tích hiệu suất'],
-['A0741DA7','Lý Quốc Bảo','QuocBao_LQ','finance_admin','Đối soát thanh toán qua Momo, ZaloPay, VNPay',false,true,'2024-06-10','Đối soát thanh toán'],
-['C6430460','Trịnh Văn Toàn','VanToan_TV','ops_admin','Quản lý hệ thống quyên góp và phân phối cho tổ chức từ thiện',false,true,'2024-06-10','Quản lý quyên góp'],
-['B3BDF26F','Dương Thị Hồng Nhung','HongNhung_DT','support_admin','Hỗ trợ đối tác kỹ năng chụp ảnh, mô tả sản phẩm',false,true,'2024-07-01','Đào tạo đối tác'],
-['8E37ED13','Tô Minh Phúc','MinhPhuc_TM','ops_admin','Giám sát thống kê bền vững, báo cáo môi trường',false,true,'2024-07-01','Phân tích bền vững'],
-['C2ABB524','Phan Thị Lan','ThiLan_PT','finance_admin','Xuất hóa đơn điện tử, tuân thủ quy định thuế',false,true,'2024-08-05','Tuân thủ thuế'],
-['267F9D11','Mai Đức Anh','DucAnh_MD','ops_admin','Phân tích dữ liệu lãng phí thực phẩm, báo cáo',false,true,'2024-08-05','Phân tích lãng phí'],
-['667BBF54','Lương Thị Kim Ngân','KimNgan_LT','support_admin','Chăm sóc khách hàng cấp 1 Hà Nội, trực ca tối',false,true,'2024-09-01','Chăm sóc khách hàng Hà Nội'],
-['EF2B7195','Cao Văn Khoa','VanKhoa_CV','ops_admin','Duyệt đối tác ngành ẩm thực chuyên sâu',false,true,'2024-09-01','Chuyên gia ẩm thực'],
-['568B6B1B','Đinh Thị Nga','ThiNga_DT','support_admin','Hỗ trợ người dùng cao cấp, hạng Tin cậy',false,true,'2024-10-15','Hỗ trợ khách hàng VIP'],
-['5586C6B8','Hồ Minh Quân','MinhQuan_HM','ops_admin','Kiểm tra tuân thủ, kiểm toán định kỳ đối tác',false,true,'2024-10-15','Kiểm toán tuân thủ'],
+
 ];
 
 const U=[
 ['Nguyễn Thị Hoa','nguyenthihoa1995@gmail.com','0901234567','active','google','2023-06-15',95,'trusted',48,0,'Khách hàng ưu tiên'],
 ['Trần Văn Bình','tranvanbinh.hcm@gmail.com','0912345678','active','sdt','2023-07-20',88,'trusted',35,0,'Khách hàng thân thiết, dùng 2 năm'],
-['Lê Thị Kim Oanh','lekimoanh2000@gmail.com','0933456789','active','google','2023-08-05',72,'standard',15,2,'Cảnh báo: 2 lần vắng mặt trong tháng'],
+['Lê Thị Kim Oanh','lekimoanh2000@gmail.com','0933456789','active','google','2023-08-05',72,'restricted',15,2,'Cảnh báo: 2 lần vắng mặt trong tháng'],
 ['Phạm Công Tuấn','phamcongtuan.it@gmail.com','0944567890','active','sdt','2023-09-12',85,'trusted',40,0,'Ổn định, không có vấn đề'],
-['Hoàng Minh Đức','hoangminhduc98@gmail.com','0955678901','active','google','2023-10-01',90,'trusted',55,0,'Tích cực nhận hàng miễn phí đúng mục đích'],
-['Vũ Thị Thanh Thảo','vuthanhthao.kd@gmail.com','0966789012','active','sdt','2023-10-15',78,'standard',28,1,'Đang có tranh chấp, theo dõi'],
-['Đặng Quang Vinh','dangquangvinh.dn@gmail.com','0977890123','active','google','2023-11-03',92,'trusted',62,0,'Người dùng hàng đầu khu vực Đà Nẵng'],
-['Bùi Thị Ngọc Ánh','buingocanh.hcm@gmail.com','0988901234','active','sdt','2023-11-20',86,'trusted',33,0,'Nhận hàng miễn phí đúng giới hạn'],
-['Ngô Minh Khoa','ngominhkhoa95@gmail.com','0999012345','active','facebook','2023-12-08',70,'standard',18,1,'Lần đầu vắng mặt, đã cảnh báo'],
-['Đỗ Thị Lan Hương','dolanhuong.hn@gmail.com','0900123456','active','google','2024-01-05',82,'standard',30,0,'Hủy trễ 1 lần, chấp nhận được'],
-['Lý Văn Phúc','lyvanphuc.dn@gmail.com','0911234567','suspended','sdt','2024-01-18',35,'restricted',8,4,'Hạn chế: vắng mặt quá nhiều'],
-['Trịnh Thị Ngân','trinhthingan2001@gmail.com','0922345678','active','google','2024-02-14',94,'trusted',50,0,'Trung thành, tranh chấp thắng chính đáng'],
-['Dương Anh Tuấn','duonganhtuan.hcm@gmail.com','0933456780','active','sdt','2024-02-28',65,'restricted',12,2,'Hạn chế: 3 lần hủy trễ'],
-['Tô Thị Hà','tothiha.hn@gmail.com','0944567891','active','google','2024-03-10',89,'trusted',44,0,'Tốt, tranh chấp thắng do lỗi đối tác'],
-['Phan Văn Hải','phanvanhai.ct@gmail.com','0955678902','active','apple','2024-03-25',93,'trusted',58,0,'Sử dụng đều đặn, khách hàng trung thành'],
-['Mai Thị Kiều','maikieu2001@gmail.com','0966789013','banned','sdt','2024-04-05',18,'blocked',3,7,'Cấm vĩnh viễn: gian lận nhiều tài khoản'],
-['Lương Thị Thu','thuluong.hn@gmail.com','0977890124','active','google','2024-04-15',87,'trusted',38,0,'Bình thường, đang tốt'],
-['Cao Minh Tuấn','caominhtuan.sg@gmail.com','0988901235','active','sdt','2024-04-28',77,'standard',22,0,'Hủy trễ 2 lần, gần ngưỡng cảnh báo'],
-['Đinh Thị Lan','dinhthilan99@gmail.com','0999012346','active','google','2024-05-10',91,'trusted',47,0,'Tốt, nhận miễn phí có trách nhiệm'],
-['Hồ Văn Quý','hovanquy.vn@gmail.com','0900123457','active','sdt','2024-05-22',83,'standard',29,0,'Mới, đang xây dựng lịch sử tốt'],
-['Nguyễn Đức Anh','nguyenducanh.it@gmail.com','0901234568','active','google','2024-06-01',96,'trusted',60,0,'Đánh giá chất lượng cao nhất'],
-['Phạm Thị Thanh Huyền','phamthuyen2003@gmail.com','0912345679','active','sdt','2024-06-15',89,'trusted',42,0,'Quen thuộc khu vực Quận 1'],
-['Trần Minh Tú','tranminhtu.hn@gmail.com','0933456790','active','google','2024-06-30',81,'standard',25,0,'Một lần vắng mặt, đã tự cải thiện'],
-['Lê Thị Cẩm Tiên','lecamtien95@gmail.com','0944567892','active','apple','2024-07-08',93,'trusted',51,0,'Tranh chấp thắng, đối tác vi phạm thực sự'],
-['Hoàng Văn Long','hoangvanlong.sg@gmail.com','0955678903','active','sdt','2024-07-20',87,'trusted',36,0,'Ổn định, hủy trễ do bận việc'],
-['Vũ Thị Bích Ngọc','vubichngoc2000@gmail.com','0966789014','active','google','2024-08-02',94,'trusted',55,0,'Rất tích cực, tranh chấp đều chính đáng'],
-['Đặng Công Thành','dangcongthanh.hn@gmail.com','0977890125','active','sdt','2024-08-18',45,'restricted',10,3,'Hạn chế: thanh toán thất bại nhiều lần'],
-['Bùi Thị Yến','buithiyen.hcm@gmail.com','0988901236','active','google','2024-09-01',80,'standard',30,0,'Có tranh chấp đang mở, chờ kết quả'],
-['Ngô Quốc Khánh','ngoquockhanh97@gmail.com','0999012347','active','facebook','2024-09-15',88,'trusted',40,0,'Đăng nhập Facebook, xác minh thêm khi cần'],
-['Đỗ Minh Trí','dominhtri.sg@gmail.com','0900123458','active','sdt','2024-09-28',91,'trusted',44,0,'Mới nhưng rất đáng tin'],
-['Lý Thị Ngọc Bích','lyngocbich2002@gmail.com','0911234568','active','google','2024-10-10',86,'trusted',38,0,'Tranh chấp thắng hợp lệ'],
-['Trịnh Văn Nam','trinhvannam.ct@gmail.com','0922345679','active','sdt','2024-10-25',90,'trusted',48,0,'Thân thiết khu vực Cần Thơ'],
-['Dương Thị Hồng','duongthihong.dn@gmail.com','0933456791','active','google','2024-11-05',84,'standard',31,0,'Tốt, tranh chấp giải quyết ổn'],
-['Tô Văn Khải','tovankai.hn@gmail.com','0944567893','active','sdt','2024-11-18',55,'restricted',14,2,'Hạn chế: nhiều lần vắng mặt, cảnh báo lần cuối'],
-['Phan Thị Mỹ Linh','phantmylinh99@gmail.com','0955678904','active','apple','2024-12-01',97,'trusted',70,0,'Người dùng xuất sắc nhất tháng 4/2025'],
-['Mai Văn Trọng','maivantrong.hcm@gmail.com','0966789015','active','google','2024-12-15',88,'trusted',39,0,'Sử dụng ứng dụng hàng tuần'],
-['Lương Thị Phúc','luongthiphuc2001@gmail.com','0977890126','active','sdt','2025-01-05',79,'standard',26,0,'Hủy trễ 2 lần, theo dõi thêm 1 tháng'],
-['Cao Đức Huy','caoduchuy.it@gmail.com','0988901237','active','google','2025-01-20',95,'trusted',55,0,'Chuyên gia công nghệ, sử dụng tốt'],
-['Đinh Văn Bảo','dinhvanbao.hn@gmail.com','0999012348','active','sdt','2025-02-08',82,'standard',28,0,'Bình thường, không có vấn đề'],
-['Hồ Thị Phương Linh','hotphuonglinh2003@gmail.com','0900123459','active','google','2025-02-28',92,'trusted',46,0,'Mới nhưng rất có ý thức'],
+['Mai Thị Lan','maithilan@gmail.com','0955678901','active','google','2025-02-28',92,'trusted',46,0,'Mới nhưng rất có ý thức'],
 ];
 
 // ===== DETAIL OPENERS =====
@@ -344,16 +310,12 @@ function oA(i){const a=A[i];oD(a[1],Sec('Thông tin cơ bản',R([['Mã',mn(a[0]
 
 function oU(i){const u=U[i];oD(u[0],Sec('Thông tin tài khoản',R([['Họ tên','<strong>'+u[0]+'</strong>'],['Email',u[1]],['Số điện thoại',mn(u[2])],['Trạng thái',sB(u[3])],['Đăng nhập qua',B('b-m',u[4])],['Ngày đăng ký',mn(u[5])]]))+Sec('Điểm uy tín',R([['Điểm',scH(u[6])],['Hạng',tB(u[7])],['Lần nhận hàng thành công','<strong style="color:var(--ok)">'+u[8]+'</strong>'],['Lần vắng mặt','<strong style="color:'+(u[9]>0?'var(--err)':'var(--t3)')+'">'+u[9]+'</strong>']]))+Sec('Nhận xét vận hành',R([['Ghi chú',u[10]]]),false))}
 
-const MR=[
-['M-1001','WinMart Nguyễn Trãi','Siêu thị','Hà Nội','enterprise','active','4.8',142,'18,4 triệu','2.1%','Đối tác doanh nghiệp, doanh thu ổn định'],
-['M-1002','Bánh Mì Sài Gòn 365','Tiệm bánh','TP.HCM','standard','active','4.7',96,'12,7 triệu','1.4%','Tích cực quyên góp cuối ngày'],
-['M-1003','Co.op Food Thảo Điền','Cửa hàng tiện lợi','TP.HCM','premium','active','4.9',81,'10,9 triệu','0%','Không có tranh chấp trong 30 ngày'],
-['M-1004','Nhà Hàng Chay An Lạc','Nhà hàng','Đà Nẵng','standard','active','4.9',63,'8,6 triệu','0.8%','Sản phẩm được đánh giá cao'],
-['M-1005','ABC Market Cầu Giấy','Mini mart','Hà Nội','probation','suspended','3.7',24,'2,1 triệu','12.2%','Tạm ngưng do tỷ lệ hủy cao'],
-['M-1006','Fresh Bakery Cần Thơ','Tiệm bánh','Cần Thơ','standard','pending','4.5',0,'0','0%','Đang chờ duyệt hồ sơ pháp lý'],
-['M-1007','Lotte Mart Quận 7','Siêu thị','TP.HCM','enterprise','active','4.6',118,'16,2 triệu','3.1%','Cần tối ưu thời gian chuẩn bị'],
-['M-1008','Bếp Nhà Mây','Quán ăn','Huế','premium','active','4.8',52,'6,4 triệu','1.9%','Có lịch quyên góp cố định']
-];
+const MR=[];
+
+const CR = [];
+let partnerApprovalBusy = false;
+let charityApprovalBusy = false;
+
 const IV=[
 ['B-2209','Sữa tươi WinMart','WinMart Nguyễn Trãi',180,'35.000đ','2026-05-08 21:00','partially_sold','Cận hạn','Giảm 42%'],
 ['B-2210','Bánh mì sandwich','Bánh Mì Sài Gòn 365',24,'0đ','2026-05-07 22:00','donated','Sắp hết hạn','Chuyển quyên góp tự động'],
@@ -462,7 +424,7 @@ const AUD=[
 ['2026-05-07 11:30','Vũ Quang Minh','Đóng băng lô hàng','B-2216','Kiểm tra chất lượng Yogurt Hy Lạp'],
 ['2026-05-07 11:05','Bùi Gia Huy','Cấm người dùng','Mai Thị Kiều','Gian lận nhiều tài khoản'],
 ['2026-05-07 10:40','Hoàng Thị Lan','Duyệt đối tác','Fresh Bakery Cần Thơ','Chuyển sang bước kiểm duyệt ảnh'],
-['2026-05-07 10:18','Hệ thống','Tự động giảm giá','B-2211','Còn dưới 24 giờ trước hạn sử dụng'],
+['2026-05-07 10:18','Hệ thống','Tự động giảm giá','B-2211','Còn 24h trước hạn sử dụng'],
 ['2026-05-07 09:50','Đặng Thị Nga','Cập nhật tranh chấp','D-304','Chuyển cấp trên do lặp lại vi phạm'],
 ['2026-05-07 09:20','E7E227D4','Hoàn tiền','D-305','Hoàn tiền cho người dùng do lỗi chuẩn bị hàng'],
 ['2026-05-07 06:00','Hệ thống','Cập nhật nhãn','28 lô hàng','Chuyển nhãn theo thời hạn sử dụng']
@@ -472,34 +434,293 @@ const chuKy=n=>({weekly:'Hàng tuần',hold:'Tạm giữ'}[n]||n);
 const loaiRuiRo=n=>({multi_account:'Nhiều tài khoản',cancel_rate:'Tỷ lệ hủy cao',no_show:'Vắng mặt khi nhận hàng',payment_anomaly:'Bất thường thanh toán',quality_check:'Kiểm tra chất lượng',document_review:'Rà soát hồ sơ'}[n]||n);
 function moLienQuan(t,p,rows){oD(t,Sec('Tóm tắt nghiệp vụ',R(rows))+Sec('Danh sách liên quan',`<div style="padding:12px 18px"><button class="bt bt-p" onclick="xD();go('${p}')">Mở danh sách ${titles[p]||p}</button></div>`,false))}
 
+function partnerProfileOwner(p){const owner=p?.owner||p?.profiles||p?.profile||{};return Array.isArray(owner)?obj(owner[0]):obj(owner)}
+function partnerStore(p){const store=p?.store||p?.stores||{};return Array.isArray(store)?obj(store[0]):obj(store)}
+function partnerMeta(p){return obj(p?.metadata||partnerProfileOwner(p).metadata)}
+function partnerStoreMeta(p){const meta=partnerMeta(p);return obj(meta.store)}
+function partnerDocs(p){const meta=partnerMeta(p);return obj(p?.documents||meta.documents)}
+function partnerDocUrl(doc){return doc?.url||doc?.preview||doc?.dataUrl||doc?.data_url||doc?.image_url||doc?.file_url||doc?.publicUrl||doc?.public_url||doc?.path||''}
+function partnerBusinessLicenseDoc(p){const docs=partnerDocs(p);return docs.businessLicense||docs.business_license||docs.license||docs.businessLicenseExtra||null}
+function renderPartnerBusinessLicense(p){
+const raw=partnerBusinessLicenseDoc(p);
+if(!raw)return'<div style="padding:12px 18px;color:var(--t3);font-size:.78rem">ChÆ°a cÃ³ dá»¯ liá»‡u giáº¥y phÃ©p kinh doanh.</div>';
+const doc=typeof raw==='string'?{name:raw}:obj(raw);
+const url=partnerDocUrl(doc);
+const canOpen=/^(https?:|data:image|blob:)/i.test(url);
+const img=canOpen&&(/\.(png|jpe?g|webp|gif|bmp|svg)(\?|$)/i.test(url)||/^data:image/i.test(url))?`<img src="${esc(url)}" alt="Giáº¥y phÃ©p kinh doanh" style="width:100%;max-height:280px;object-fit:contain;border:1px solid var(--bd);border-radius:8px;margin-top:8px;background:#fff">`:'';
+const link=canOpen?`<a class="bt" style="display:inline-block;margin-top:8px" href="${esc(url)}" target="_blank" rel="noopener">Má»Ÿ tá»‡p gá»‘c</a>`:'';
+return`<div style="padding:12px 18px"><div style="border:1px solid var(--bd);border-radius:8px;padding:10px;background:var(--bg2)"><div style="font-size:.72rem;font-weight:800;color:var(--t2)">Giáº¥y phÃ©p kinh doanh</div><div style="font-size:.75rem;margin-top:4px">${val(doc.name||doc.fileName||doc.filename||url)}</div><div style="font-size:.68rem;color:var(--t3);margin-top:3px">Tráº¡ng thÃ¡i: ${val(doc.status||'Ä‘Ã£ gá»­i')}</div>${img}${link}</div></div>`;
+}
+function partnerReviewActions(p){
+const id=p?.profile_id||'';
+if(!id)return'';
+return Sec('Kiá»ƒm duyá»‡t',`<div style="padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap"><button class="bt bt-p" onclick="approvePartner('${jsQ(id)}')">Duyá»‡t</button><button class="bt" style="border-color:var(--err);color:var(--err)" onclick="rejectPartner('${jsQ(id)}')">Tá»« chá»‘i</button></div>`);
+}
+function openPartnerDetail(i){
+const row=MR[i]||[];
+const p=row[11]||{};
+const owner=partnerProfileOwner(p),store=partnerStore(p),meta=partnerMeta(p),storeMeta=partnerStoreMeta(p);
+const status=p.onboarding_status||meta.onboarding_status||store.status||owner.status||row[5]||'pending';
+const title=store.name||storeMeta.name||p.legal_name||row[1]||'Cá»­a hÃ ng';
+oD(title,
+Sec('ThÃ´ng tin cá»­a hÃ ng',R([['MÃ£ há»“ sÆ¡',mn(val(p.profile_id||row[0]))],['TÃªn cá»­a hÃ ng','<strong>'+val(title)+'</strong>'],['PhÃ¡p nhÃ¢n',val(p.legal_name)],['Loáº¡i hÃ¬nh',val(p.business_type||storeMeta.business_type||row[2])],['MÃ£ sá»‘ thuáº¿',mn(val(p.tax_code))],['Hotline',mn(val(p.public_hotline||p.phone))],['Email',val(p.email||owner.email)],['Khu vá»±c',val(store.district||meta.address?.district||row[3])],['Tráº¡ng thÃ¡i',sB(status)],['NgÃ y gá»­i',mn(timeText(p.created_at))]]))+
+Sec('NgÆ°á»i Ä‘áº¡i diá»‡n',R([['Há» tÃªn','<strong>'+val(p.representative_name||owner.full_name)+'</strong>'],['Chá»©c vá»¥',val(p.representative_title)],['Email quáº£n trá»‹',val(p.admin_email||p.email)],['Äiá»‡n thoáº¡i',mn(val(p.admin_phone||p.phone))],['CCCD',mn(val(p.cccd_number))]]))+
+Sec('Giáº¥y phÃ©p kinh doanh',renderPartnerBusinessLicense(p))+
+Sec('TÃ i chÃ­nh',R([['NgÃ¢n hÃ ng',val(p.bank_name)],['Sá»‘ tÃ i khoáº£n',mn(val(p.bank_account_number))],['Chá»§ tÃ i khoáº£n',val(p.bank_account_holder)]]),false)+
+partnerReviewActions(p)+
+Sec('Dá»¯ liá»‡u gá»‘c',`<pre style="padding:12px 18px;margin:0;white-space:pre-wrap;word-break:break-word;font-size:.68rem;color:var(--t2);font-family:var(--m)">${esc(JSON.stringify(p,null,2))}</pre>`,false)
+)}
+
+// Partner detail modal rebuilt with DOM/textContent to avoid encoding and HTML injection issues.
+function partnerText(v){return v===undefined||v===null||v===''?'—':String(v)}
+function partnerStatusLabel(status){
+const labels={active:'Hoạt động',approved:'Đã duyệt',pending:'Chờ duyệt',rejected:'Từ chối',suspended:'Tạm ngưng',under_review:'Đang xem xét'};
+return labels[status]||partnerText(status);
+}
+function partnerStatusClass(status){
+const map={active:'b-ok',approved:'b-ok',pending:'b-w',rejected:'b-e',suspended:'b-o',under_review:'b-w'};
+return map[status]||'b-m';
+}
+function partnerOpenDomModal(title){
+document.getElementById('dT').textContent=partnerText(title);
+const body=document.getElementById('dB');
+body.textContent='';
+document.getElementById('dO').classList.add('open');
+document.getElementById('dP').classList.add('open');
+return body;
+}
+function partnerSection(parent,title,open=true){
+const section=document.createElement('div');
+section.className='DS';
+const head=document.createElement('div');
+head.className='DS-h';
+const label=document.createElement('span');
+label.textContent=title;
+const marker=document.createElement('span');
+marker.textContent=open?'v':'>';
+head.append(label,marker);
+const content=document.createElement('div');
+content.className=`DS-c ${open?'':'hd'}`;
+head.addEventListener('click',()=>{content.classList.toggle('hd');marker.textContent=content.classList.contains('hd')?'>':'v';});
+section.append(head,content);
+parent.appendChild(section);
+return content;
+}
+function partnerRow(parent,label,value){
+const row=document.createElement('div');
+row.className='DR';
+const left=document.createElement('div');
+left.className='DR-l';
+left.textContent=label;
+const right=document.createElement('div');
+right.className='DR-v';
+if(value instanceof Node)right.appendChild(value);
+else right.textContent=partnerText(value);
+row.append(left,right);
+parent.appendChild(row);
+return right;
+}
+function partnerBadge(status){
+const span=document.createElement('span');
+span.className=`b ${partnerStatusClass(status)}`;
+span.textContent=partnerStatusLabel(status);
+return span;
+}
+function partnerDocumentLabel(key){
+const labels={cccdFront:'CCCD mặt trước',cccdBack:'CCCD mặt sau',businessLicense:'Giấy phép kinh doanh',businessLicenseExtra:'Giấy phép kinh doanh bổ sung',business_license:'Giấy phép kinh doanh',foodSafety:'Giấy chứng nhận VSATTP',food_safety:'Giấy chứng nhận VSATTP',logo:'Logo cửa hàng',cover:'Ảnh bìa cửa hàng',license:'Giấy phép'};
+return labels[key]||key;
+}
+function partnerDocEntries(p){
+const docs=partnerDocs(p);
+return Object.entries(docs).filter(([,raw])=>{
+if(!raw)return false;
+if(typeof raw==='string')return raw.trim()!=='';
+if(Array.isArray(raw))return raw.length>0;
+if(typeof raw==='object')return Object.keys(raw).length>0;
+return true;
+});
+}
+function partnerAppendDocumentCard(parent,key,raw,index){
+const doc=typeof raw==='string'?{name:raw,url:raw}:obj(raw);
+const url=partnerDocUrl(doc);
+const canOpen=/^(https?:|data:image|blob:)/i.test(url);
+const canImage=canOpen&&(/^data:image/i.test(url)||/\.(png|jpe?g|webp|gif|bmp|svg)(\?|$)/i.test(url));
+const card=document.createElement('div');
+card.style.cssText='border:1px solid var(--bd);border-radius:8px;padding:10px;background:var(--bg2)';
+const title=document.createElement('div');
+title.style.cssText='font-size:.72rem;font-weight:800;color:var(--t2)';
+title.textContent=`${index+1}. ${partnerDocumentLabel(key)}`;
+const name=document.createElement('div');
+name.style.cssText='font-size:.75rem;margin-top:4px';
+name.textContent=partnerText(doc.name||doc.fileName||doc.filename||url);
+const status=document.createElement('div');
+status.style.cssText='font-size:.68rem;color:var(--t3);margin-top:3px';
+status.textContent=`Trạng thái: ${partnerText(doc.status||'đã gửi')}`;
+card.append(title,name,status);
+if(canImage){
+const img=document.createElement('img');
+img.src=url;
+img.alt=partnerDocumentLabel(key);
+img.style.cssText='width:100%;max-height:260px;object-fit:contain;border:1px solid var(--bd);border-radius:8px;margin-top:8px;background:#fff';
+card.appendChild(img);
+}
+if(canOpen){
+const link=document.createElement('a');
+link.className='bt';
+link.href=url;
+link.target='_blank';
+link.rel='noopener';
+link.style.cssText='display:inline-block;margin-top:8px';
+link.textContent=canImage?'Mở ảnh gốc':'Tải xuống / mở tệp';
+card.appendChild(link);
+}else{
+const note=document.createElement('div');
+note.style.cssText='font-size:.68rem;color:var(--t3);margin-top:8px';
+note.textContent='Chưa có URL xem trước cho tệp này.';
+card.appendChild(note);
+}
+parent.appendChild(card);
+}
+function partnerAppendDocuments(parent,p){
+const wrap=document.createElement('div');
+wrap.style.cssText='padding:12px 18px;display:grid;gap:10px';
+const entries=partnerDocEntries(p);
+if(!entries.length){
+const empty=document.createElement('div');
+empty.style.cssText='color:var(--t3);font-size:.78rem';
+empty.textContent='Chưa có dữ liệu hồ sơ pháp lý.';
+wrap.appendChild(empty);
+}else{
+let renderedIndex=0;
+entries.forEach(([key,raw])=>{
+if(Array.isArray(raw)){
+raw.forEach((item,itemIndex)=>{partnerAppendDocumentCard(wrap,`${key} ${itemIndex+1}`,item,renderedIndex);renderedIndex+=1;});
+}else{
+partnerAppendDocumentCard(wrap,key,raw,renderedIndex);
+renderedIndex+=1;
+}
+});
+}
+parent.appendChild(wrap);
+}
+function partnerActions(parent,p){
+const id=p?.profile_id||'';
+if(!id)return;
+const wrap=document.createElement('div');
+wrap.style.cssText='padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap';
+const approve=document.createElement('button');
+approve.className='bt bt-p';
+approve.type='button';
+approve.textContent='Duyệt';
+approve.addEventListener('click',()=>approvePartner(id));
+const reject=document.createElement('button');
+reject.className='bt';
+reject.type='button';
+reject.style.borderColor='var(--err)';
+reject.style.color='var(--err)';
+reject.textContent='Từ chối';
+reject.addEventListener('click',()=>rejectPartner(id));
+wrap.append(approve,reject);
+parent.appendChild(wrap);
+}
+function openPartnerDetail(i){
+const row=MR[i]||[];
+const p=row[11]||{};
+const owner=partnerProfileOwner(p),store=partnerStore(p),meta=partnerMeta(p),storeMeta=partnerStoreMeta(p);
+const status=partnerAdminStatus(p,row[5]||'pending');
+const title=store.name||storeMeta.name||p.legal_name||row[1]||'Cửa hàng';
+const body=partnerOpenDomModal(title);
+let section=partnerSection(body,'Thông tin cửa hàng');
+partnerRow(section,'Mã hồ sơ',p.profile_id||row[0]);
+partnerRow(section,'Tên cửa hàng',title);
+partnerRow(section,'Pháp nhân',p.legal_name||storeMeta.legal_name);
+partnerRow(section,'Loại hình',p.business_type||storeMeta.business_type||row[2]);
+partnerRow(section,'Mã số thuế',p.tax_code);
+partnerRow(section,'Hotline',p.public_hotline||p.phone);
+partnerRow(section,'Email',p.email||owner.email);
+partnerRow(section,'Khu vực',store.district||meta.address?.district||row[3]);
+partnerRow(section,'Trạng thái',partnerBadge(status));
+partnerRow(section,'Ngày gửi',timeText(p.created_at));
+section=partnerSection(body,'Người đại diện');
+partnerRow(section,'Họ tên',p.representative_name||owner.full_name);
+partnerRow(section,'Chức vụ',p.representative_title);
+partnerRow(section,'Email quản trị',p.admin_email||p.email);
+partnerRow(section,'Điện thoại',p.admin_phone||p.phone);
+partnerRow(section,'CCCD',p.cccd_number);
+section=partnerSection(body,'Hồ sơ pháp lý');
+partnerAppendDocuments(section,p);
+section=partnerSection(body,'Tài chính',false);
+partnerRow(section,'Ngân hàng',p.bank_name);
+partnerRow(section,'Số tài khoản',p.bank_account_number);
+partnerRow(section,'Chủ tài khoản',p.bank_account_holder);
+section=partnerSection(body,'Kiểm duyệt');
+partnerActions(section,p);
+section=partnerSection(body,'Dữ liệu gốc',false);
+const pre=document.createElement('pre');
+pre.style.cssText='padding:12px 18px;margin:0;white-space:pre-wrap;word-break:break-word;font-size:.68rem;color:var(--t2);font-family:var(--m)';
+pre.textContent=JSON.stringify(p,null,2);
+section.appendChild(pre);
+}
+
+function charityOwner(c){const owner=c?.owner||c?.profiles||c?.profile||{};return Array.isArray(owner)?obj(owner[0]):obj(owner)}
+function charityMeta(c){return obj(c?.metadata||charityOwner(c).metadata)}
+function charityInfo(c){const meta=charityMeta(c);return obj(meta.organization_info||meta.charity_profile||{})}
+function charityDocs(c){
+const meta=charityMeta(c);
+const docs=obj(c?.documents||meta.documents||meta.charity_profile?.documents);
+return Object.keys(docs).length?docs:{
+avatar_logo:{label:'Ảnh đại diện / Logo tổ chức',url:c?.avatar_url||meta.avatar_logo_url||''},
+cover_banner:{label:'Ảnh bìa / Banner',url:meta.cover_image_url||meta.cover_banner_url||''},
+cccd_front:{label:'Ảnh CCCD mặt trước',url:meta.cccd_front_url||''},
+cccd_back:{label:'Ảnh CCCD mặt sau',url:meta.cccd_back_url||''},
+establishment_decision:{label:'Ảnh Giấy quyết định thành lập',url:meta.decision_image_url||meta.establishment_decision_url||''},
+operating_license:{label:'Giấy phép hoạt động của tổ chức',url:meta.license_image_url||meta.operating_license_url||''},
+financial_report:{label:'Ảnh Báo cáo tài chính',url:meta.financial_report_url||''}
+};
+}
+function charityOrderedDocKeys(c){
+const meta=charityMeta(c),docs=charityDocs(c);
+const preferred=Array.isArray(meta.ordered_document_keys)?meta.ordered_document_keys:[];
+const fallback=['avatar_logo','cover_banner','cccd_front','cccd_back','establishment_decision','operating_license','financial_report','cover','cccdFront','cccdBack','decision','license','finance'];
+return [...preferred,...fallback,...Object.keys(docs)].filter((key,index,arr)=>key&&arr.indexOf(key)===index&&docs[key]);
+}
+function charityDocLabel(key,doc){return doc?.label||{avatar_logo:'Ảnh đại diện / Logo tổ chức',cover_banner:'Ảnh bìa / Banner',cccd_front:'Ảnh CCCD mặt trước',cccd_back:'Ảnh CCCD mặt sau',establishment_decision:'Ảnh Giấy quyết định thành lập',operating_license:'Giấy phép hoạt động của tổ chức',financial_report:'Ảnh Báo cáo tài chính',cover:'Ảnh bìa / Banner',decision:'Quyết định thành lập',license:'Giấy phép hoạt động',finance:'Báo cáo tài chính',cccdFront:'CCCD mặt trước',cccdBack:'CCCD mặt sau',orgLicense:'Giấy phép tổ chức'}[key]||key}
+function charityDocUrl(doc){return doc?.url||doc?.preview||doc?.image_url||doc?.file_url||doc?.publicUrl||doc?.public_url||doc?.path||''}
+function renderCharityDocuments(c){
+const docs=charityDocs(c);
+const entries=charityOrderedDocKeys(c).map(key=>[key,docs[key]]).filter(([,doc])=>doc&&(typeof doc!=='object'||Object.keys(doc).length));
+if(!entries.length)return'<div style="padding:12px 18px;color:var(--t3);font-size:.78rem">Chưa có dữ liệu giấy tờ scan.</div>';
+return`<div style="padding:12px 18px;display:grid;gap:10px">${entries.map(([key,raw])=>{
+const doc=typeof raw==='string'?{name:raw}:obj(raw);
+const url=charityDocUrl(doc);
+const canOpen=/^(https?:|data:image|blob:)/i.test(url);
+const label=charityDocLabel(key,doc);
+const img=canOpen&&(/\.(png|jpe?g|webp|gif|bmp|svg)(\?|$)/i.test(url)||/^data:image/i.test(url))?`<img src="${esc(url)}" alt="${esc(label)}" style="width:100%;max-height:160px;object-fit:cover;border:1px solid var(--bd);border-radius:8px;margin-top:8px">`:'';
+const link=canOpen?`<a class="bt" style="display:inline-block;margin-top:8px" href="${esc(url)}" target="_blank" rel="noopener">Mở tệp</a>`:'';
+return`<div style="border:1px solid var(--bd);border-radius:8px;padding:10px;background:var(--bg2)"><div style="font-size:.72rem;font-weight:800;color:var(--t2)">${esc(label)}</div><div style="font-size:.75rem;margin-top:4px">${val(doc.name||doc.fileName||doc.filename||url)}</div><div style="font-size:.68rem;color:var(--t3);margin-top:3px">Trạng thái: ${val(doc.status||'đã gửi')}</div>${img}${link}</div>`;
+}).join('')}</div>`;
+}
+function charityReviewActions(c){
+const id=c?.id||'';
+if((c?.status||'pending')!=='pending'||!id)return'';
+return Sec('Kiểm duyệt',`<div style="padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap"><button class="bt bt-p" onclick="approveCharity('${jsQ(id)}')">Phê duyệt</button><button class="bt" style="border-color:var(--err);color:var(--err)" onclick="rejectCharity('${jsQ(id)}')">Từ chối</button></div>`);
+}
+function openCharityDetail(i){
+const c=CR[i]?.[7]||{};
+const owner=charityOwner(c),meta=charityMeta(c),info=charityInfo(c),profile=obj(meta.charity_profile),rep=obj(meta.representative),scale=obj(meta.scale);
+const status=c.status||meta.onboarding_status||owner.status||'pending';
+const title=c.name||info.organization_name||profile.name||'Tổ chức từ thiện';
+oD(title,
+Sec('Thông tin tổ chức',R([['Mã hồ sơ',mn(val(c.id||CR[i]?.[0]))],['Tên tổ chức','<strong>'+val(c.name||info.organization_name||profile.name)+'</strong>'],['Mã số thuế / Mã tổ chức',mn(val(info.tax_id||meta.tax_id))],['Email',val(c.email||info.organization_email||profile.email||owner.email)],['Điện thoại',mn(val(c.phone||info.organization_phone||profile.phone||owner.phone))],['Địa chỉ',val(c.address||info.address||meta.address||profile.address)],['Quận/Huyện',val(c.district||info.district||profile.district)],['Tỉnh/Thành phố',val(c.city||info.city||profile.city)],['Trạng thái',sB(status)],['Ngày đăng ký',mn(timeText(c.created_at))]]))+
+Sec('Người đại diện',R([['Họ tên','<strong>'+val(info.representative_name||rep.name||owner.full_name)+'</strong>'],['Chức vụ',val(info.representative_role||rep.role)],['Email',val(info.representative_email||rep.email)],['Điện thoại',mn(val(info.representative_phone||rep.phone||c.phone))],['CCCD',mn(val(info.representative_cccd||rep.cccd))]]))+
+Sec('Quy mô & nhu cầu',R([['Số người thụ hưởng',val(c.beneficiaries_count??info.beneficiaries_count??scale.people)],['Suất ăn/ngày',val(info.meals_per_day??scale.meals)],['Tình nguyện viên',val(info.volunteers_count??scale.volunteers)],['Bán kính nhận hàng',val(info.pickup_radius||scale.radius)],['Loại tổ chức',val(info.organization_type||profile.organization_type)],['Mô tả',val(info.description||meta.description||profile.description)],['Sứ mệnh',val(info.mission||meta.mission||profile.mission)]]),false)+
+Sec('Giấy tờ scan',renderCharityDocuments(c))+
+charityReviewActions(c)+
+Sec('Dữ liệu gốc',`<pre style="padding:12px 18px;margin:0;white-space:pre-wrap;word-break:break-word;font-size:.68rem;color:var(--t2);font-family:var(--m)">${esc(JSON.stringify(c,null,2))}</pre>`,false)
+)}
+
 // ===== PAGES =====
 const pg={};
-let ECO_PLATFORM=null;
-function adminApiBase(){
-const explicit=(window.FOODSAVE_API_BASE||'').replace(/\/+$/,'');
-if(explicit)return explicit;
-const loc=window.location;
-if((loc.protocol==='http:'||loc.protocol==='https:')&&loc.hostname!=='localhost'&&loc.hostname!=='127.0.0.1')return `${loc.origin}/api/v1`;
-return 'http://localhost:8080/api/v1';
-}
-function adminAuthToken(){
-try{const raw=localStorage.getItem('foodsave.auth.session');const session=raw?JSON.parse(raw):null;return session&&session.accessToken?session.accessToken:'';}catch(e){return '';}
-}
-function adminEcoTotals(){return ECO_PLATFORM&&ECO_PLATFORM.totals?ECO_PLATFORM.totals:null;}
-function adminEcoNum(v,d){return (Number(v)||0).toLocaleString('vi-VN',{maximumFractionDigits:d});}
-function adminEcoFoodSaved(){const t=adminEcoTotals();return t?`${adminEcoNum(t.food_saved_kg,1)} kg`:'1.247 kg';}
-function adminEcoCo2Note(){const t=adminEcoTotals();return t?`Tương đương ${adminEcoNum(t.co2_avoided_kg,1)} kg CO2 tránh phát thải`:'Tương đương 2.494 kg CO2 tránh phát thải';}
-function adminEcoMeals(){const t=adminEcoTotals();return t?`${adminEcoNum(t.meals_equivalent,0)} suất`:'186 suất';}
-function adminEcoDonationNote(){const t=adminEcoTotals();return t?`${adminEcoNum(t.completed_donations,0)} donation hoàn thành`:'11 tổ chức từ thiện nhận trong tuần';}
-async function syncEcoImpactPlatform(){
-const token=adminAuthToken();
-if(!token)return;
-try{
-const res=await fetch(`${adminApiBase()}/eco-impact/platform?period=all&months=6`,{headers:{Authorization:`Bearer ${token}`}});
-const payload=await res.json().catch(()=>null);
-if(res.ok&&payload&&payload.success===true){ECO_PLATFORM=payload.data;if(typeof currentPage!=='undefined'&&currentPage==='dashboard')go('dashboard');}
-}catch(e){}
-}
 pg.dashboard=()=>`
 <div class="al al-w"><strong>4 tranh chấp</strong> đang mở cần xử lý - thời hạn gần nhất còn 4 giờ</div>
 <div class="hero">
@@ -529,8 +750,8 @@ pg.dashboard=()=>`
   <div class="K" onclick="moLienQuan('Tranh chấp đang mở','disputes',[['Số hồ sơ','4'],['Hạn gần nhất','Còn 4 giờ'],['Việc cần làm','Thu thập bằng chứng, ra quyết định hoàn tiền hoặc bảo vệ đối tác']])"><div class="K-l">Tranh chấp đang mở</div><div class="K-v" style="color:var(--err)">4</div><div class="K-n">Thời hạn gần nhất: 4 giờ</div></div>
 </div>
 <div class="impact">
-  <div class="K" onclick="moLienQuan('Thực phẩm đã được cứu','inventory',[['Khối lượng',adminEcoFoodSaved()],['Tác động môi trường',adminEcoCo2Note()],['Việc cần làm','Theo dõi nhóm hàng cận hạn để giảm thất thoát thực phẩm']])"><div class="K-l">Thực phẩm đã cứu</div><div class="K-v" style="color:var(--ok)">${adminEcoFoodSaved()}</div><div class="K-n">${adminEcoCo2Note()}</div></div>
-  <div class="K" onclick="moLienQuan('Quyên góp thành công','inventory',[['Số suất',adminEcoMeals()],['Donation hoàn thành',adminEcoDonationNote()],['Việc cần làm','Xác nhận lịch nhận và ghi nhận biên bản bàn giao']])"><div class="K-l">Quyên góp thành công</div><div class="K-v" style="color:var(--pur)">${adminEcoMeals()}</div><div class="K-n">${adminEcoDonationNote()}</div></div>
+  <div class="K" onclick="moLienQuan('Thực phẩm đã được cứu','inventory',[['Khối lượng','1.247 kg'],['Tác động môi trường','Tương đương 2.494 kg CO2 tránh phát thải'],['Việc cần làm','Theo dõi nhóm hàng cận hạn để giảm thất thoát thực phẩm']])"><div class="K-l">Thực phẩm đã cứu</div><div class="K-v" style="color:var(--ok)">1.247 kg</div><div class="K-n">Tương đương 2.494 kg CO2 tránh phát thải</div></div>
+  <div class="K" onclick="moLienQuan('Quyên góp thành công','inventory',[['Số suất','186 suất'],['Đơn vị tiếp nhận','11 tổ chức từ thiện'],['Việc cần làm','Xác nhận lịch nhận và ghi nhận biên bản bàn giao']])"><div class="K-l">Quyên góp thành công</div><div class="K-v" style="color:var(--pur)">186 suất</div><div class="K-n">11 tổ chức từ thiện nhận trong tuần</div></div>
   <div class="K" onclick="moLienQuan('Tỷ lệ đúng hạn xử lý','audits',[['Tỷ lệ đúng hạn','96,8%'],['So với tuần trước','Tăng 3,1 điểm'],['Ý nghĩa','Tỷ lệ hồ sơ được xử lý trong thời hạn cam kết với người dùng và đối tác']])"><div class="K-l">Tỷ lệ đúng hạn</div><div class="K-v" style="color:var(--blue)">96,8%</div><div class="K-n">Tăng 3,1 điểm so với tuần trước</div></div>
 </div>
 <div class="split">
@@ -558,7 +779,7 @@ pg.dashboard=()=>`
 <div class="tl" onclick="oD('Cấm người dùng',Sec('Chi tiết',R([['Hành động','Cấm vĩnh viễn'],['Đối tượng','Mai Thị Kiều'],['Lý do','Gian lận nhiều tài khoản — 3 tài khoản cùng IP và thiết bị, nhận 14 sản phẩm miễn phí trong 3 ngày'],['Người thực hiện','Bùi Gia Huy — Tài chính'],['Thời gian',mn('2025-05-06 08:55')]])))"><div class="tl-d" style="background:var(--err)"></div><div class="tl-c"><div class="tl-t">Cấm người dùng: Mai Thị Kiều — Gian lận nhiều tài khoản</div><div class="tl-s">Bùi Gia Huy · Tài chính</div></div><div class="tl-m">08:55</div></div>
 <div class="tl" onclick="oD('Điều chỉnh giá',Sec('Chi tiết',R([['Hành động','Điều chỉnh giá khẩn cấp'],['Lô hàng','B-2209 — Sữa tươi WinMart'],['Giá cũ',mn('60.000đ')],['Giá mới',mn('35.000đ')],['Lý do','Hạn sử dụng khẩn cấp — còn 36 giờ'],['Người thực hiện','Vũ Quang Minh — Vận hành'],['Thời gian',mn('2025-05-06 09:18')]])))"><div class="tl-d" style="background:var(--warn)"></div><div class="tl-c"><div class="tl-t">Điều chỉnh giá: Sữa WinMart — 60.000đ xuống 35.000đ</div><div class="tl-s">Vũ Quang Minh · Vận hành</div></div><div class="tl-m">09:18</div></div>
 <div class="tl" onclick="oD('Duyệt đối tác',Sec('Chi tiết',R([['Hành động','Duyệt đối tác mới'],['Cửa hàng','Chuỗi Bánh Mì Sài Gòn 365'],['Trạng thái cũ','Chờ duyệt'],['Trạng thái mới','Đã duyệt — Hoa hồng 15%'],['Thời gian xử lý','26 giờ — đúng hạn'],['Người thực hiện','Hoàng Thị Lan — Vận hành']])))"><div class="tl-d" style="background:var(--ok)"></div><div class="tl-c"><div class="tl-t">Duyệt đối tác mới: Chuỗi Bánh Mì Sài Gòn 365</div><div class="tl-s">Hoàng Thị Lan · Vận hành</div></div><div class="tl-m">09:32</div></div>
-<div class="tl" onclick="oD('Cập nhật nhãn tự động',Sec('Chi tiết',R([['Hành động','Hệ thống tự động cập nhật nhãn'],['Số lô hàng','28 lô từ nhiều cửa hàng'],['Nhãn cũ','Còn hạn (xanh)'],['Nhãn mới','Sắp hết hạn (đỏ) — còn dưới 24 giờ'],['Hệ thống','Tự động kích hoạt giảm giá tương ứng'],['Thời gian',mn('2025-05-06 06:00')]])))"><div class="tl-d" style="background:var(--blue)"></div><div class="tl-c"><div class="tl-t">Cập nhật nhãn tự động: 28 lô chuyển sang sắp hết hạn</div><div class="tl-s">Hệ thống tự động · 06:00 sáng hàng ngày</div></div><div class="tl-m">06:00</div></div>
+<div class="tl" onclick="oD('Cập nhật nhãn tự động',Sec('Chi tiết',R([['Hành động','Hệ thống tự động cập nhật nhãn'],['Số lô hàng','28 lô từ nhiều cửa hàng'],['Nhãn cũ','Còn hạn (xanh)'],['Nhãn mới','Sắp hết hạn (đỏ) — còn 24h'],['Hệ thống','Tự động kích hoạt giảm giá tương ứng'],['Thời gian',mn('2025-05-06 06:00')]])))"><div class="tl-d" style="background:var(--blue)"></div><div class="tl-c"><div class="tl-t">Cập nhật nhãn tự động: 28 lô chuyển sang sắp hết hạn</div><div class="tl-s">Hệ thống tự động · 06:00 sáng hàng ngày</div></div><div class="tl-m">06:00</div></div>
 <div class="tl" onclick="oD('Quyên góp tự động',Sec('Chi tiết',R([['Hành động','Hệ thống tự động chuyển quyên góp'],['Sản phẩm','24 ổ bánh mì — Chuỗi Bánh Mì SG 365'],['Tổ chức nhận','Bếp Ăn Từ Thiện TP.HCM'],['Thời điểm','2 giờ trước khi hết hạn sử dụng'],['Trạng thái','Đã xác nhận nhận hàng lúc 10:00']])))"><div class="tl-d" style="background:var(--pur)"></div><div class="tl-c"><div class="tl-t">Quyên góp tự động: 24 bánh mì cho Bếp Ăn Từ Thiện</div><div class="tl-s">Hệ thống tự động · 2 giờ trước hạn sử dụng</div></div><div class="tl-m">10:00</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Phân bổ tồn kho theo nhãn</div></div><div style="padding:14px 16px">
@@ -599,8 +820,8 @@ pg.reputation=()=>{
 const sorted=[...U].sort((a,b)=>b[6]-a[6]);
 return`<div class="G G4">
 <div class="K"><div class="K-l">Tin cậy (≥85)</div><div class="K-v" style="color:var(--ok)">${U.filter(u=>u[6]>=85).length}</div></div>
-<div class="K"><div class="K-l">Bình thường (70–84)</div><div class="K-v" style="color:var(--blue)">${U.filter(u=>u[6]>=70&&u[6]<85).length}</div></div>
-<div class="K"><div class="K-l">Hạn chế (40–69)</div><div class="K-v" style="color:var(--ora)">${U.filter(u=>u[6]>=40&&u[6]<70).length}</div></div>
+<div class="K"><div class="K-l">Hạn chế (40–84)</div><div class="K-v" style="color:var(--ora)">${U.filter(u=>u[6]>=40&&u[6]<85).length}</div></div>
+<div class="K"><div class="K-l">Điểm khởi đầu</div><div class="K-v" style="color:var(--blue)">100</div></div>
 <div class="K"><div class="K-l">Bị chặn (<40)</div><div class="K-v" style="color:var(--err)">${U.filter(u=>u[6]<40).length}</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Bảng xếp hạng uy tín người dùng</div></div>
@@ -617,7 +838,7 @@ pg.config=()=>`
 <div class="cf" onclick="oD('Trừ điểm lấy trễ',Sec('Chi tiết',R([['Mã thiết lập',mn('reputation.delta.late_pickup')],['Giá trị','<strong style=color:var(--err)>-10</strong>'],['Mô tả','Khi người dùng đến nhận hàng nhưng trễ hơn khung giờ đã cam kết. Phạt để khuyến khích đến đúng giờ, giúp cửa hàng vận hành hiệu quả hơn.'],['Tác động','Giảm giá trị sẽ phạt nhẹ hơn. Hiện tại -10 là mức trung bình phù hợp.']])))"><div class="cf-k">Trừ điểm lấy trễ</div><div class="cf-v" style="color:var(--err)">-10</div><div class="cf-d">Trừ khi đến nhận hàng trễ giờ</div></div>
 <div class="cf" onclick="oD('Không đến lấy hàng',Sec('Chi tiết',R([['Mã thiết lập',mn('reputation.delta.no_show')],['Giá trị','<strong style=color:var(--err)>-15</strong>'],['Mô tả','Khi người dùng đặt hàng nhưng hoàn toàn không đến nhận trong khung giờ quy định. Đây là vi phạm nghiêm trọng vì gây lãng phí sản phẩm cận hạn và ảnh hưởng đến cửa hàng.'],['Tác động','Phạt nặng nhất trong các hành vi vi phạm. Tích lũy nhiều lần sẽ bị chuyển sang hạng Hạn chế hoặc Chặn.']])))"><div class="cf-k">Không đến lấy hàng</div><div class="cf-v" style="color:var(--err)">-15</div><div class="cf-d">Trừ khi không đến nhận hàng</div></div>
 <div class="cf" onclick="oD('Ngưỡng Tin cậy',Sec('Chi tiết',R([['Mã thiết lập',mn('reputation.tier.trusted')],['Giá trị','<strong>≥85</strong>'],['Mô tả','Người dùng đạt từ 85 điểm trở lên được xếp hạng Tin cậy. Được ưu tiên nhận hàng trong giờ cao điểm và mở khóa tính năng đặc biệt.']])))"><div class="cf-k">Hạng Tin cậy</div><div class="cf-v">≥85</div><div class="cf-d">Ngưỡng hạng Tin cậy</div></div>
-<div class="cf" onclick="oD('Ngưỡng Hạn chế',Sec('Chi tiết',R([['Mã thiết lập',mn('reputation.tier.restricted')],['Giá trị','<strong>≥40</strong>'],['Mô tả','Dưới ngưỡng này: không được nhận hàng miễn phí. Người dùng cần cải thiện hành vi để nâng điểm.']])))"><div class="cf-k">Hạng Hạn chế</div><div class="cf-v">≥40</div><div class="cf-d">Ngưỡng hạng Hạn chế</div></div>
+<div class="cf" onclick="oD('Ngưỡng Hạn chế',Sec('Chi tiết',R([['Mã thiết lập',mn('reputation.tier.restricted')],['Giá trị','<strong>≥40</strong>'],['Mô tả','Người dùng từ 40 đến dưới 85 điểm được xếp hạng Hạn chế. Dưới 40 điểm sẽ bị chặn theo quy trình xử lý tài khoản.']])))"><div class="cf-k">Hạng Hạn chế</div><div class="cf-v">≥40</div><div class="cf-d">Từ 40 đến dưới 85</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Tài chính & Hoa hồng</div></div>
 <div class="cf" onclick="oD('Chu kỳ chi trả',Sec('Chi tiết',R([['Mã thiết lập',mn('payout.cycle_days')],['Giá trị','<strong>T+3 ngày</strong>'],['Mô tả','Nền tảng giữ tiền ký quỹ và chi trả cho đối tác sau 3 ngày kể từ khi kết thúc kỳ. Giảm chu kỳ sẽ giúp đối tác hài lòng hơn. Tăng chu kỳ giúp nền tảng giữ tiền lâu hơn.']])))"><div class="cf-k">Chu kỳ chi trả</div><div class="cf-v">T+3</div><div class="cf-d">Chu kỳ chi trả đối tác sau kỳ kết thúc</div></div>
@@ -629,9 +850,9 @@ pg.config=()=>`
 <div class="cf" onclick="oD('Tiền đặt cọc miễn phí',Sec('Chi tiết',R([['Giá trị','<strong>10.000 đồng</strong>'],['Mô tả','Người dùng phải đặt cọc khi nhận hàng miễn phí. Hoàn lại khi nhận hàng thành công. Mất cọc nếu vắng mặt. Tăng tiền cọc sẽ giảm vắng mặt. Giảm tiền cọc giúp nhiều người tham gia hơn.']])))"><div class="cf-k">Cọc hàng miễn phí</div><div class="cf-v">10k</div><div class="cf-d">Đặt cọc khi nhận hàng miễn phí</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Kho hàng & Nhãn</div></div>
-<div class="cf" onclick="oD('Ngưỡng nhãn xanh',Sec('Chi tiết',R([['Giá trị','<strong style=color:var(--ok)>Trên 72 giờ</strong> trước hạn sử dụng'],['Mô tả','Sản phẩm còn hạn dài, giảm giá nhẹ 5-10% để kích cầu. Lịch tự động kiểm tra 3 lần/ngày (06:00, 12:00, 18:00) và tự động chuyển nhãn khi đến ngưỡng.']])))"><div class="cf-k">Nhãn xanh</div><div class="cf-v" style="color:var(--ok)">&gt;72h</div><div class="cf-d">Còn hạn dài - giảm 5-10%</div></div>
-<div class="cf" onclick="oD('Ngưỡng nhãn vàng',Sec('Chi tiết',R([['Giá trị','<strong style=color:var(--warn)>48 giờ</strong> trước hạn sử dụng'],['Mô tả','Cận hạn, giảm giá 20-40%. Hệ thống tự động tăng mức giảm giá và ưu tiên hiển thị trên trang chủ ứng dụng.']])))"><div class="cf-k">Nhãn vàng</div><div class="cf-v" style="color:var(--warn)">48h</div><div class="cf-d">Cận hạn - giảm 20-40%</div></div>
-<div class="cf" onclick="oD('Ngưỡng nhãn đỏ',Sec('Chi tiết',R([['Giá trị','<strong style=color:var(--err)>24 giờ</strong> trước hạn sử dụng'],['Mô tả','Sắp hết hạn, giảm giá 50-90% hoặc miễn phí hoàn toàn. Ưu tiên hiển thị cao nhất. Nếu không bán được, hệ thống tự động chuyển sang quyên góp.']])))"><div class="cf-k">Nhãn đỏ</div><div class="cf-v" style="color:var(--err)">24h</div><div class="cf-d">Sắp hết hạn - giảm 50-90%</div></div>
+<div class="cf" onclick="oD('Ngưỡng nhãn xanh',Sec('Chi tiết',R([['Giá trị','<strong style=color:var(--ok)>3-5 ngày</strong> trước hạn sử dụng'],['Mô tả','Sản phẩm còn 3-5 ngày, giảm nhẹ để kích cầu. Lịch tự động kiểm tra 3 lần/ngày (06:00, 12:00, 18:00) và tự động chuyển nhãn khi đến ngưỡng.']])))"><div class="cf-k">Nhãn xanh</div><div class="cf-v" style="color:var(--ok)">3-5 ngày</div><div class="cf-d">Còn 3-5 ngày - giảm nhẹ</div></div>
+<div class="cf" onclick="oD('Ngưỡng nhãn vàng',Sec('Chi tiết',R([['Giá trị','<strong style=color:var(--warn)>48h</strong> trước hạn sử dụng'],['Mô tả','Cận hạn, giảm giá 20-40%. Hệ thống tự động tăng mức giảm giá và ưu tiên hiển thị trên trang chủ ứng dụng.']])))"><div class="cf-k">Nhãn vàng</div><div class="cf-v" style="color:var(--warn)">48h</div><div class="cf-d">Cận hạn - giảm 20-40%</div></div>
+<div class="cf" onclick="oD('Ngưỡng nhãn đỏ',Sec('Chi tiết',R([['Giá trị','<strong style=color:var(--err)>24h</strong> trước hạn sử dụng'],['Mô tả','Sắp hết hạn, giảm giá 50-90% hoặc miễn phí hoàn toàn. Ưu tiên hiển thị cao nhất. Nếu không bán được, hệ thống tự động chuyển sang quyên góp.']])))"><div class="cf-k">Nhãn đỏ</div><div class="cf-v" style="color:var(--err)">24h</div><div class="cf-d">Sắp hết hạn - giảm 50-90%</div></div>
 <div class="cf" onclick="oD('Tự động quyên góp',Sec('Chi tiết',R([['Giá trị','<strong>8 giờ</strong> trước hạn sử dụng'],['Mô tả','Hệ thống tự động chuyển sản phẩm chưa bán được sang tổ chức từ thiện đã đăng ký. Giảm thời gian sẽ ít quyên góp hơn. Tăng thời gian giúp tổ chức từ thiện có thêm thời gian đến nhận.'],['Thay đổi gần nhất','Từ 6 lên 8 giờ (15/03/2025) - cải thiện tỷ lệ quyên góp thành công']])))"><div class="cf-k">Quyên góp tự động</div><div class="cf-v">8h</div><div class="cf-d">Tự động quyên góp trước hạn sử dụng</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Ngưỡng cảnh báo hiệu suất đối tác</div></div>
@@ -648,6 +869,16 @@ pg.merchants=()=>`<div class="G G4">
 <div class="K"><div class="K-l">Tạm ngưng</div><div class="K-v" style="color:var(--err)">${MR.filter(m=>m[5]=='suspended').length}</div></div>
 </div><div class="P"><div class="P-h"><div class="P-t">Danh sách cửa hàng</div></div><div class="W"><table><thead><tr><th>Mã</th><th>Cửa hàng</th><th>Loại</th><th>Khu vực</th><th>Hạng</th><th>Trạng thái</th><th>Điểm đánh giá</th><th>Đơn</th><th>Doanh thu</th><th>Hủy</th></tr></thead><tbody>
 ${MR.map(m=>`<tr onclick="oG('${m[1]}',[[ 'Mã',mn('${m[0]}') ],['Loại','${m[2]}'],['Khu vực','${m[3]}'],['Hạng',tB('${m[4]}')],['Trạng thái',sB('${m[5]}')],['Đánh giá','${m[6]} sao'],['Đơn 30 ngày','${m[7]}'],['Doanh thu','${m[8]}'],['Tỷ lệ hủy','${m[9]}'],['Ghi chú','${m[10]}']])"><td>${mn(m[0])}</td><td><strong class="lk">${m[1]}</strong></td><td>${m[2]}</td><td>${m[3]}</td><td>${tB(m[4])}</td><td>${sB(m[5])}</td><td>${m[6]}</td><td>${m[7]}</td><td>${mn(m[8])}</td><td>${m[9]}</td></tr>`).join('')}
+</tbody></table></div></div>`;
+
+pg.charities = () => `<div class="G G4">
+<div class="K"><div class="K-l">Tổng tổ chức</div><div class="K-v">${CR.length}</div></div>
+<div class="K"><div class="K-l">Đang hoạt động</div><div class="K-v" style="color:var(--ok)">${CR.filter(c=>c[4]=='active').length}</div></div>
+<div class="K"><div class="K-l">Chờ duyệt</div><div class="K-v" style="color:var(--warn)">${CR.filter(c=>c[4]=='pending').length}</div></div>
+<div class="K"><div class="K-l">Từ chối</div><div class="K-v" style="color:var(--err)">${CR.filter(c=>c[4]=='rejected').length}</div></div>
+</div><div class="P"><div class="P-h"><div class="P-t">Danh sách Tổ chức từ thiện</div></div><div class="W"><table><thead><tr><th>Mã</th><th>Tên Tổ Chức</th><th>Đại Diện</th><th>Điện thoại</th><th>Trạng thái</th><th>Đã nhận</th><th>Thao tác</th></tr></thead><tbody>
+
+  ${CR.length?CR.map((c,i) => `<tr onclick="openCharityDetail(${i})"><td>${mn(val(c[0]))}</td><td><strong class="lk">${val(c[1])}</strong></td><td>${val(c[2])}</td><td>${mn(val(c[3]))}</td><td>${sB(c[4])}</td><td style="color:var(--pur);font-weight:bold">${val(c[5])}</td><td><button class="bt" onclick="event.stopPropagation();openCharityDetail(${i})">Xem chi tiết</button></td></tr>`).join(''):`<tr><td colspan="7" style="color:var(--t3);text-align:center;padding:20px">Chưa có hồ sơ tổ chức từ thiện.</td></tr>`}
 </tbody></table></div></div>`;
 
 pg.inventory=()=>`<div class="G G4">
@@ -693,8 +924,320 @@ pg.audits=()=>`<div class="P"><div class="P-h"><div class="P-t">Nhật ký hoạ
 ${AUD.map(a=>`<tr onclick="oG('${a[2]}',[[ 'Thời gian',mn('${a[0]}') ],['Người thực hiện','${a[1]}'],['Hành động','${a[2]}'],['Đối tượng',mn('${a[3]}')],['Ghi chú','${a[4]}']])"><td>${mn(a[0])}</td><td><strong class="lk">${a[1]}</strong></td><td>${a[2]}</td><td>${mn(a[3])}</td><td style="white-space:normal">${a[4]}</td></tr>`).join('')}
 </tbody></table></div></div>`;
 
+// ===== PARTNER ADMIN APPROVAL FLOW =====
+function partnerAdminStatus(p, fallback) {
+    const owner = partnerProfileOwner(p);
+    const store = partnerStore(p);
+    const meta = partnerMeta(p);
+    return p?.onboarding_status || meta.onboarding_status || store.onboarding_status || store.status || owner.status || fallback || 'pending';
+}
+
+pg.merchants = () => {
+    const activeCount = MR.filter(m => m[5] === 'active').length;
+    const pendingCount = MR.filter(m => m[5] === 'pending').length;
+    const rejectedCount = MR.filter(m => ['rejected', 'suspended'].includes(m[5])).length;
+    return `<div class="G G4">
+<div class="K"><div class="K-l">Tổng cửa hàng</div><div class="K-v">${MR.length}</div></div>
+<div class="K"><div class="K-l">Đang hoạt động</div><div class="K-v" style="color:var(--ok)">${activeCount}</div></div>
+<div class="K"><div class="K-l">Chờ duyệt</div><div class="K-v" style="color:var(--warn)">${pendingCount}</div></div>
+<div class="K"><div class="K-l">Từ chối/Tạm ngưng</div><div class="K-v" style="color:var(--err)">${rejectedCount}</div></div>
+</div><div class="P"><div class="P-h"><div class="P-t">Danh sách cửa hàng từ partner_profiles</div></div><div class="W"><table><thead><tr><th>Mã</th><th>Cửa hàng</th><th>Pháp nhân</th><th>Loại</th><th>Khu vực</th><th>Trạng thái</th><th>Giấy phép</th><th>Thao tác</th></tr></thead><tbody>
+${MR.length ? MR.map((m, i) => {
+    const p = m[11] || {};
+    const storeMeta = partnerStoreMeta(p);
+    const license = partnerBusinessLicenseDoc(p);
+    const legalName = p.legal_name || storeMeta.legal_name || m[10] || '—';
+    return `<tr onclick="openPartnerDetail(${i})"><td>${mn(val(m[0]))}</td><td><strong class="lk">${val(m[1])}</strong></td><td>${val(legalName)}</td><td>${val(m[2])}</td><td>${val(m[3])}</td><td>${sB(m[5])}</td><td>${license ? B('b-ok', 'Đã gửi') : B('b-w', 'Thiếu')}</td><td><button class="bt" onclick="event.stopPropagation();openPartnerDetail(${i})">Xem chi tiết</button></td></tr>`;
+}).join('') : `<tr><td colspan="8" style="color:var(--t3);text-align:center;padding:20px">Chưa có hồ sơ cửa hàng.</td></tr>`}
+</tbody></table></div></div>`;
+};
+
+async function syncPartnersFromSupabase() {
+    try {
+        let directPartnerResult = null;
+        {
+            const supabase = foodsaveAdminSupabase;
+            console.log("=== ĐANG FETCH PARTNER ===");
+            const { data, error } = await supabase.from('partner_profiles').select('*');
+            console.log("=== KẾT QUẢ FETCH PARTNER ===", { data, error });
+            if (!error && Array.isArray(data) && data.length === 0) {
+                console.warn("=== PARTNER FETCH RỖNG === Nếu Supabase có dữ liệu, hãy kiểm tra RLS hoặc session admin đang dùng cho foodsaveAdminSupabase.");
+            }
+            directPartnerResult = { data, error };
+        }
+
+        let result = await foodsaveAdminSupabase
+            .from('partner_profiles')
+            .select('*, owner:profiles!partner_profiles_profile_id_fkey(id, full_name, email, phone, status, metadata), store:stores!partner_profiles_store_id_fkey(id, name, address, district, city, status, onboarding_status, is_open, service_tier, rating)')
+            .order('created_at', { ascending: false });
+
+        if (result.error) {
+            console.warn('Không lấy được owner/store partner, thử lại chỉ với partner_profiles:', result.error);
+            result = await foodsaveAdminSupabase
+                .from('partner_profiles')
+                .select('*')
+                .order('created_at', { ascending: false });
+        }
+
+        if (directPartnerResult && !directPartnerResult.error) {
+            result = directPartnerResult;
+        }
+
+        const { data, error } = result;
+        if (error) throw error;
+
+        MR.length = 0;
+        (data || []).forEach((p, index) => {
+            const owner = partnerProfileOwner(p);
+            const store = partnerStore(p);
+            const meta = partnerMeta(p);
+            const storeMeta = partnerStoreMeta(p);
+            const address = obj(meta.address);
+            const metrics = obj(meta.metrics || p.metrics);
+            const shortId = p.profile_id ? String(p.profile_id).substring(0, 8).toUpperCase() : `P-${3000 + index}`;
+            const status = partnerAdminStatus(p, 'pending');
+            const name = store.name || storeMeta.name || p.legal_name || p.email || owner.email || 'Chưa có tên';
+            const businessType = p.business_type || storeMeta.business_type || 'other';
+            const area = [store.district || address.district, store.city || address.city].filter(Boolean).join(', ') || address.address || '—';
+            const tier = store.service_tier || 'Starter';
+            const rating = store.rating ?? metrics.rating ?? '—';
+            const orders30 = metrics.orders_30d ?? metrics.orders30 ?? 0;
+            const revenue = metrics.revenue_30d_cents
+                ? moneyFromCents(metrics.revenue_30d_cents)
+                : (metrics.revenue_30d ? Number(metrics.revenue_30d).toLocaleString('vi-VN') + 'đ' : '—');
+            const cancelRate = metrics.cancel_rate_30d ?? metrics.cancelRate ?? '—';
+            const legalName = p.legal_name || storeMeta.legal_name || '—';
+
+            MR.push([shortId, name, businessType, area, tier, status, rating, orders30, revenue, cancelRate, legalName, p]);
+        });
+
+        const badge = document.querySelector('.S-i[data-p="merchants"] em');
+        if (badge) badge.textContent = MR.length;
+
+        if (currentPage === 'merchants') go('merchants');
+    } catch (error) {
+        console.error('Lỗi khi kéo dữ liệu Cửa hàng:', error);
+    }
+}
+
+async function updatePartnerApprovalStatus(profileId, status, reason = '') {
+    if (partnerApprovalBusy) return;
+    if (!profileId) {
+        alert('Không tìm thấy ID hồ sơ partner để cập nhật.');
+        return;
+    }
+
+    partnerApprovalBusy = true;
+    try {
+        const current = MR.find(m => m[11]?.profile_id === profileId)?.[11] || {};
+        const metadata = {
+            ...partnerMeta(current),
+            onboarding_status: status,
+            admin_review: {
+                status,
+                reason,
+                reviewed_at: new Date().toISOString(),
+                reviewer: 'admin_01'
+            }
+        };
+
+        const { error } = await foodsaveAdminSupabase
+            .from('partner_profiles')
+            .update({ onboarding_status: status, metadata })
+            .eq('profile_id', profileId);
+
+        if (error) throw error;
+
+        await syncPartnersFromSupabase();
+        const nextIndex = MR.findIndex(m => m[11]?.profile_id === profileId);
+        if (nextIndex >= 0) openPartnerDetail(nextIndex);
+        else xD();
+    } catch (error) {
+        console.error('Lỗi cập nhật trạng thái partner_profiles:', error);
+        alert(error.message || 'Không thể cập nhật trạng thái cửa hàng.');
+    } finally {
+        partnerApprovalBusy = false;
+    }
+}
+
+async function approvePartner(profileId) {
+    if (partnerApprovalBusy) return;
+    if (!profileId) {
+        alert('Không tìm thấy ID hồ sơ partner để duyệt.');
+        return;
+    }
+
+    partnerApprovalBusy = true;
+    try {
+        const supabase = foodsaveAdminSupabase;
+        const { data, error } = await supabase
+            .from('partner_profiles')
+            .update({ onboarding_status: 'active' })
+            .eq('profile_id', profileId)
+            .select('*')
+            .maybeSingle();
+
+        console.log("=== KẾT QUẢ DUYỆT PARTNER ===", { profileId, data, error });
+        if (error) throw error;
+
+        await syncPartnersFromSupabase();
+        const nextIndex = MR.findIndex(m => m[11]?.profile_id === profileId);
+        if (nextIndex >= 0) openPartnerDetail(nextIndex);
+        else xD();
+    } catch (error) {
+        console.error('Lỗi duyệt partner_profiles:', error);
+        alert(error.message || 'Không thể duyệt cửa hàng.');
+    } finally {
+        partnerApprovalBusy = false;
+    }
+}
+
+function rejectPartner(profileId) {
+    const current = MR.find(m => m[11]?.profile_id === profileId)?.[11] || {};
+    const store = partnerStore(current);
+    const storeMeta = partnerStoreMeta(current);
+    const title = store.name || storeMeta.name || current.legal_name || 'cửa hàng này';
+    oD('Từ chối cửa hàng', Sec('Lý do từ chối', `<div style="padding:12px 18px;display:grid;gap:10px">
+<div style="font-size:.78rem;color:var(--t2)">Nhập lý do từ chối hồ sơ <strong>${val(title)}</strong>. Lý do sẽ được lưu vào metadata.admin_review.</div>
+<textarea id="partnerRejectReason" rows="5" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font:inherit;resize:vertical" placeholder="Ví dụ: Giấy phép kinh doanh không rõ thông tin pháp nhân"></textarea>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bt" onclick="xD()">Hủy</button><button class="bt bt-p" onclick="confirmRejectPartner('${jsQ(profileId)}')">Xác nhận từ chối</button></div>
+</div>`));
+}
+
+function confirmRejectPartner(profileId) {
+    const reason = String(document.getElementById('partnerRejectReason')?.value || '').trim();
+    if (!reason) {
+        alert('Vui lòng nhập lý do từ chối.');
+        return;
+    }
+    updatePartnerApprovalStatus(profileId, 'rejected', reason);
+}
+
+function rejectPartner(profileId) {
+    const current = MR.find(m => m[11]?.profile_id === profileId)?.[11] || {};
+    const store = partnerStore(current);
+    const storeMeta = partnerStoreMeta(current);
+    const title = store.name || storeMeta.name || current.legal_name || 'cửa hàng này';
+    const body = partnerOpenDomModal('Từ chối cửa hàng');
+    const section = partnerSection(body, 'Lý do từ chối');
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:12px 18px;display:grid;gap:10px';
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:.78rem;color:var(--t2)';
+    note.textContent = `Nhập lý do từ chối hồ sơ ${title}. Lý do sẽ được lưu vào metadata.admin_review.`;
+    const textarea = document.createElement('textarea');
+    textarea.id = 'partnerRejectReason';
+    textarea.rows = 5;
+    textarea.style.cssText = 'width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font:inherit;resize:vertical';
+    textarea.placeholder = 'Ví dụ: Giấy phép kinh doanh không rõ thông tin pháp nhân';
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+    const cancel = document.createElement('button');
+    cancel.className = 'bt';
+    cancel.type = 'button';
+    cancel.textContent = 'Hủy';
+    cancel.addEventListener('click', xD);
+    const confirm = document.createElement('button');
+    confirm.className = 'bt bt-p';
+    confirm.type = 'button';
+    confirm.textContent = 'Xác nhận từ chối';
+    confirm.addEventListener('click', () => confirmRejectPartner(profileId));
+    actions.append(cancel, confirm);
+    wrap.append(note, textarea, actions);
+    section.appendChild(wrap);
+}
+
+async function syncCharitiesFromSupabase() {
+    try {
+        let result = await foodsaveAdminSupabase
+            .from('charity_profiles')
+            .select('*, owner:profiles!charity_profiles_owner_id_fkey(id, full_name, email, phone, status, metadata)')
+            .order('created_at', { ascending: false });
+
+        if (result.error) {
+            console.warn('Không lấy được metadata owner, thử lại chỉ với charity_profiles:', result.error);
+            result = await foodsaveAdminSupabase
+            .from('charity_profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+        }
+
+        const { data, error } = result;
+        if (error) throw error;
+
+        CR.length = 0;
+        (data || []).forEach((c, index) => {
+            const owner = charityOwner(c);
+            const meta = charityMeta(c);
+            const info = charityInfo(c);
+            const profile = obj(meta.charity_profile);
+            const rep = obj(meta.representative);
+            const shortId = c.id ? c.id.substring(0, 8).toUpperCase() : `C-${2000 + index}`;
+
+            CR.push([
+                shortId,
+                c.name || info.organization_name || profile.name || 'Chưa có tên',
+                info.representative_name || rep.name || owner.full_name || c.email || 'Chưa cập nhật',
+                info.representative_phone || rep.phone || c.phone || info.organization_phone || profile.phone || owner.phone || '—',
+                c.status || meta.onboarding_status || owner.status || 'pending',
+                (c.beneficiaries_count ?? info.beneficiaries_count ?? meta.scale?.people ?? 0) + ' người',
+                c.address || info.address || profile.address || 'Chưa có địa chỉ',
+                c
+            ]);
+        });
+
+        const badge = document.querySelector('.S-i[data-p="charities"] em');
+        if (badge) badge.textContent = CR.length;
+
+        if (currentPage === 'charities') go('charities');
+    } catch (error) {
+        console.error('Lỗi khi kéo dữ liệu Tổ chức từ thiện:', error);
+    }
+}
+
+async function updateCharityApprovalStatus(charityId, status) {
+    if (charityApprovalBusy) return;
+    if (!charityId) {
+        alert('Không tìm thấy ID hồ sơ charity để cập nhật.');
+        return;
+    }
+
+    charityApprovalBusy = true;
+    try {
+        const payload = status === 'active'
+            ? { status: 'active', approved_by: 'admin_01' }
+            : { status: 'rejected' };
+        const { error } = await foodsaveAdminSupabase
+            .from('charity_profiles')
+            .update(payload)
+            .eq('id', charityId);
+
+        if (error) throw error;
+
+        await syncCharitiesFromSupabase();
+        const nextIndex = CR.findIndex(c => c[7]?.id === charityId);
+        if (nextIndex >= 0) openCharityDetail(nextIndex);
+        else xD();
+    } catch (error) {
+        console.error('Lỗi cập nhật trạng thái charity_profiles:', error);
+        alert(error.message || 'Không thể cập nhật trạng thái tổ chức từ thiện.');
+    } finally {
+        charityApprovalBusy = false;
+    }
+}
+
+function approveCharity(charityId) {
+    updateCharityApprovalStatus(charityId, 'active');
+}
+
+function rejectCharity(charityId) {
+    if (confirm('Từ chối hồ sơ tổ chức từ thiện này?')) {
+        updateCharityApprovalStatus(charityId, 'rejected');
+    }
+}
+
 // ===== NAV =====
-const titles={dashboard:'Bảng điều khiển',admins:'Quản trị viên',users:'Người dùng',reputation:'Uy tín',merchants:'Cửa hàng',inventory:'Lô hàng tồn kho',orders:'Đơn hàng',payments:'Thanh toán',payouts:'Chi trả đối tác',disputes:'Tranh chấp',risks:'Cảnh báo gian lận',audits:'Nhật ký hoạt động',config:'Cấu hình'};
+const titles={dashboard:'Bảng điều khiển',admins:'Quản trị viên',users:'Người dùng',reputation:'Uy tín',merchants:'Cửa hàng',charities:'Tổ chức từ thiện',inventory:'Lô hàng tồn kho',orders:'Đơn hàng',payments:'Thanh toán',payouts:'Chi trả đối tác',disputes:'Tranh chấp',risks:'Cảnh báo gian lận',audits:'Nhật ký hoạt động',config:'Cấu hình'};
 let currentPage='dashboard';
 function go(p){
 currentPage=p;
@@ -703,9 +1246,19 @@ document.getElementById('pt').textContent=titles[p]||p;
 document.getElementById('ct').innerHTML=`<div class="page">${(pg[p]||pg.dashboard)()}</div>`;
 }
 document.querySelectorAll('.S-i').forEach(el=>el.addEventListener('click',()=>go(el.dataset.p)));
+function initAdminSupabaseSync(){
+console.log("=== ADMIN LOAD: KÍCH HOẠT FETCH PARTNER ===");
 go('dashboard');
 syncOrdersFromSupabase();
-syncEcoImpactPlatform();
+syncPartnersFromSupabase();
+syncCharitiesFromSupabase(); // Thêm dòng này vào đây
+}
+if(document.readyState==='loading'){
+document.addEventListener('DOMContentLoaded',initAdminSupabaseSync);
+}else{
+initAdminSupabaseSync();
+}
+
 </script>
 </body>
 </html>

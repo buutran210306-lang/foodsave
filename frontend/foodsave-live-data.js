@@ -238,8 +238,8 @@
   function productLabelFromExpiry(expiresAt, fallback) {
     if (!expiresAt) return fallback || "green";
     const hours = hoursUntil(expiresAt);
-    if (hours <= 12) return "red";
-    if (hours <= 24) return "yellow";
+    if (hours <= 24) return "red";
+    if (hours <= 48) return "yellow";
     return "green";
   }
 

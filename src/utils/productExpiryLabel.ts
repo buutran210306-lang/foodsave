@@ -1,9 +1,10 @@
 import type { ProductLabel } from "../types/domain";
 
 export const PRODUCT_EXPIRY_LABEL_THRESHOLDS = {
-  redHours: 12,
-  yellowHours: 24,
-  greenReferenceDays: 5
+  redHours: 24,
+  yellowHours: 48,
+  greenMinDays: 3,
+  greenMaxDays: 5
 } as const;
 
 export const hoursUntilExpiry = (expiresAt: string | Date, now = new Date()): number => {

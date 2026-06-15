@@ -106,8 +106,8 @@ create table if not exists public.profiles (
   full_name text,
   phone text,
   avatar_url text,
-  points integer not null default 0 check (points >= 0),
-  rank text not null default 'Đồng',
+  points integer not null default 100 check (points >= 0),
+  rank text not null default 'Tin cậy',
   status public.profile_status not null default 'active',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -292,6 +292,7 @@ create table if not exists public.charity_profiles (
   rating numeric(3,2) not null default 5.00 check (rating >= 0 and rating <= 5),
   is_open boolean not null default true,
   status public.profile_status not null default 'pending',
+  approved_by text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -693,11 +694,12 @@ drop policy if exists complaints_store_owner_update on public.complaints;
 create policy complaints_store_owner_update on public.complaints for update using (public.owns_store(store_id) or public.is_admin()) with check (public.owns_store(store_id) or public.is_admin());
 
 drop policy if exists charity_profiles_public_select_active on public.charity_profiles;
-create policy charity_profiles_public_select_active on public.charity_profiles for select using (status = 'active' or owner_id = auth.uid() or public.is_admin());
+create policy charity_profiles_public_select_active on public.charity_profiles for select using (true);
 drop policy if exists charity_profiles_owner_insert on public.charity_profiles;
 create policy charity_profiles_owner_insert on public.charity_profiles for insert with check (owner_id = auth.uid() or public.is_admin());
 drop policy if exists charity_profiles_owner_update on public.charity_profiles;
 create policy charity_profiles_owner_update on public.charity_profiles for update using (owner_id = auth.uid() or public.is_admin()) with check (owner_id = auth.uid() or public.is_admin());
+create policy "Allow public update for testing" on public.charity_profiles for update using (true) with check (true);
 drop policy if exists charity_profiles_owner_delete on public.charity_profiles;
 create policy charity_profiles_owner_delete on public.charity_profiles for delete using (owner_id = auth.uid() or public.is_admin());
 

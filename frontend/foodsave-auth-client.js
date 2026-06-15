@@ -5,8 +5,8 @@
   const API_PATH = "/api/v1";
   const AUTH_STORAGE_KEY = "foodsave.auth.session";
   const PHONE_OTP_STORAGE_KEY = "foodsave.auth.phoneOtp";
-  const SUPABASE_URL = "https://pggcbgtoxlhlgmwxupoc.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_SYM7q7GKZviIk4u66-ECRw_HwBlh96p";
+  const SUPABASE_URL = "https://uqyqayrwhcicuctfnwix.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_tUk1J3EpJfW4h9SkPDg_hg_FAJPOUuX";
   let oauthNoticeTimer = 0;
   let customerLoginPending = false;
   let customerRegisterPending = false;
@@ -17,6 +17,11 @@
   let phoneOtpTimer = 0;
   let portalLoginPending = false;
   let portalRegisterPending = false;
+  let charityOtpPending = false;
+  let charityVerifyPending = false;
+  let charitySubmitPending = false;
+  let partnerOtpPending = false;
+  let partnerVerifyPending = false;
   let supabaseAuthInitialized = false;
 
   function trimTrailingSlash(value) {
@@ -91,6 +96,22 @@
   }
 
   window.getFoodSaveSupabaseClient = getFoodSaveSupabase;
+
+  // PARTNER SECTION START
+  function getPartnerLoginSupabaseClient() {
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("Supabase JS chưa sẵn sàng. Hãy kiểm tra thứ tự nhúng script @supabase/supabase-js.");
+    }
+
+    return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
+  }
+  // PARTNER SECTION END
 
   function select(selector) {
     return document.querySelector(selector);
@@ -892,7 +913,6 @@
 
     return `
 <h2 class="auth-h">Đăng nhập ${label}</h2>
-<p class="auth-sub">Backend sẽ xác thực Supabase Auth và chỉ cho đúng vai trò ${config.expectedRole} vào cổng này</p>
 <div class="field"><label>Email / Số điện thoại</label><input class="inp" id="auth-login-identifier" autocomplete="username" placeholder="${sampleEmail}"></div>
 <div class="field"><div class="f ac jb m6"><label style="margin-bottom:0">Mật khẩu</label><span style="font-size:11.5px;color:${config.accent};cursor:pointer;font-weight:800" onclick="aS='forgot';rAuth()">Quên mật khẩu?</span></div><input class="inp" id="auth-login-password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu"></div>
 <div class="f ac g8 m16"><input type="checkbox" id="rmm" style="accent-color:${config.accent};width:16px;height:16px"><label for="rmm" style="font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:500">Ghi nhớ đăng nhập</label></div>
@@ -922,7 +942,8 @@
     "eKYC",
     "Cửa hàng",
     "Tài chính",
-    "Vận hành"
+    "Vận hành",
+    "Chờ duyệt"
   ];
 
   const PARTNER_BUSINESS_TYPES = [
@@ -933,6 +954,10 @@
   ];
 
   const PARTNER_BANKS = ["Vietcombank", "Techcombank", "BIDV", "MB Bank", "VPBank", "ACB", "Sacombank", "VietinBank"];
+  const PARTNER_STORAGE_BUCKET = "partner-assets";
+  const PARTNER_DOCUMENT_FIELDS = ["cccdFront", "cccdBack", "businessLicense", "businessLicenseExtra", "foodSafety", "logo", "cover"];
+  const CHARITY_STORAGE_BUCKET = "charity_documents";
+  const CHARITY_DOCUMENT_FIELDS = ["logo", "cover", "cccdFront", "cccdBack", "decision", "license", "finance", "coverImage", "financialReport", "idCard"];
   const PORTAL_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const VIETNAM_PROVINCE_2025_MAP = {
@@ -1320,7 +1345,7 @@
   function partnerFileUpload(field, label, requiredText, icon) {
     const state = partnerState();
     const fileName = field === "logo" ? state.logoFileName : field === "cover" ? state.coverFileName : state.docs?.[field];
-    return `<div style="flex:1"><div class="f ac jb m6"><span style="font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">${label}</span>${requiredText ? `<span class="tg ${requiredText === "Bắt buộc" ? "tg-r" : "tg-y"}">${requiredText}</span>` : ""}</div><div id="seller-upload-${field}" style="border:2px dashed ${fileName ? "var(--green-700)" : "var(--line)"};border-radius:13px;padding:22px;text-align:center;cursor:pointer;background:${fileName ? "var(--green-50)" : "var(--soft)"};transition:.2s" onclick="document.getElementById('seller-file-${field}').click()">${fileName ? `<i class="ti ti-check" style="font-size:22px;color:var(--green-700)"></i><div style="font-size:10.5px;color:var(--green-800);font-weight:800;margin-top:4px">${escapeHtml(fileName)}</div>` : `<i class="ti ${icon}" style="font-size:24px;color:var(--muted)"></i><div style="font-size:10.5px;color:var(--muted);font-weight:800;margin-top:4px">Chụp ảnh hoặc tải lên</div>`}</div><input id="seller-file-${field}" type="file" accept="image/*,.pdf" style="display:none" onchange="FoodSaveAuth.markSellerFileUploaded('${field}',this)"></div>`;
+    return `<div style="flex:1"><div class="f ac jb m6"><span style="font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">${label}</span>${requiredText ? `<span class="tg ${requiredText === "Bắt buộc" ? "tg-r" : "tg-y"}">${requiredText}</span>` : ""}</div><div id="seller-upload-${field}" style="border:2px dashed ${fileName ? "var(--green-700)" : "var(--line)"};border-radius:13px;padding:22px;text-align:center;cursor:pointer;background:${fileName ? "var(--green-50)" : "var(--soft)"};transition:.2s" onclick="document.getElementById('seller-file-${field}').click()">${fileName ? `<i class="ti ti-check" style="font-size:22px;color:var(--green-700)"></i><div style="font-size:10.5px;color:var(--green-800);font-weight:800;margin-top:4px">${escapeHtml(fileName)}</div>` : `<i class="ti ${icon}" style="font-size:24px;color:var(--muted)"></i><div style="font-size:10.5px;color:var(--muted);font-weight:800;margin-top:4px">Tải ảnh lên</div>`}</div><input id="seller-file-${field}" type="file" accept="image/*" style="display:none" onchange="FoodSaveAuth.markSellerFileUploaded('${field}',this)"></div>`;
   }
 
   function partnerStepAccount() {
@@ -1343,7 +1368,7 @@ ${partnerPasswordField("auth-register-password-confirm", "auth-register-confirm-
     return `
 <h2 class="auth-h" style="font-size:28px">Hồ sơ cửa hàng & Định vị địa chỉ</h2>
 <p class="auth-sub">Thông tin sẽ hiển thị cho khách hàng và giúp FoodSave xác thực vị trí</p>
-<div class="f g12 m12">${partnerFileUpload("logo", "Logo", "", "ti-camera")}${partnerFileUpload("cover", "Ảnh bìa", "", "ti-photo")}</div>
+<div class="f g12 m12">${partnerFileUpload("logo", "Logo", "", "ti-photo")}${partnerFileUpload("cover", "Ảnh bìa", "", "ti-photo")}</div>
 <div class="field"><label>Tên cửa hàng</label><input class="inp" id="auth-register-name" placeholder="VD: Cửa hàng của bạn" value="${escapeHtml(profile.storeName || "")}"></div>
 <div class="field"><label>Mô tả cửa hàng</label><textarea class="inp" id="seller-store-description" rows="3" placeholder="Tiệm bánh mì tươi mỗi ngày, sourdough truyền thống...">${escapeHtml(profile.description || "")}</textarea></div>
 <div class="field"><label>Hashtag (tối đa 5)</label><input class="inp" id="seller-hashtags" placeholder="#bakery #freshbread #handcraft" value="${escapeHtml((profile.hashtags || []).join(" "))}" oninput="FoodSaveAuth.limitPartnerHashtags(this)"></div>
@@ -1357,12 +1382,12 @@ ${profile.businessType === type.id ? '<i class="ti ti-check" style="color:var(--
 <div class="field"><label>Tìm kiếm địa chỉ trên Google Maps</label><input class="inp" id="seller-address-search" placeholder="Gõ địa chỉ cửa hàng để dùng Google Places Autocomplete" value="${escapeHtml(location.formattedAddress || "")}" onblur="FoodSaveAuth.parseSellerTypedAddress()"></div>
 <div id="seller-map" style="height:180px;border:1.5px solid var(--line);border-radius:16px;background:var(--soft);margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:800;text-align:center;padding:16px"><i class="ti ti-map-pin" style="font-size:22px;color:var(--green-700);margin-right:6px"></i> Google Maps sẽ hiển thị khi API đã được nạp</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-  <div class="field"><label>Số nhà & Tên đường</label><input class="inp" id="seller-street" readonly value="${escapeHtml(location.street || "")}"></div>
-  <div class="field"><label>Phường/Xã</label><input class="inp" id="seller-ward" readonly value="${escapeHtml(location.ward || "")}"></div>
-  <div class="field"><label>Quận/Huyện</label><input class="inp" id="seller-district" readonly value="${escapeHtml(location.district || "")}"></div>
-  <div class="field"><label>Tỉnh/Thành phố</label><input class="inp" id="seller-city" readonly value="${escapeHtml(location.city || "")}"></div>
-  <div class="field"><label>Latitude</label><input class="inp" id="seller-lat" readonly value="${escapeHtml(location.lat || "")}"></div>
-  <div class="field"><label>Longitude</label><input class="inp" id="seller-lng" readonly value="${escapeHtml(location.lng || "")}"></div>
+  <div class="field"><label>Số nhà & Tên đường</label><input class="inp" id="seller-street" value="${escapeHtml(location.street || "")}"></div>
+  <div class="field"><label>Phường/Xã</label><input class="inp" id="seller-ward" value="${escapeHtml(location.ward || "")}"></div>
+  <div class="field"><label>Quận/Huyện</label><input class="inp" id="seller-district" value="${escapeHtml(location.district || "")}"></div>
+  <div class="field"><label>Tỉnh/Thành phố</label><input class="inp" id="seller-city" value="${escapeHtml(location.city || "")}"></div>
+  <div class="field"><label>Latitude</label><input class="inp" id="seller-lat" value="${escapeHtml(location.lat || "")}"></div>
+  <div class="field"><label>Longitude</label><input class="inp" id="seller-lng" value="${escapeHtml(location.lng || "")}"></div>
 </div>
 <div class="f g8" style="margin-top:8px"><button class="btn btn-o btn-lg" style="flex:1;justify-content:center" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button><button class="btn btn-primary btn-lg" style="flex:1;justify-content:center" onclick="FoodSaveAuth.nextPartnerRegisterStep()">Tiếp tục <i class="ti ti-arrow-right"></i></button></div>`;
   }
@@ -1382,7 +1407,7 @@ ${profile.businessType === type.id ? '<i class="ti ti-check" style="color:var(--
 }).join("")}</div>
 <div style="background:linear-gradient(135deg,var(--green-50),var(--green-100));border-radius:16px;padding:16px;margin-bottom:14px;border:1px solid var(--green-200)">
 <div style="font-size:11.5px;font-weight:900;color:var(--green-800);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:7px;font-family:'Plus Jakarta Sans'"><i class="ti ti-clock-hour-4"></i> Hệ thống nhãn HSD tự động</div>
-<div class="f g8 m10">${[{c:"var(--green-700)",l:"Xanh",d:"≥ 5 ngày"},{c:"var(--yellow)",l:"Vàng",d:"3-5 ngày"},{c:"var(--red)",l:"Đỏ",d:"< 24h"}].map((item) => `<div style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:10px;border:1px solid var(--line)"><div style="width:12px;height:12px;border-radius:50%;background:${item.c};margin:0 auto 5px"></div><div style="font-size:11.5px;font-weight:900;color:${item.c};font-family:'Plus Jakarta Sans'">${item.l}</div><div style="font-size:9.5px;color:var(--muted);font-weight:700">${item.d}</div></div>`).join("")}</div>
+<div class="f g8 m10">${[{c:"var(--green-700)",l:"Xanh",d:"3-5 ngày"},{c:"var(--yellow)",l:"Vàng",d:"48h"},{c:"var(--red)",l:"Đỏ",d:"24h"}].map((item) => `<div style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:10px;border:1px solid var(--line)"><div style="width:12px;height:12px;border-radius:50%;background:${item.c};margin:0 auto 5px"></div><div style="font-size:11.5px;font-weight:900;color:${item.c};font-family:'Plus Jakarta Sans'">${item.l}</div><div style="font-size:9.5px;color:var(--muted);font-weight:700">${item.d}</div></div>`).join("")}</div>
 <div style="font-size:10px;color:var(--ink-soft);line-height:1.7;font-weight:600"><i class="ti ti-ban" style="color:var(--red)"></i> Chặn tự động: Gỡ SP khi còn ≤30-45p<br><i class="ti ti-tag" style="color:var(--yellow-600)"></i> Điều chỉnh giá linh hoạt khi gần hạn<br><i class="ti ti-heart" style="color:var(--green-700)"></i> Chuyển tặng từ thiện khi không bán được</div></div>
 ${[
   {field:"businessLicense",label:"Giấy phép kinh doanh",required:"Bắt buộc",icon:"ti-file-certificate"},
@@ -1447,7 +1472,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 <div class="field"><label>Người đại diện</label><input class="inp" id="auth-register-representative" autocomplete="name" placeholder="Nhập họ tên người đại diện"></div>
 <div class="field"><label>Mật khẩu</label><input class="inp" id="auth-register-password" type="password" autocomplete="new-password" placeholder="Tối thiểu 8 ký tự, có chữ hoa và số"></div>
 <div class="field"><label>${isPartner ? "Địa chỉ cửa hàng" : "Địa chỉ trụ sở"}</label><input class="inp" id="auth-register-address" placeholder="Nhập địa chỉ hoạt động"></div>
-<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;margin:12px 0 16px;color:var(--muted);cursor:pointer"><input type="checkbox" id="auth-register-terms" style="accent-color:${isPartner ? "var(--green-700)" : "var(--rose)"};margin-top:2px">Tôi đồng ý với điều khoản dịch vụ và chính sách bảo mật FoodSave.</label>
+<label style="display:flex;gap:10px;align-items:flex-start;font-size:12.5px;margin:12px 0 16px;color:var(--muted);cursor:pointer"><input type="checkbox" id="auth-register-terms" style="accent-color:${isPartner ? "var(--green-700)" : "var(--rose)"};margin-top:2px"><span>Tôi đồng ý với <a href="dieu-khoan.html?source=partner" style="color:var(--green-700);font-weight:900;text-decoration:none">điều khoản dịch vụ</a> và <a href="chinh-sach.html?source=partner" style="color:var(--green-700);font-weight:900;text-decoration:none">chính sách bảo mật</a> FoodSave.</span></label>
 <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:8px" onclick="FoodSaveAuth.capturePortalAccount('${role}')">Tiếp tục <i class="ti ti-arrow-right"></i></button>`;
   }
 
@@ -1469,6 +1494,22 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const file = input?.files?.[0];
     if (!file) return;
     const state = partnerState();
+    const previousPreview = state.uploads?.[field]?.preview;
+    if (previousPreview && String(previousPreview).startsWith("blob:")) URL.revokeObjectURL(previousPreview);
+    state.uploads = {
+      ...(state.uploads || {}),
+      [field]: {
+        ...(state.uploads?.[field] || {}),
+        name: file.name,
+        rawFile: file,
+        preview: file.type && file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+        dataUrl: "",
+        url: "",
+        mimeType: file.type || "",
+        size: file.size || 0,
+        status: "uploaded"
+      }
+    };
     if (field === "logo") state.logoFileName = file.name;
     else if (field === "cover") state.coverFileName = file.name;
     else state.docs = { ...(state.docs || {}), [field]: file.name };
@@ -1586,44 +1627,20 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   async function submitPartnerRegistration() {
     if (portalRegisterPending) return;
     portalRegisterPending = true;
-    savePartnerStep(3);
+    savePartnerStep(Math.min(5, PARTNER_REGISTER_STEPS.length - 2));
     const state = partnerState();
-    const account = state.account || {};
-    const profile = state.profile || {};
-    const location = state.location || {};
-    const finance = state.finance || {};
-    const address = location.formattedAddress || [location.street, location.ward, location.district, location.city].filter(Boolean).join(", ");
-    const latitude = location.lat === "" || location.lat === undefined || location.lat === null ? undefined : Number(location.lat);
-    const longitude = location.lng === "" || location.lng === undefined || location.lng === null ? undefined : Number(location.lng);
 
     try {
-      const data = await request(portalConfig.partner.registerEndpoint, {
-        method: "POST",
-        body: {
-          store_name: profile.storeName,
-          email: account.email,
-          phone: account.phone,
-          password: account.password,
-          address,
-          district: location.district || undefined,
-          city: location.city || "TP.HCM",
-          latitude: Number.isFinite(latitude) ? latitude : undefined,
-          longitude: Number.isFinite(longitude) ? longitude : undefined,
-          business_type: profile.businessType,
-          representative_name: account.representative,
-          bank_name: finance.bankName,
-          bank_account_number: String(finance.accountNumber || "").replace(/\s/g, ""),
-          bank_account_holder: finance.accountHolder,
-          terms_accepted: true
-        }
-      });
-
-      saveSession(data, "partner");
-      setPartnerStep(4);
-      window.rAuth();
-      notify("Đăng ký thành công", portalConfig.partner.pendingMessage, "info");
+      state.submitted = true;
+      stopPartnerFaceStream();
+      // PARTNER SECTION START
+      showPartnerPendingStep();
+      // PARTNER SECTION END
     } catch (error) {
-      notify("Đăng ký thất bại", error.message, "error");
+      // PARTNER SECTION START
+      console.error('Lỗi ở Bước 6:', error);
+      showPartnerPendingStep();
+      // PARTNER SECTION END
     } finally {
       portalRegisterPending = false;
     }
@@ -1631,14 +1648,15 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   async function nextPartnerRegisterStep() {
     const step = partnerStep();
-    if (step === 4) return finishPartnerPending();
+    const pendingStep = PARTNER_REGISTER_STEPS.length - 1;
+    if (step === pendingStep) return finishPartnerPending();
     const error = validatePartnerStep(step);
     if (error) {
       if (step === 0) validatePartnerPasswords();
       notify("Thiếu thông tin", error, "warn");
       return;
     }
-    if (step === 3) {
+    if (step === pendingStep - 1) {
       await submitPartnerRegistration();
       return;
     }
@@ -1659,6 +1677,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   }
 
   function finishPartnerPending() {
+    stopPartnerFaceStream();
     setPortalAuthState("login");
     setPartnerStep(0);
     if (typeof window.goView === "function") window.goView("landing");
@@ -1666,6 +1685,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   }
 
   function cancelPartnerRegistration() {
+    stopPartnerFaceStream();
     setPortalAuthState("login");
     setPartnerStep(0);
     window.rAuth();
@@ -1708,6 +1728,103 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     return account.contact || account.email || account.phone || "";
   }
 
+  function normalizePartnerEmail(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function partnerVerifiedEmail(state) {
+    const otp = state?.otp || {};
+    return normalizePartnerEmail(state?.authEmail || state?.otpEmail || otp.email || "");
+  }
+
+  function partnerContactEmail(state) {
+    const account = state?.account || {};
+    const profile = state?.profile || {};
+    const contact = splitPartnerContact(account.contact || "");
+    return normalizePartnerEmail(account.email || profile.adminEmail || contact.email || partnerVerifiedEmail(state));
+  }
+
+  function partnerContactPhone(state) {
+    const account = state?.account || {};
+    const profile = state?.profile || {};
+    const contact = splitPartnerContact(account.contact || "");
+    return normalizePhone(account.phone || profile.adminPhone || profile.hotline || contact.phone || "");
+  }
+
+  // PARTNER SECTION START
+  function partnerUserMetadata() {
+    // Lấy state hiện tại (tuỳ thuộc vào cách bạn khai báo biến state)
+    const state = typeof partnerState === 'function' ? partnerState() : (window.FS?.partnerState || {});
+
+    // Chỉ trả về đúng role và tên, không nhồi nhét thêm data lớn
+    return {
+        role: "partner",
+        name: state.profile?.storeName || state.account?.representative || "Cửa hàng đối tác"
+    };
+  }
+  // PARTNER SECTION END
+
+  function partnerRegistrationCredentials(state = partnerState()) {
+    state.account = state.account || {};
+    const passwordInput = select("#auth-register-password");
+    const confirmInput = select("#auth-register-password-confirm");
+    const passwordVar = passwordInput && "value" in passwordInput
+      ? String(passwordInput.value || "").trim()
+      : String(state.account.password || "").trim();
+    const confirmVar = confirmInput && "value" in confirmInput
+      ? String(confirmInput.value || "").trim()
+      : String(state.account.passwordConfirm || "").trim();
+
+    state.account.password = passwordVar;
+    state.account.passwordConfirm = confirmVar;
+
+    return {
+      emailVar: partnerContactEmail(state),
+      passwordVar,
+      confirmVar,
+      passwordInputFound: !!passwordInput,
+      confirmInputFound: !!confirmInput
+    };
+  }
+
+  async function updatePartnerAuthPassword(supabaseClient, user, state = partnerState()) {
+    const credentials = partnerRegistrationCredentials(state);
+    const emailVar = normalizePartnerEmail(user?.email || credentials.emailVar);
+    const passwordVar = credentials.passwordVar;
+    const passwordError = passwordErrorText(passwordVar, credentials.confirmVar);
+
+    if (passwordError) {
+      setPartnerStep(0);
+      if (typeof window.rAuth === "function") window.rAuth();
+      throw new Error(passwordError);
+    }
+
+    console.log("=== DEBUG DỮ LIỆU ĐĂNG KÝ PARTNER ===", {
+      emailTruyenVao: emailVar,
+      passTruyenVao: passwordVar,
+      passLength: passwordVar.length,
+      passwordInputFound: credentials.passwordInputFound,
+      confirmInputFound: credentials.confirmInputFound
+    });
+
+    // PARTNER SECTION START
+    const minimalPartnerAuthMetadata = partnerUserMetadata({
+      ...state,
+      account: {
+        ...(state.account || {}),
+        email: emailVar
+      }
+    });
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: passwordVar,
+      data: minimalPartnerAuthMetadata
+    });
+    // PARTNER SECTION END
+
+    if (error) throw error;
+    return data?.user || user;
+  }
+
   function setPartnerWizardMode(enabled) {
     const wrap = select(".auth-wrap");
     if (wrap) wrap.classList.toggle("partner-wizard-mode", Boolean(enabled));
@@ -1715,12 +1832,12 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   function ensurePartnerOtp(reset) {
     const state = ensurePartnerRegistrationDefaults();
-    if (reset || !state.otp.code || !state.otp.expiresAt) {
+    if (reset || !state.otp.expiresAt) {
       state.otp = {
-        code: "123456",
         value: reset ? "" : state.otp.value || "",
         expiresAt: Date.now() + 180000,
-        error: ""
+        error: "",
+        verified: false
       };
     }
     return state.otp;
@@ -1759,10 +1876,143 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     window.__partnerOtpTimer = window.setInterval(tick, 1000);
   }
 
-  function resendPartnerOtp() {
-    ensurePartnerOtp(true);
+  async function sendPartnerEmailOtp() {
+    if (partnerOtpPending) return;
+    if (select("#partner-contact")) savePartnerStep(0);
+    const state = ensurePartnerRegistrationDefaults();
+    const contact = splitPartnerContact(state.account?.contact || "");
+    const email = normalizePartnerEmail(contact.email || state.account?.email || "");
+
+    if (!PORTAL_EMAIL_RE.test(email)) {
+      state.otp = { ...(state.otp || {}), error: "Vui lòng nhập email hợp lệ để nhận mã OTP." };
+      window.rAuth();
+      notify("Email chưa hợp lệ", state.otp.error, "warn");
+      return;
+    }
+
+    partnerOtpPending = true;
+    state.otp = { ...(state.otp || {}), sending: true, error: "" };
     window.rAuth();
-    notify("Đã gửi lại mã OTP", "Mã OTP mới có hiệu lực trong 3 phút.", "info");
+
+    try {
+      const { error } = await getFoodSaveSupabase().auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          data: partnerUserMetadata({
+            ...state,
+            account: { ...(state.account || {}), email }
+          })
+        }
+      });
+
+      if (error) throw error;
+
+      state.account = { ...(state.account || {}), email, contact: email };
+      state.profile = {
+        ...(state.profile || {}),
+        adminEmail: state.profile?.adminEmail || email
+      };
+      state.otpEmail = email;
+      state.otp = {
+        value: "",
+        email,
+        expiresAt: Date.now() + 180000,
+        error: "",
+        verified: false,
+        sending: false,
+        sentAt: new Date().toISOString()
+      };
+      setPartnerStep(1);
+      notify("Đã gửi OTP", `Kiểm tra email ${email} để lấy mã 6 số.`, "info");
+    } catch (error) {
+      state.otp = {
+        ...(state.otp || {}),
+        sending: false,
+        error: error.message || "Không thể gửi OTP. Vui lòng thử lại."
+      };
+      notify("Không thể gửi OTP", state.otp.error, "error");
+    } finally {
+      partnerOtpPending = false;
+      window.rAuth();
+    }
+  }
+
+  async function verifyPartnerEmailOtp() {
+    if (partnerVerifyPending) return;
+    savePartnerStep(1);
+    const state = ensurePartnerRegistrationDefaults();
+    const email = normalizePartnerEmail(state.otp?.email || state.otpEmail || state.account?.email || "");
+    const token = String(state.otp?.value || "").replace(/\D/g, "");
+
+    if (!PORTAL_EMAIL_RE.test(email)) {
+      state.otp = { ...(state.otp || {}), error: "Không tìm thấy email nhận OTP. Vui lòng quay lại bước 1." };
+      window.rAuth();
+      notify("Thiếu email OTP", state.otp.error, "warn");
+      return;
+    }
+
+    if (partnerOtpRemainingSeconds() <= 0) {
+      state.otp = { ...(state.otp || {}), error: "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới." };
+      window.rAuth();
+      notify("OTP đã hết hạn", state.otp.error, "warn");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(token)) {
+      state.otp = { ...(state.otp || {}), error: "Vui lòng nhập đủ mã OTP 6 chữ số." };
+      window.rAuth();
+      notify("Thiếu mã OTP", state.otp.error, "warn");
+      return;
+    }
+
+    partnerVerifyPending = true;
+    state.otp = { ...(state.otp || {}), verifying: true, error: "" };
+    window.rAuth();
+
+    try {
+      const { data, error } = await getFoodSaveSupabase().auth.verifyOtp({
+        email,
+        token,
+        type: "email"
+      });
+
+      if (error) throw error;
+
+      const user = data?.user || data?.session?.user;
+      state.account = { ...(state.account || {}), email };
+      state.otpEmail = email;
+      state.authUserId = user?.id || state.authUserId || "";
+      state.authEmail = user?.email || email;
+      state.otp = {
+        ...(state.otp || {}),
+        email,
+        verified: true,
+        verifying: false,
+        error: "",
+        verifiedAt: new Date().toISOString()
+      };
+      // PARTNER SECTION START
+      state.sessionVerified = true;
+      state.sessionVerifiedAt = state.otp.verifiedAt;
+      showPartnerRegisterStep(2);
+      // PARTNER SECTION END
+    } catch (error) {
+      state.otp = {
+        ...(state.otp || {}),
+        verified: false,
+        verifying: false,
+        error: error.message || "Mã OTP không chính xác, vui lòng kiểm tra lại."
+      };
+      notify("OTP không hợp lệ", state.otp.error, "error");
+    } finally {
+      partnerVerifyPending = false;
+      window.rAuth();
+    }
+  }
+
+  function resendPartnerOtp() {
+    sendPartnerEmailOtp();
   }
 
   function partnerOtpInput(input, index) {
@@ -1786,6 +2036,14 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     return `<div class="partner-upload-preview" style="display:flex;align-items:center;justify-content:center;background:var(--green-50);color:var(--green-700)"><i class="ti ti-file-check" style="font-size:24px"></i></div>`;
   }
 
+  function partnerDocumentLabel(field) {
+    return {
+      cccdFront: "CCCD mặt trước",
+      cccdBack: "CCCD mặt sau",
+      businessLicense: "Giấy ĐKKD"
+    }[field] || "Tài liệu";
+  }
+
   function partnerUploadBox(field, label, hint, options = {}) {
     const state = partnerState();
     const upload = state.uploads?.[field] || {};
@@ -1793,41 +2051,1000 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const loading = upload.loading;
     const done = Boolean(fileName) && !loading;
     const icon = options.icon || (options.add ? "ti-plus" : "ti-upload");
+    const idleHint = hint || "Chọn file ảnh có sẵn";
     return `
-<button type="button" class="partner-upload ${done ? "done" : ""} ${loading ? "loading" : ""}" onclick="document.getElementById('seller-file-${field}').click()">
-  ${loading ? `<span class="partner-spinner"></span><strong>Đang phân tích dữ liệu...</strong><small>${escapeHtml(label)}</small>` : done ? `${partnerUploadPreview(upload)}<span class="partner-upload-success"><i class="ti ti-check"></i></span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(fileName)}</small>` : `<i class="ti ${icon}"></i><strong>${escapeHtml(label)}</strong><small>${escapeHtml(hint || "Chọn file có sẵn")}</small>`}
-</button>
-<input id="seller-file-${field}" type="file" accept="image/*, application/pdf" style="display:none" onchange="FoodSaveAuth.markSellerFileUploaded('${field}',this)">`;
+<label class="partner-upload ${done ? "done" : ""} ${loading ? "loading" : ""}" for="seller-file-${field}">
+  ${loading ? `<span class="partner-spinner"></span><strong>Đang phân tích dữ liệu...</strong><small>${escapeHtml(label)}</small>` : done ? `${partnerUploadPreview(upload)}<span class="partner-upload-success"><i class="ti ti-check"></i></span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(fileName)}</small>` : `<i class="ti ${icon}"></i><strong>${escapeHtml(label)}</strong><small>${escapeHtml(idleHint)}</small>`}
+</label>
+<input id="seller-file-${field}" type="file" accept="image/*" style="display:none" onchange="FoodSaveAuth.markSellerFileUploaded('${field}',this)">`;
   }
 
-  function applyPartnerMockOcr(field) {
+  function isPartnerOcrField(field) {
+    return ["cccdFront", "cccdBack", "businessLicense"].includes(field);
+  }
+
+  function partnerMockOcrText(field, fileName) {
+    if (field === "businessLicense") {
+      return `GIẤY CHỨNG NHẬN ĐĂNG KÝ KINH DOANH\nTên doanh nghiệp: CÔNG TY TNHH TIỆM BÁNH ABC\nTên cửa hàng: Tiệm bánh ABC\nMã số thuế: 0317456789\nTệp: ${fileName || "business-license.jpg"}`;
+    }
+    if (field === "cccdFront" || field === "cccdBack") {
+      return `CĂN CƯỚC CÔNG DÂN\nHọ và tên\nNGUYỄN MINH ANH\nNgày sinh 20/03/1990\n079203000123\nTệp: ${fileName || field + ".jpg"}`;
+    }
+    return `FOODSAVE OCR\nTệp ${fileName || field}`;
+  }
+
+  function extractPartnerTaxCode(text) {
+    return (String(text || "").match(/\b\d{10,14}\b/) || [])[0] || "";
+  }
+
+  function extractPartnerBusinessName(text) {
+    const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    for (let index = 0; index < lines.length; index += 1) {
+      const normalized = normalizeOcrText(lines[index]);
+      if (["ten doanh nghiep", "ten cong ty", "ten ho kinh doanh", "ho kinh doanh"].some((key) => normalized.includes(key))) {
+        const raw = lines[index].includes(":") ? lines[index].split(":").slice(1).join(":") : lines[index + 1] || "";
+        if (raw.trim()) return raw.replace(/^[\s:.-]+/, "").replace(/\s+/g, " ").trim();
+      }
+    }
+    return lines.find((line) => /(cong ty|tnhh|co phan|ho kinh doanh|doanh nghiep)/i.test(normalizeOcrText(line))) || "";
+  }
+
+  function extractPartnerStoreName(text, legalName) {
+    const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    for (let index = 0; index < lines.length; index += 1) {
+      const normalized = normalizeOcrText(lines[index]);
+      if (["ten cua hang", "ten thuong mai", "thuong hieu"].some((key) => normalized.includes(key))) {
+        const raw = lines[index].includes(":") ? lines[index].split(":").slice(1).join(":") : lines[index + 1] || "";
+        if (raw.trim()) return raw.replace(/^[\s:.-]+/, "").replace(/\s+/g, " ").trim();
+      }
+    }
+    return String(legalName || "")
+      .replace(/^(công ty|cong ty)\s+(tnhh|trách nhiệm hữu hạn|co phan|cổ phần)?\s*/i, "")
+      .replace(/^(hộ kinh doanh|ho kinh doanh)\s*/i, "")
+      .trim();
+  }
+
+  async function recognizePartnerDocument(field, file, fallbackName) {
+    if (file && file.type && file.type.startsWith("image/") && window.Tesseract && typeof window.Tesseract.recognize === "function") {
+      try {
+        const result = await window.Tesseract.recognize(file, "vie+eng");
+        const text = result && result.data ? result.data.text : "";
+        if (text && text.trim()) return text;
+      } catch (error) {
+        notify("OCR chưa sẵn sàng", "Tesseract không đọc được ảnh này, FoodSave dùng dữ liệu mô phỏng để bạn kiểm thử UI.", "warn");
+      }
+    }
+    return partnerMockOcrText(field, fallbackName);
+  }
+
+  function applyPartnerOcrToState(field, text) {
     const state = ensurePartnerRegistrationDefaults();
     if (field === "cccdFront" || field === "cccdBack") {
+      const representative = extractCharityRepresentativeName(text);
+      const cccdNumber = (String(text || "").match(/\b\d{12}\b/) || [])[0] || "";
       state.account = {
         ...(state.account || {}),
-        representative: state.account?.representative || "Nguyễn Minh Anh",
-        cccdNumber: state.account?.cccdNumber || "079203000123"
+        representative: representative || state.account?.representative || "",
+        cccdNumber: cccdNumber || state.account?.cccdNumber || ""
       };
     }
     if (field === "businessLicense") {
+      const legalName = extractPartnerBusinessName(text);
+      const taxCode = extractPartnerTaxCode(text);
+      const storeName = extractPartnerStoreName(text, legalName);
       state.profile = {
         ...(state.profile || {}),
-        legalName: state.profile?.legalName || "CÔNG TY TNHH TIỆM BÁNH ABC",
-        taxCode: state.profile?.taxCode || "0317456789",
-        storeName: state.profile?.storeName || "Tiệm bánh ABC"
+        legalName: legalName || state.profile?.legalName || "",
+        taxCode: taxCode || state.profile?.taxCode || "",
+        storeName: storeName || state.profile?.storeName || ""
       };
     }
   }
 
-  function markSellerFileUploaded(field, input) {
+  const CHARITY_REGISTER_LAST_STEP = 5;
+
+  function charityState() {
+    try {
+      if (typeof charityRegState !== "undefined" && charityRegState) return charityRegState;
+    } catch (error) {
+      // FOODSAVE_USER / PARTNER do not define this state.
+    }
+    window.FoodSaveCharityRegistration = window.FoodSaveCharityRegistration || {
+      docs: {},
+      rep: {},
+      org: {},
+      scale: {},
+      face: {}
+    };
+    return window.FoodSaveCharityRegistration;
+  }
+
+  function charityStep() {
+    let current = window.regStep;
+    try {
+      if (typeof regStep !== "undefined") current = regStep;
+    } catch (error) {
+      // The global lexical binding is absent outside portal pages.
+    }
+    const step = Number(current);
+    return Number.isFinite(step) ? Math.max(0, Math.min(CHARITY_REGISTER_LAST_STEP, step)) : 0;
+  }
+
+  function setCharityStep(step) {
+    const next = Math.max(0, Math.min(CHARITY_REGISTER_LAST_STEP, Number(step) || 0));
+    window.regStep = next;
+    try { regStep = next; } catch (error) { /* global regStep can be absent outside portal pages. */ }
+  }
+
+  function setCharityAuthState(state) {
+    window.aS = state;
+    try { aS = state; } catch (error) { /* global aS can be absent outside portal pages. */ }
+  }
+
+  function charityAuthState() {
+    let state = window.aS;
+    try {
+      if (typeof aS !== "undefined") state = aS;
+    } catch (error) {
+      // The global lexical binding is absent outside portal pages.
+    }
+    return state || "login";
+  }
+
+  function renderCharityAuth() {
+    if (typeof window.rAuth === "function") window.rAuth();
+  }
+
+  function writeCharityValue(path, value) {
+    if (typeof window.setCharityValue === "function") {
+      window.setCharityValue(path, value);
+      return;
+    }
+    const state = charityState();
+    const parts = String(path || "").split(".");
+    let target = state;
+    parts.slice(0, -1).forEach((part) => {
+      target[part] = target[part] || {};
+      target = target[part];
+    });
+    target[parts[parts.length - 1]] = value;
+  }
+
+  function readCharityDomValue(selector, options = {}) {
+    const input = select(selector);
+    if (!input || !("value" in input)) return "";
+    const value = String(input.value ?? "");
+    return options.trim ? value.trim() : value;
+  }
+
+  function syncCharityRegisterValues() {
+    [
+      ["contact", "#charityContact", true],
+      ["rep.name", "#repName", true],
+      ["rep.cccd", "#repID", true],
+      ["rep.role", "#repTitle", true],
+      ["rep.email", "#repEmail", true],
+      ["rep.orgPhone", "#orgPhone", true],
+      ["rep.password", "#repPassword", true],
+      ["rep.confirm", "#repPasswordConfirm", true],
+      ["org.name", "#orgName", true],
+      ["org.type", "#orgType", true],
+      ["org.taxId", "#orgTaxId", true],
+      ["org.phone", "#orgContactPhone", true],
+      ["org.email", "#orgContactEmail", true],
+      ["org.address", "#orgAddress", true],
+      ["org.description", "#orgDesc", true],
+      ["org.mission", "#orgMission", true],
+      ["scale.people", "#scalePeople", true],
+      ["scale.meals", "#scaleMeals", true],
+      ["scale.volunteers", "#scaleVols", true],
+      ["scale.radius", "#serviceRadius", true]
+    ].forEach(([path, selector, trim]) => {
+      const input = select(selector);
+      if (input) writeCharityValue(path, readCharityDomValue(selector, { trim }));
+    });
+  }
+
+  function charityRegistrationCredentials(state = charityState()) {
+    state.rep = state.rep || {};
+    const passwordInput = select("#repPassword");
+    const confirmInput = select("#repPasswordConfirm");
+    const passwordVar = passwordInput
+      ? readCharityDomValue("#repPassword", { trim: true })
+      : String(state.rep.password || "").trim();
+    const confirmVar = confirmInput
+      ? readCharityDomValue("#repPasswordConfirm", { trim: true })
+      : String(state.rep.confirm || "").trim();
+
+    state.rep.password = passwordVar;
+    state.rep.confirm = confirmVar;
+
+    return {
+      emailVar: normalizeCharityEmail(state.authEmail || state.otpEmail || state.contact || charityContactEmail(state)),
+      passwordVar,
+      confirmVar,
+      passwordInputFound: !!passwordInput,
+      confirmInputFound: !!confirmInput
+    };
+  }
+
+  function charityRegistrationPasswordError(state = charityState()) {
+    const credentials = charityRegistrationCredentials(state);
+    return passwordErrorText(credentials.passwordVar, credentials.confirmVar);
+  }
+
+  async function updateCharityAuthPassword(supabaseClient, user, state = charityState()) {
+    const credentials = charityRegistrationCredentials(state);
+    const emailVar = normalizeCharityEmail(user?.email || credentials.emailVar);
+    const passwordVar = credentials.passwordVar;
+    const passwordError = passwordErrorText(passwordVar, credentials.confirmVar);
+
+    if (passwordError) {
+      setCharityStep(2);
+      renderCharityAuth();
+      throw new Error(passwordError);
+    }
+
+    console.log("=== DEBUG DỮ LIỆU ĐĂNG KÝ ===", { emailTruyenVao: emailVar, passTruyenVao: passwordVar, passLength: passwordVar.length });
+
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: passwordVar,
+      data: charityUserMetadata({
+        ...state,
+        contact: emailVar,
+        rep: {
+          ...(state.rep || {}),
+          password: passwordVar,
+          confirm: credentials.confirmVar
+        }
+      })
+    });
+
+    if (error) throw error;
+    return data?.user || user;
+  }
+
+  function normalizeCharityEmail(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function charityContactEmail(state) {
+    return normalizeCharityEmail(state.org?.email || state.rep?.email || state.otpEmail || state.contact);
+  }
+
+  function charityContactPhone(state) {
+    const raw = state.org?.phone || state.rep?.orgPhone || (String(state.contact || "").includes("@") ? "" : state.contact);
+    return normalizePhone(raw);
+  }
+
+  function charityNumber(value) {
+    const number = Number(String(value || "").replace(/[^\d]/g, ""));
+    return Number.isFinite(number) && number > 0 ? number : 0;
+  }
+
+  function charitySlug(value, userId) {
+    const base = stripVietnameseTone(value || "to-chuc-tu-thien")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 54) || "to-chuc-tu-thien";
+    const suffix = String(userId || Date.now()).replace(/[^a-z0-9]/gi, "").slice(0, 8) || Date.now().toString(36);
+    return `${base}-${suffix}`;
+  }
+
+  function charityAddressParts(address) {
+    const parts = String(address || "").split(",").map((item) => item.trim()).filter(Boolean);
+    return {
+      address: String(address || "").trim() || "Chưa cập nhật",
+      district: parts.length >= 3 ? parts[parts.length - 2] : "",
+      city: parts.length >= 2 ? normalizeVietnamAdminName(parts[parts.length - 1], "province") : "TP.HCM"
+    };
+  }
+
+  function charityDocumentPublicUrl(doc) {
+    return partnerStoredAssetUrl(doc?.url || doc?.dataUrl || doc?.publicUrl || "");
+  }
+
+  const CHARITY_ORDERED_DOCUMENT_KEYS = [
+    "avatar_logo",
+    "cover_banner",
+    "cccd_front",
+    "cccd_back",
+    "establishment_decision",
+    "operating_license",
+    "financial_report"
+  ];
+
+  function charityDocumentMetadataEntry(label, ...docs) {
+    const url = docs.map((doc) => charityDocumentPublicUrl(doc)).find(Boolean) || "";
+    return {
+      label,
+      url,
+      status: url ? "done" : "idle"
+    };
+  }
+
+  function charityDocumentsMetadata(docs, state = charityState()) {
+    const source = docs || {};
+    return {
+      avatar_logo: charityDocumentMetadataEntry("Ảnh đại diện / Logo tổ chức", source.logo, state.org?.logo),
+      cover_banner: charityDocumentMetadataEntry("Ảnh bìa / Banner", source.cover, source.coverImage, state.org?.cover),
+      cccd_front: charityDocumentMetadataEntry("Ảnh CCCD mặt trước", source.cccdFront, source.idCard, state.representative?.idCard),
+      cccd_back: charityDocumentMetadataEntry("Ảnh CCCD mặt sau", source.cccdBack),
+      establishment_decision: charityDocumentMetadataEntry("Ảnh Giấy quyết định thành lập", source.decision),
+      operating_license: charityDocumentMetadataEntry("Giấy phép hoạt động của tổ chức", source.license, state.org?.license),
+      financial_report: charityDocumentMetadataEntry("Ảnh Báo cáo tài chính", source.finance, source.financialReport)
+    };
+  }
+
+  function charityStoragePath(userId, field, file) {
+    const safeUserId = String(userId || "charity").replace(/[^a-z0-9_-]/gi, "") || "charity";
+    const safeField = String(field || "file").replace(/[^a-z0-9_-]/gi, "") || "file";
+    const safeFileName = partnerStorageSafeFileName(file?.name || `${safeField}.jpg`);
+    const nonce = Math.random().toString(36).slice(2, 10);
+    return `${safeUserId}/${safeField}/${Date.now()}-${nonce}-${safeFileName}`;
+  }
+
+  function charityLegacyDocumentSources(state) {
+    return [
+      ["logo", state?.org?.logo],
+      ["license", state?.org?.license],
+      ["idCard", state?.representative?.idCard || state?.rep?.idCard]
+    ].filter(([, doc]) => doc && typeof doc === "object");
+  }
+
+  async function ensureCharityDocumentDataUrls(supabaseClient = getFoodSaveSupabase(), userId = "", state = charityState()) {
+    if (!supabaseClient?.storage?.from) {
+      throw new Error("Supabase Storage chưa sẵn sàng để tải tài liệu tổ chức.");
+    }
+
+    state.docs = state.docs || {};
+    const bucket = supabaseClient.storage.from(CHARITY_STORAGE_BUCKET);
+    const fields = new Set([...CHARITY_DOCUMENT_FIELDS, ...Object.keys(state.docs || {})]);
+
+    charityLegacyDocumentSources(state).forEach(([field, doc]) => {
+      fields.add(field);
+      state.docs[field] = {
+        ...(state.docs[field] || {}),
+        name: state.docs[field]?.name || doc.name || doc.file?.name || "",
+        rawFile: state.docs[field]?.rawFile || doc.rawFile || doc.file || null,
+        url: state.docs[field]?.url || charityDocumentPublicUrl(doc),
+        dataUrl: state.docs[field]?.dataUrl || charityDocumentPublicUrl(doc),
+        preview: state.docs[field]?.preview || doc.preview || charityDocumentPublicUrl(doc),
+        mimeType: state.docs[field]?.mimeType || doc.mimeType || doc.file?.type || "",
+        size: state.docs[field]?.size || doc.size || doc.file?.size || 0,
+        status: state.docs[field]?.status || doc.status || "uploaded"
+      };
+    });
+
+    await Promise.all([...fields].map(async (field) => {
+      const doc = state.docs[field];
+      if (!doc || typeof doc !== "object") return;
+
+      const existingUrl = charityDocumentPublicUrl(doc);
+      const file = doc.rawFile || doc.file || null;
+      if (!file) {
+        if (existingUrl) {
+          doc.url = existingUrl;
+          doc.dataUrl = existingUrl;
+          doc.preview = existingUrl;
+        }
+        return;
+      }
+
+      const path = charityStoragePath(userId, field, file);
+      const { data, error } = await bucket.upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type || "application/octet-stream",
+        upsert: true
+      });
+      if (error) throw error;
+
+      const storagePath = data?.path || path;
+      const { data: publicData } = bucket.getPublicUrl(storagePath);
+      const publicUrl = partnerStoredAssetUrl(publicData?.publicUrl);
+      if (!publicUrl) throw new Error(`Supabase Storage không trả về public URL cho ${field}.`);
+
+      state.docs[field] = {
+        ...doc,
+        name: doc.name || file.name || field,
+        url: publicUrl,
+        dataUrl: publicUrl,
+        preview: publicUrl,
+        storagePath,
+        mimeType: file.type || doc.mimeType || "",
+        size: file.size || doc.size || 0,
+        status: "done"
+      };
+    }));
+
+    charityLegacyDocumentSources(state).forEach(([field, doc]) => {
+      const uploaded = state.docs[field];
+      if (!uploaded) return;
+      doc.url = uploaded.url || "";
+      doc.dataUrl = uploaded.dataUrl || "";
+      doc.preview = uploaded.preview || "";
+      doc.storagePath = uploaded.storagePath || "";
+      doc.status = uploaded.status || "done";
+    });
+
+    return state.docs;
+  }
+
+  function charityUserMetadata(state) {
+    const email = charityContactEmail(state);
+    const phone = charityContactPhone(state);
+    return {
+      role: "charity",
+      full_name: state.rep?.name || state.org?.name || email,
+      org_name: state.org?.name || "",
+      phone,
+      representative_name: state.rep?.name || "",
+      representative_role: state.rep?.role || "",
+      cccd_number: state.rep?.cccd || "",
+      organization_type: state.org?.type || "",
+      terms_accepted: true
+    };
+  }
+
+  function buildCharityRegistrationPayload(userId) {
+    const state = charityState();
+    const org = state.org || {};
+    const scale = state.scale || {};
+    const emailCandidate = charityContactEmail(state);
+    const verifiedEmail = normalizeCharityEmail(state.otpEmail || state.authEmail || state.contact);
+    const email = PORTAL_EMAIL_RE.test(emailCandidate) ? emailCandidate : verifiedEmail;
+    const phone = charityContactPhone(state) || "Chưa cập nhật";
+    const addressInfo = charityAddressParts(org.address);
+    const name = String(org.name || "").trim() || "Chưa cập nhật";
+    const logoUrl = charityDocumentPublicUrl(state.docs?.logo) || charityDocumentPublicUrl(org.logo);
+
+    return {
+      id: userId,
+      owner_id: userId,
+      name,
+      slug: charitySlug(name, userId),
+      phone,
+      email,
+      avatar_url: logoUrl || "",
+      address: addressInfo.address,
+      district: addressInfo.district || undefined,
+      city: addressInfo.city || "TP.HCM",
+      beneficiaries_count: charityNumber(scale.people),
+      status: "pending"
+    };
+  }
+
+  function charityFormValue(id, fallback = "") {
+    const element = document.getElementById(id);
+    if (!element || !("value" in element)) return String(fallback || "").trim();
+    return String(element.value || "").trim();
+  }
+
+  function charityLegalDocumentUrls(state = charityState()) {
+    const docs = state.docs || {};
+    return {
+      avatar_logo_url: charityDocumentPublicUrl(docs.logo) || charityDocumentPublicUrl(state.org?.logo),
+      cover_banner_url: charityDocumentPublicUrl(docs.cover) || charityDocumentPublicUrl(docs.coverImage) || charityDocumentPublicUrl(state.org?.cover),
+      cccd_front_url: charityDocumentPublicUrl(docs.cccdFront) || charityDocumentPublicUrl(docs.idCard) || charityDocumentPublicUrl(state.representative?.idCard),
+      cccd_back_url: charityDocumentPublicUrl(docs.cccdBack),
+      establishment_decision_url: charityDocumentPublicUrl(docs.decision),
+      operating_license_url: charityDocumentPublicUrl(docs.license) || charityDocumentPublicUrl(state.org?.license),
+      financial_report_url: charityDocumentPublicUrl(docs.finance) || charityDocumentPublicUrl(docs.financialReport)
+    };
+  }
+
+  function buildCharityOrganizationInfo(profilePayload) {
+    const state = charityState();
+    const org = state.org || {};
+    const rep = state.rep || {};
+    const scale = state.scale || {};
+    const documentUrls = charityLegalDocumentUrls(state);
+
+    return {
+      organization_name: charityFormValue("orgName", profilePayload.name || org.name || ""),
+      organization_type: charityFormValue("orgType", org.type || ""),
+      tax_id: charityFormValue("orgTaxId", org.taxId || org.tax_id || ""),
+      organization_phone: charityFormValue("orgContactPhone", org.phone || profilePayload.phone || ""),
+      organization_email: charityFormValue("orgContactEmail", org.email || profilePayload.email || ""),
+      address: charityFormValue("orgAddress", profilePayload.address || org.address || ""),
+      district: profilePayload.district || "",
+      city: profilePayload.city || "",
+      description: charityFormValue("orgDesc", org.description || ""),
+      mission: charityFormValue("orgMission", org.mission || ""),
+      representative_name: charityFormValue("repName", rep.name || ""),
+      representative_role: charityFormValue("repTitle", rep.role || ""),
+      representative_email: charityFormValue("repEmail", rep.email || ""),
+      representative_phone: charityFormValue("orgPhone", rep.orgPhone || ""),
+      representative_cccd: charityFormValue("repID", rep.cccd || ""),
+      contact: charityFormValue("charityContact", state.contact || ""),
+      verified_email: state.authEmail || state.otpEmail || profilePayload.email || "",
+      beneficiaries_count: charityNumber(charityFormValue("scalePeople", scale.people || "")),
+      meals_per_day: charityNumber(charityFormValue("scaleMeals", scale.meals || "")),
+      volunteers_count: charityNumber(charityFormValue("scaleVols", scale.volunteers || "")),
+      pickup_radius: charityFormValue("serviceRadius", scale.radius || ""),
+      legal_documents: documentUrls,
+      otp_verified: Boolean(state.otpVerified),
+      face_status: state.face?.status || "idle"
+    };
+  }
+
+  function buildCharityProfileMetadata(profilePayload) {
+    const state = charityState();
+    const organizationInfo = buildCharityOrganizationInfo(profilePayload);
+    const documentUrls = charityLegalDocumentUrls(state);
+    return {
+      role: "charity",
+      tax_id: organizationInfo.tax_id || "",
+      address: organizationInfo.address || "",
+      description: organizationInfo.description || "",
+      mission: organizationInfo.mission || "",
+      representative_name: organizationInfo.representative_name || "",
+      representative_role: organizationInfo.representative_role || "",
+      representative_email: organizationInfo.representative_email || "",
+      representative_phone: organizationInfo.representative_phone || "",
+      representative_cccd: organizationInfo.representative_cccd || "",
+      license_image_url: documentUrls.operating_license_url || "",
+      decision_image_url: documentUrls.establishment_decision_url || "",
+      financial_report_url: documentUrls.financial_report_url || "",
+      cover_image_url: documentUrls.cover_banner_url || "",
+      avatar_logo_url: documentUrls.avatar_logo_url || "",
+      cccd_front_url: documentUrls.cccd_front_url || "",
+      cccd_back_url: documentUrls.cccd_back_url || "",
+      organization_info: organizationInfo,
+      documents: charityDocumentsMetadata(state.docs, state),
+      ordered_document_keys: [...CHARITY_ORDERED_DOCUMENT_KEYS]
+    };
+  }
+
+  async function sendCharityEmailOtp() {
+    if (charityOtpPending) return;
+    syncCharityRegisterValues();
+    const state = charityState();
+    const email = normalizeCharityEmail(state.contact);
+
+    if (!PORTAL_EMAIL_RE.test(email)) {
+      state.otpError = "Vui lòng nhập email hợp lệ để nhận mã OTP.";
+      renderCharityAuth();
+      notify("Email chưa hợp lệ", state.otpError, "warn");
+      return;
+    }
+
+    charityOtpPending = true;
+    state.otpSending = true;
+    state.otpError = "";
+    renderCharityAuth();
+
+    try {
+      const { error } = await getFoodSaveSupabase().auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          data: charityUserMetadata({ ...state, contact: email })
+        }
+      });
+
+      if (error) throw error;
+
+      state.contact = email;
+      state.otpEmail = email;
+      state.otp = ["", "", "", "", "", ""];
+      state.otpSeconds = 180;
+      state.otpExpired = false;
+      state.otpVerified = false;
+      state.otpSentAt = new Date().toISOString();
+      setCharityStep(1);
+      notify("Đã gửi OTP", `Kiểm tra email ${email} để lấy mã 6 số.`, "info");
+    } catch (error) {
+      state.otpError = error.message || "Không thể gửi OTP. Vui lòng thử lại.";
+      notify("Không thể gửi OTP", state.otpError, "error");
+    } finally {
+      state.otpSending = false;
+      charityOtpPending = false;
+      renderCharityAuth();
+    }
+  }
+
+  async function verifyCharityEmailOtp() {
+    if (charityVerifyPending) return;
+    syncCharityRegisterValues();
+    const state = charityState();
+    const email = normalizeCharityEmail(state.otpEmail || state.contact);
+    const token = Array.isArray(state.otp) ? state.otp.join("") : String(state.otp || "");
+
+    if (!PORTAL_EMAIL_RE.test(email)) {
+      state.otpError = "Không tìm thấy email nhận OTP. Vui lòng quay lại bước 1.";
+      renderCharityAuth();
+      notify("Thiếu email OTP", state.otpError, "warn");
+      return;
+    }
+
+    if (state.otpExpired || state.otpSeconds <= 0) {
+      state.otpError = "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.";
+      renderCharityAuth();
+      notify("OTP đã hết hạn", state.otpError, "warn");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(token)) {
+      state.otpError = "Vui lòng nhập đủ mã OTP 6 chữ số.";
+      renderCharityAuth();
+      notify("Thiếu mã OTP", state.otpError, "warn");
+      return;
+    }
+
+    charityVerifyPending = true;
+    state.otpVerifying = true;
+    state.otpError = "";
+    renderCharityAuth();
+
+    try {
+      const { data, error } = await getFoodSaveSupabase().auth.verifyOtp({
+        email,
+        token,
+        type: "email"
+      });
+
+      if (error) throw error;
+
+      const user = data?.user || data?.session?.user;
+      state.otpVerified = true;
+      state.authUserId = user?.id || state.authUserId || "";
+      state.authEmail = user?.email || email;
+      state.otpError = "";
+      setCharityStep(2);
+      notify("Xác thực thành công", "Email đã được xác minh bằng OTP.", "info");
+    } catch (error) {
+      state.otpVerified = false;
+      state.otpError = error.message || "Mã OTP không chính xác, vui lòng kiểm tra lại.";
+      notify("OTP không hợp lệ", state.otpError, "error");
+    } finally {
+      state.otpVerifying = false;
+      charityVerifyPending = false;
+      renderCharityAuth();
+    }
+  }
+
+  async function saveCharityOwnerProfile(supabaseClient, user, profilePayload, metadata) {
+    const state = charityState();
+    const phone = profilePayload.phone === "Chưa cập nhật" ? null : profilePayload.phone;
+    const { error } = await supabaseClient
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        role: "charity",
+        email: normalizeCharityEmail(user.email || profilePayload.email),
+        full_name: state.rep?.name || profilePayload.name,
+        phone,
+        status: "pending",
+        metadata
+      }, { onConflict: "id" });
+
+    if (error) throw error;
+  }
+
+  async function saveCharityOrganizationProfile(supabaseClient, charityProfilePayload) {
+    const { data: existingRows, error: findError } = await supabaseClient
+      .from("charity_profiles")
+      .select("id, slug")
+      .eq("owner_id", charityProfilePayload.owner_id)
+      .limit(1);
+
+    if (findError) throw findError;
+
+    const existing = Array.isArray(existingRows) ? existingRows[0] : null;
+    if (existing?.id) {
+      const { id, ...updatablePayload } = charityProfilePayload;
+      const { data, error } = await supabaseClient
+        .from("charity_profiles")
+        .update({ ...updatablePayload, slug: existing.slug || charityProfilePayload.slug })
+        .eq("id", existing.id)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("charity_profiles")
+      .insert(charityProfilePayload)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async function submitCharityRegistration() {
+    if (charitySubmitPending) return;
+    syncCharityRegisterValues();
+    const state = charityState();
+
+    if (!state.otpVerified) {
+      setCharityStep(1);
+      state.otpError = "Vui lòng xác minh OTP trước khi gửi hồ sơ.";
+      renderCharityAuth();
+      notify("Chưa xác minh OTP", state.otpError, "warn");
+      return;
+    }
+
+    if (!String(state.org?.name || "").trim()) {
+      notify("Thiếu tên tổ chức", "Vui lòng nhập hoặc sửa tên tổ chức trước khi gửi hồ sơ.", "warn");
+      setCharityStep(3);
+      renderCharityAuth();
+      return;
+    }
+
+    charitySubmitPending = true;
+    state.submitting = true;
+    renderCharityAuth();
+
+    try {
+      const supabaseClient = getFoodSaveSupabase();
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+      if (userError || !userData?.user?.id) {
+        throw new Error("Phiên OTP đã hết hạn. Vui lòng xác minh lại email.");
+      }
+
+      const authUser = await updateCharityAuthPassword(supabaseClient, userData.user, state);
+      await ensureCharityDocumentDataUrls(supabaseClient, authUser.id, state);
+      const profilePayload = buildCharityRegistrationPayload(authUser.id);
+      const metadata = buildCharityProfileMetadata(profilePayload);
+      const charityProfilePayload = {
+        ...profilePayload,
+        metadata
+      };
+
+      await saveCharityOwnerProfile(supabaseClient, authUser, profilePayload, metadata);
+      const charityProfile = await saveCharityOrganizationProfile(supabaseClient, charityProfilePayload);
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+
+      state.submitted = true;
+      state.submittedProfile = charityProfile;
+      state.authUserId = authUser.id;
+
+      if (sessionData?.session) {
+        saveSession({
+          session: sessionData.session,
+          profile: {
+            id: authUser.id,
+            role: "charity",
+            email: profilePayload.email,
+            phone: profilePayload.phone,
+            full_name: state.rep?.name || profilePayload.name,
+            status: "pending"
+          },
+          context: { charity: charityProfile }
+        }, "charity");
+      }
+
+      setCharityStep(5);
+      notify("Đăng ký thành công", portalConfig.charity.pendingMessage, "info");
+    } catch (error) {
+      notify("Gửi hồ sơ thất bại", error.message || "Không thể lưu hồ sơ tổ chức.", "error");
+    } finally {
+      state.submitting = false;
+      charitySubmitPending = false;
+      renderCharityAuth();
+    }
+  }
+
+  function charityMockOcrText(field, fileName) {
+    if (field === "decision") {
+      return `QUYẾT ĐỊNH THÀNH LẬP\nTên tổ chức\nMÁI ẤM HOA DƯƠNG\nSố hồ sơ: ${fileName || "decision.pdf"}`;
+    }
+    if (field === "cccdFront" || field === "cccdBack") {
+      return "CĂN CƯỚC CÔNG DÂN\nHọ và tên\nNGUYỄN THỊ MINH ANH\nNgày sinh 12/04/1988\n079188012345";
+    }
+    return `FOODSAVE OCR\nTệp ${fileName || field}`;
+  }
+
+  function normalizeOcrText(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  function cleanOcrName(value) {
+    return String(value || "").replace(/[^\p{L}\s.'-]/gu, " ").replace(/\s+/g, " ").trim().toLocaleUpperCase("vi-VN");
+  }
+
+  function extractCharityRepresentativeName(text) {
+    const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const index = lines.findIndex((line) => normalizeOcrText(line).includes("ho va ten"));
+    if (index >= 0 && lines[index + 1]) return cleanOcrName(lines[index + 1]);
+    const sameLine = lines.find((line) => normalizeOcrText(line).includes("ho va ten") && line.includes(":"));
+    return sameLine ? cleanOcrName(sameLine.split(":").slice(1).join(":")) : "";
+  }
+
+  function extractCharityOrganizationName(text) {
+    const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const index = lines.findIndex((line) => ["ten to chuc", "ten don vi", "to chuc"].some((key) => normalizeOcrText(line).includes(key)));
+    if (index >= 0 && lines[index + 1]) return cleanOcrName(lines[index + 1]);
+    const candidate = lines.find((line) => /(mai am|bep an|trung tam|vien|to chuc)/i.test(normalizeOcrText(line)));
+    return candidate ? cleanOcrName(candidate) : "";
+  }
+
+  async function recognizeCharityDocument(field, file, fallbackName) {
+    if (file && file.type && file.type.startsWith("image/") && window.Tesseract && typeof window.Tesseract.recognize === "function") {
+      try {
+        const result = await window.Tesseract.recognize(file, "vie+eng");
+        const text = result && result.data ? result.data.text : "";
+        if (text && text.trim()) return text;
+      } catch (error) {
+        notify("OCR chưa sẵn sàng", "Tesseract không đọc được ảnh này, FoodSave dùng dữ liệu mô phỏng để bạn kiểm thử UI.", "warn");
+      }
+    }
+    return charityMockOcrText(field, fallbackName);
+  }
+
+  function applyCharityOcrToState(field, text) {
+    if (typeof window.applyCharityOcrResult === "function") {
+      window.applyCharityOcrResult(field, text);
+      return;
+    }
+    if (field === "cccdFront" || field === "cccdBack") {
+      const name = extractCharityRepresentativeName(text);
+      const cccd = (String(text || "").match(/\b\d{12}\b/) || [])[0] || "";
+      if (name) writeCharityValue("rep.name", name);
+      if (cccd) writeCharityValue("rep.cccd", cccd);
+    }
+    if (field === "decision") {
+      const org = extractCharityOrganizationName(text);
+      if (org) writeCharityValue("org.name", org);
+    }
+  }
+
+  function isCharityUpload(field, input, options = {}) {
+    const id = input && input.id ? input.id : "";
+    return options.role === "charity" ||
+      pageRole === "charity" ||
+      Boolean(select("#charityRegisterForm")) ||
+      /^upload(CCCD|Decision|License|Finance|Logo|Cover)/.test(id);
+  }
+
+  async function markCharityFileUploaded(field, input, options = {}) {
+    const file = input?.files?.[0] || null;
+    if (!file && !options.mock) return;
+    const state = charityState();
+    state.docs = state.docs || {};
+    const preview = file && file.type && file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+    state.docs[field] = {
+      ...(state.docs[field] || {}),
+      name: file?.name || `${field}-mock.jpg`,
+      rawFile: file || null,
+      preview,
+      dataUrl: "",
+      url: "",
+      mimeType: file?.type || "",
+      size: file?.size || 0,
+      status: "analyzing"
+    };
+    renderCharityAuth();
+
+    const text = await recognizeCharityDocument(field, file, state.docs[field].name);
+    const nextState = charityState();
+    nextState.docs = nextState.docs || {};
+    nextState.docs[field] = {
+      ...(nextState.docs[field] || {}),
+      name: file?.name || nextState.docs[field]?.name || `${field}-mock.jpg`,
+      rawFile: file || nextState.docs[field]?.rawFile || null,
+      preview: preview || nextState.docs[field]?.preview || "",
+      dataUrl: nextState.docs[field]?.dataUrl || "",
+      url: nextState.docs[field]?.url || "",
+      mimeType: file?.type || nextState.docs[field]?.mimeType || "",
+      size: file?.size || nextState.docs[field]?.size || 0,
+      status: "done"
+    };
+    applyCharityOcrToState(field, text);
+    renderCharityAuth();
+  }
+
+  function mockCharityOcrProcess(field) {
+    return markCharityFileUploaded(field, null, { role: "charity", mock: true });
+  }
+
+  function stopFoodSaveFaceStream() {
+    const stream = window.__foodsaveFaceStream;
+    if (stream && typeof stream.getTracks === "function") {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    window.__foodsaveFaceStream = null;
+  }
+
+  function attachCharityFaceStream() {
+    const holder = select("#videoFaceScan");
+    const stream = window.__foodsaveFaceStream;
+    if (!holder || !stream) return;
+    holder.innerHTML = '<video id="regFaceVideo" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover"></video>';
+    const video = select("#regFaceVideo");
+    if (video) video.srcObject = stream;
+  }
+
+  function initPartnerFaceScan(options = {}) {
+    if (options.role === "charity" || pageRole === "charity" || select("#videoFaceScan")) {
+      attachCharityFaceStream();
+    }
+  }
+
+  function afterCharityRegisterRender() {
+    if (pageRole !== "charity" && !select("#charityRegisterForm")) return;
+    if (charityAuthState() !== "register") {
+      stopFoodSaveFaceStream();
+      return;
+    }
+    if (charityStep() === 2) initPartnerFaceScan({ role: "charity" });
+    else stopFoodSaveFaceStream();
+  }
+
+  async function nextCharityRegisterStep() {
+    setCharityAuthState("register");
+    syncCharityRegisterValues();
+    const step = charityStep();
+    if (step === 0) {
+      await sendCharityEmailOtp();
+      return;
+    }
+    if (step === 1) {
+      await verifyCharityEmailOtp();
+      return;
+    }
+    if (step === 2) {
+      const passwordError = charityRegistrationPasswordError();
+      if (passwordError) {
+        notify("Máº­t kháº©u chÆ°a há»£p lá»‡", passwordError, "warn");
+        renderCharityAuth();
+        return;
+      }
+    }
+    if (step >= CHARITY_REGISTER_LAST_STEP - 1) {
+      await submitCharityRegistration();
+      return;
+    }
+    if (step < CHARITY_REGISTER_LAST_STEP) {
+      setCharityStep(step + 1);
+      renderCharityAuth();
+      return;
+    }
+    setCharityAuthState("login");
+    setCharityStep(0);
+    renderCharityAuth();
+    notify("Đăng ký thành công", portalConfig.charity.pendingMessage, "info");
+  }
+
+  function backCharityRegisterStep() {
+    syncCharityRegisterValues();
+    const step = charityStep();
+    if (step <= 0) {
+      setCharityAuthState("login");
+      setCharityStep(0);
+      stopFoodSaveFaceStream();
+    } else {
+      if (step === 2) stopFoodSaveFaceStream();
+      setCharityStep(step - 1);
+    }
+    renderCharityAuth();
+  }
+
+  async function markSellerFileUploaded(field, input, options = {}) {
+    if (isCharityUpload(field, input, options)) {
+      return markCharityFileUploaded(field, input, { role: "charity" });
+    }
     const file = input?.files?.[0];
+    if (input) input.value = "";
     if (!file) return;
     savePartnerStep(partnerStep());
     const state = ensurePartnerRegistrationDefaults();
+    const previousPreview = state.uploads?.[field]?.preview;
+    if (previousPreview && String(previousPreview).startsWith("blob:")) URL.revokeObjectURL(previousPreview);
     const upload = {
       name: file.name,
       loading: true,
-      preview: file.type && file.type.startsWith("image/") ? URL.createObjectURL(file) : ""
+      preview: file.type && file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+      dataUrl: "",
+      rawFile: file,
+      url: "",
+      mimeType: file.type || "",
+      size: file.size || 0,
+      status: "analyzing"
     };
     state.uploads = { ...(state.uploads || {}), [field]: upload };
     if (field === "logo") state.logoFileName = file.name;
@@ -1835,32 +3052,95 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     else state.docs = { ...(state.docs || {}), [field]: file.name };
     window.rAuth();
 
-    window.setTimeout(() => {
-      const nextState = ensurePartnerRegistrationDefaults();
-      nextState.uploads = {
-        ...(nextState.uploads || {}),
-        [field]: { ...(nextState.uploads?.[field] || upload), loading: false }
-      };
-      applyPartnerMockOcr(field);
-      window.rAuth();
-    }, 2000);
+    let text = "";
+    if (isPartnerOcrField(field)) {
+      text = await recognizePartnerDocument(field, file, file.name);
+      applyPartnerOcrToState(field, text);
+    }
+    const nextState = ensurePartnerRegistrationDefaults();
+    nextState.uploads = {
+      ...(nextState.uploads || {}),
+      [field]: {
+        ...(nextState.uploads?.[field] || upload),
+        loading: false,
+        status: "done",
+        ocrText: text,
+        rawFile: file,
+        dataUrl: "",
+        url: nextState.uploads?.[field]?.url || "",
+        storagePath: nextState.uploads?.[field]?.storagePath || "",
+        mimeType: file.type || nextState.uploads?.[field]?.mimeType || "",
+        size: file.size || nextState.uploads?.[field]?.size || 0
+      }
+    };
+    if (field !== "logo" && field !== "cover") nextState.docs = { ...(nextState.docs || {}), [field]: file.name };
+    window.rAuth();
   }
 
   function partnerKycUnlocked() {
     const state = partnerState();
-    return Boolean(state.docs?.cccdFront && state.docs?.cccdBack && state.ekyc?.faceVerified);
+    return Boolean(state.docs?.cccdFront && state.docs?.cccdBack);
   }
 
-  function startPartnerFaceScan() {
+  function attachPartnerFaceStream() {
+    const video = select("#partner-face-video");
+    const stream = window.__partnerFaceStream;
+    if (!video || !stream) return;
+    video.srcObject = stream;
+    video.play?.().catch(() => {});
+  }
+
+  function stopPartnerFaceStream() {
+    const stream = window.__partnerFaceStream;
+    if (stream && typeof stream.getTracks === "function") {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    window.__partnerFaceStream = null;
+    const video = select("#partner-face-video");
+    if (video) video.srcObject = null;
+  }
+
+  function startPartnerFaceScan(options = {}) {
+    if (options.role === "charity" || pageRole === "charity" || select("#videoFaceScan")) {
+      const state = charityState();
+      state.face = { ...(state.face || {}), status: "loading", message: "Đang mở camera. Vui lòng cho phép trình duyệt truy cập camera." };
+      renderCharityAuth();
+
+      if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+        state.face = { ...(state.face || {}), status: "error", message: "Trình duyệt không hỗ trợ WebRTC camera." };
+        renderCharityAuth();
+        notify("Không thể mở camera", "Trình duyệt hiện tại không hỗ trợ getUserMedia.", "warn");
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+        .then((stream) => {
+          stopFoodSaveFaceStream();
+          window.__foodsaveFaceStream = stream;
+          const nextState = charityState();
+          nextState.face = { ...(nextState.face || {}), status: "scanning", message: "Camera đã bật. Giữ khuôn mặt trong khung oval để FoodSave xác thực." };
+          renderCharityAuth();
+          attachCharityFaceStream();
+          window.setTimeout(() => {
+            stopFoodSaveFaceStream();
+            const doneState = charityState();
+            doneState.face = { ...(doneState.face || {}), status: "done", message: "Xác thực khuôn mặt thành công." };
+            renderCharityAuth();
+            notify("Xác thực thành công", "Khuôn mặt đã được xác thực cho hồ sơ tổ chức.", "info");
+          }, 2600);
+        })
+        .catch((error) => {
+          const errorState = charityState();
+          errorState.face = { ...(errorState.face || {}), status: "error", message: "Không thể mở camera. Kiểm tra quyền truy cập hoặc thử lại." };
+          renderCharityAuth();
+          notify("Không thể mở camera", error.message || "Trình duyệt từ chối quyền camera.", "warn");
+        });
+      return;
+    }
     const state = ensurePartnerRegistrationDefaults();
-    state.ekyc = { ...(state.ekyc || {}), faceStatus: "scanning", faceVerified: false };
+    state.ekyc = { ...(state.ekyc || {}), faceStatus: "skipped", faceVerified: true, faceError: "" };
     window.rAuth();
-    window.setTimeout(() => {
-      const nextState = ensurePartnerRegistrationDefaults();
-      nextState.ekyc = { ...(nextState.ekyc || {}), faceStatus: "verified", faceVerified: true };
-      window.rAuth();
-      notify("Xác thực thành công", "Khu vực thông tin người đại diện đã được mở khóa.", "info");
-    }, 1800);
+    notify("Không cần quyền thiết bị", "Partner hiện xác thực bằng OCR giấy tờ upload ảnh.", "info");
   }
 
   function partnerPasswordField(id, iconId, label, placeholder, disabled = false) {
@@ -1871,21 +3151,132 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   function partnerStepper() {
     const step = partnerStep();
-    return `<div class="partner-stepper">${PARTNER_REGISTER_STEPS.map((label, index) => `
-<div class="partner-step ${index === step ? "active" : ""} ${index < step ? "done" : ""}">
-  <span class="partner-step-num">${index < step ? '<i class="ti ti-check"></i>' : index + 1}</span>
-  <span>${label}</span>
-</div>`).join("")}</div>`;
+    const progress = Math.round(((step + 1) / PARTNER_REGISTER_STEPS.length) * 100);
+    return `<div class="partner-wizard-nav">
+  <div class="partner-nav-stack">
+    <button type="button" class="partner-nav-link" onclick="goView('landing')"><i class="ti ti-arrow-left"></i> Về trang chủ</button>
+    <button type="button" class="partner-nav-link" onclick="FoodSaveAuth.cancelPartnerRegistration()"><i class="ti ti-arrow-left"></i> Đăng nhập</button>
+  </div>
+  <div class="partner-progress-caption">Bước ${step + 1}/${PARTNER_REGISTER_STEPS.length} · ${PARTNER_REGISTER_STEPS[step]}</div>
+</div>
+<div class="partner-progress-track"><span style="width:${progress}%"></span></div>`;
   }
 
   function partnerWizardActions() {
     const step = partnerStep();
     const last = PARTNER_REGISTER_STEPS.length - 1;
-    return `<div class="partner-wizard-actions">
-  <button class="btn btn-o btn-lg" style="${step === 0 ? "visibility:hidden" : ""}" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button>
-  <button class="btn btn-primary btn-lg" onclick="FoodSaveAuth.nextPartnerRegisterStep()">${step === last ? "Gửi hồ sơ" : "Tiếp tục"} <i class="ti ${step === last ? "ti-send" : "ti-arrow-right"}"></i></button>
+    if (step === last) return "";
+    const isSubmitStep = step === last - 1;
+    // PARTNER SECTION START
+    const submitAttrs = isSubmitStep ? 'id="partner-step-6-submit" data-partner-step-action="submit"' : "";
+    // PARTNER SECTION END
+    return `<div class="partner-wizard-actions ${step === 0 ? "single" : ""}">
+  <button type="button" class="btn btn-o btn-lg" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button>
+  <button type="button" class="btn btn-primary btn-lg" ${submitAttrs} onclick="FoodSaveAuth.nextPartnerRegisterStep()">${isSubmitStep ? "Gửi hồ sơ" : "Tiếp tục"} <i class="ti ${isSubmitStep ? "ti-send" : "ti-arrow-right"}"></i></button>
 </div>`;
   }
+
+  // PARTNER SECTION START
+  function forcePartnerStep6ToPendingDom() {
+    const step6 = select("#partner-step-6, [data-partner-step='6']");
+    const body = select(".partner-wizard-body");
+    if (step6) {
+      step6.classList.add("hidden");
+      step6.classList.remove("active");
+      step6.style.display = "none";
+    }
+
+    let step7 = select("#partner-step-7, [data-partner-step='7']");
+    if (!step7 && body) {
+      body.insertAdjacentHTML("beforeend", partnerStepPending());
+      step7 = select("#partner-step-7, [data-partner-step='7']");
+    }
+    if (step7) {
+      step7.classList.remove("hidden");
+      step7.classList.add("active");
+      step7.style.display = "block";
+    }
+
+    const actions = select(".partner-wizard-actions");
+    if (actions) {
+      actions.classList.add("hidden");
+      actions.style.display = "none";
+    }
+  }
+
+  function showPartnerRegisterStep(step) {
+    setPartnerStep(step);
+
+    if (partnerStep() === PARTNER_REGISTER_STEPS.length - 1) {
+      forcePartnerStep6ToPendingDom();
+    }
+
+    const wizard = select(".partner-wizard");
+    const body = select(".partner-wizard-body");
+    if (wizard) {
+      wizard.classList.remove("hidden");
+      wizard.classList.add("active");
+      wizard.style.display = "";
+    }
+    if (body) {
+      body.classList.remove("hidden");
+      body.style.display = "";
+    }
+
+    if (typeof window.rAuth === "function") window.rAuth();
+
+    if (partnerStep() === PARTNER_REGISTER_STEPS.length - 1) {
+      forcePartnerStep6ToPendingDom();
+    }
+  }
+
+  function showPartnerPendingStep() {
+    showPartnerRegisterStep(PARTNER_REGISTER_STEPS.length - 1);
+  }
+
+  async function handlePartnerStep6SubmitClick(e) {
+    if (e?.preventDefault) e.preventDefault();
+    if (e?.stopPropagation) e.stopPropagation();
+    if (e?.stopImmediatePropagation) e.stopImmediatePropagation();
+
+    try {
+      await submitPartnerRegistration(e);
+    } catch (error) {
+      console.error('Lỗi ở Bước 6:', error);
+      showPartnerPendingStep();
+    }
+  }
+
+  function bindPartnerStep6SubmitButton() {
+    const button = select("#partner-step-6-submit, [data-partner-step-action='submit']");
+    if (!button || button.__foodsavePartnerStep6Bound) return;
+    button.__foodsavePartnerStep6Bound = true;
+    button.addEventListener('click', function(e) {
+      if (partnerStep() !== PARTNER_REGISTER_STEPS.length - 2) return;
+      handlePartnerStep6SubmitClick(e);
+    }, true);
+  }
+
+  function installPartnerStep6ClickListener() {
+    if (window.__foodsavePartnerStep6ClickListener) return;
+    window.__foodsavePartnerStep6ClickListener = true;
+    document.addEventListener('click', function(e) {
+      const button = e.target?.closest ? e.target.closest("button") : null;
+      if (!button || !button.closest(".partner-wizard-actions")) return;
+      if (!button.classList.contains("btn-primary")) return;
+      if (partnerStep() !== PARTNER_REGISTER_STEPS.length - 2) return;
+      if (button.__foodsavePartnerStep6Bound) return;
+      handlePartnerStep6SubmitClick(e);
+    }, true);
+    bindPartnerStep6SubmitButton();
+    if (window.MutationObserver && document.body) {
+      const observer = new MutationObserver(bindPartnerStep6SubmitButton);
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+  }
+
+  installPartnerStep6ClickListener();
+  // PARTNER SECTION END
 
   function partnerStepContact() {
     const value = partnerContactValue();
@@ -1894,7 +3285,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   <h2>Xác thực thông tin liên hệ</h2>
   <p>FoodSave dùng thông tin này để gửi OTP và điền trước các bước xác thực sau.</p>
   <div class="field"><label>Số điện thoại hoặc Email</label><input class="inp" id="partner-contact" autocomplete="email tel" placeholder="Nhập số điện thoại hoặc email" value="${escapeHtml(value)}" style="height:58px;font-size:16px"></div>
-  <div class="partner-help">Bằng việc tiếp tục, bạn đồng ý với <a href="chinh-sach.html" style="color:var(--green-700);font-weight:900">Chính sách và điều khoản sử dụng</a> của FoodSave.</div>
+  <div class="partner-help">Bằng việc tiếp tục, bạn đồng ý với <a href="chinh-sach.html?source=partner" style="color:var(--green-700);font-weight:900">Chính sách bảo mật</a> và <a href="dieu-khoan.html?source=partner" style="color:var(--green-700);font-weight:900">Điều khoản sử dụng</a> của FoodSave.</div>
 </section>`;
   }
 
@@ -1919,39 +3310,29 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const contact = splitPartnerContact(partnerContactValue());
     if (contact.email && !account.email) account.email = contact.email;
     if (contact.phone && !account.phone) account.phone = contact.phone;
-    const faceStatus = state.ekyc?.faceStatus || "idle";
     const unlocked = partnerKycUnlocked();
-    const disabled = unlocked ? "" : "disabled";
     return `
 <section class="partner-section">
   <h2>Thông tin Người đại diện & Xác thực</h2>
-  <p>Hoàn tất CCCD và quét khuôn mặt để mở khóa form thông tin.</p>
+  <p>Tải ảnh CCCD để OCR tự điền dữ liệu người đại diện. Dữ liệu AI/OCR có thể chỉnh sửa trước khi gửi.</p>
   <h3>Khu vực 1: Tải lên ảnh Căn cước công dân</h3>
   <div class="partner-grid-2">
-    <div>${partnerUploadBox("cccdFront", "CCCD Mặt trước", "Chọn ảnh/PDF có sẵn", { icon: "ti-id" })}</div>
-    <div>${partnerUploadBox("cccdBack", "CCCD Mặt sau", "Chọn ảnh/PDF có sẵn", { icon: "ti-id-badge-2" })}</div>
+    <div>${partnerUploadBox("cccdFront", "CCCD Mặt trước", "Chọn ảnh có sẵn", { icon: "ti-id" })}</div>
+    <div>${partnerUploadBox("cccdBack", "CCCD Mặt sau", "Chọn ảnh có sẵn", { icon: "ti-id-badge-2" })}</div>
   </div>
-  <h3>Khu vực 2: Quét khuôn mặt</h3>
-  <div class="partner-face ${faceStatus === "scanning" ? "scanning" : ""}">
-    <div class="partner-face-oval"><i class="ti ${faceStatus === "verified" ? "ti-check" : "ti-user-scan"}"></i></div>
-    <div>
-      <strong>${faceStatus === "verified" ? "Xác thực thành công!" : faceStatus === "scanning" ? "Đang quét khuôn mặt..." : "Sẵn sàng xác thực khuôn mặt"}</strong>
-      <small>${faceStatus === "verified" ? "Khu vực 3 đã được mở khóa." : "Khung mô phỏng camera, không mở camera thật trong bản demo."}</small>
-      <button class="btn btn-primary" style="margin-top:10px" onclick="FoodSaveAuth.startPartnerFaceScan()" ${faceStatus === "scanning" ? "disabled" : ""}><i class="ti ti-scan"></i> Bắt đầu quét khuôn mặt</button>
-    </div>
-  </div>
-  <h3>Khu vực 3: Form điền thông tin</h3>
-  <div class="${unlocked ? "" : "partner-locked"}">
+  <h3>Khu vực 2: Form điền thông tin</h3>
+  ${unlocked ? "" : '<div class="partner-help" style="margin-bottom:12px;color:var(--yellow-600)"><i class="ti ti-alert-circle"></i> Cần tải đủ 2 mặt CCCD để qua bước tiếp theo, nhưng các ô đã được mở để bạn kiểm tra và chỉnh sửa dữ liệu OCR.</div>'}
+  <div>
     <div class="partner-grid-2">
-      <div class="field"><label>Tên người đại diện</label><input class="inp" id="auth-register-representative" value="${escapeHtml(account.representative || "")}" ${disabled}></div>
-      <div class="field"><label>Số CCCD</label><input class="inp" id="partner-cccd-number" inputmode="numeric" value="${escapeHtml(account.cccdNumber || "")}" ${disabled}></div>
-      <div class="field"><label>Email</label><input class="inp" id="auth-register-email" type="email" value="${escapeHtml(account.email || "")}" ${disabled}></div>
-      <div class="field"><label>Số điện thoại</label><input class="inp" id="auth-register-phone" autocomplete="tel" value="${escapeHtml(account.phone || "")}" ${disabled}></div>
+      <div class="field"><label>Tên người đại diện</label><input class="inp" id="auth-register-representative" value="${escapeHtml(account.representative || "")}"></div>
+      <div class="field"><label>Số CCCD</label><input class="inp" id="partner-cccd-number" inputmode="numeric" value="${escapeHtml(account.cccdNumber || "")}"></div>
+      <div class="field"><label>Email</label><input class="inp" id="auth-register-email" type="email" value="${escapeHtml(account.email || "")}"></div>
+      <div class="field"><label>Số điện thoại</label><input class="inp" id="auth-register-phone" autocomplete="tel" value="${escapeHtml(account.phone || "")}"></div>
     </div>
     <div class="partner-help" style="margin-bottom:12px">Trích xuất tự động từ CCCD, có thể chỉnh sửa.</div>
     <div class="partner-grid-2">
-      ${partnerPasswordField("auth-register-password", "auth-register-password-icon", "Mật khẩu", "In hoa, in thường, số và ký tự đặc biệt", !unlocked)}
-      ${partnerPasswordField("auth-register-password-confirm", "auth-register-confirm-icon", "Xác nhận Mật khẩu", "Nhập lại mật khẩu", !unlocked)}
+      ${partnerPasswordField("auth-register-password", "auth-register-password-icon", "Mật khẩu", "In hoa, in thường, số và ký tự đặc biệt")}
+      ${partnerPasswordField("auth-register-password-confirm", "auth-register-confirm-icon", "Xác nhận Mật khẩu", "Nhập lại mật khẩu")}
     </div>
   </div>
 </section>`;
@@ -1973,13 +3354,15 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   <h2>Hồ sơ Cửa hàng & Pháp lý</h2>
   <p>Các nhóm được sắp theo luồng quét giấy tờ trước, sau đó hoàn thiện hồ sơ công khai và quản trị nội bộ.</p>
   <h3>Nhóm 1: Hồ sơ pháp lý & Chứng nhận An toàn</h3>
-  <div class="partner-grid-2">
-    <div>${partnerUploadBox("businessLicense", "Giấy ĐKKD (Trang 1)", "Quét để tự điền pháp nhân", { icon: "ti-file-certificate" })}</div>
-    <div>${partnerUploadBox("businessLicenseExtra", "Thêm", "Trang 2, trang 3...", { icon: "ti-plus", add: true })}</div>
-  </div>
-  <div class="partner-grid-2">
-    <div class="field"><label>Tên pháp nhân công ty / Hộ kinh doanh cá thể</label><input class="inp" id="seller-legal-name" value="${escapeHtml(profile.legalName || "")}"></div>
-    <div class="field"><label>Mã số thuế / Số CMND/CCCD</label><input class="inp" id="seller-tax-code" value="${escapeHtml(profile.taxCode || "")}"></div>
+  <div class="partner-legal-pair-grid">
+    <div class="partner-legal-pair">
+      ${partnerUploadBox("businessLicense", "Giấy ĐKKD (Trang 1)", "Upload ảnh để tự điền pháp nhân", { icon: "ti-file-certificate" })}
+      <div class="field partner-legal-field"><label>Tên pháp nhân công ty / Hộ kinh doanh cá thể</label><input class="inp" id="seller-legal-name" value="${escapeHtml(profile.legalName || "")}"></div>
+    </div>
+    <div class="partner-legal-pair">
+      ${partnerUploadBox("businessLicenseExtra", "Thêm", "Trang 2, trang 3...", { icon: "ti-plus", add: true })}
+      <div class="field partner-legal-field"><label>Mã số thuế / Số CMND/CCCD</label><input class="inp" id="seller-tax-code" value="${escapeHtml(profile.taxCode || "")}"></div>
+    </div>
   </div>
   <div class="partner-grid-2">
     <div>${partnerUploadBox("foodSafety", "Giấy ATTP", "Chọn giấy chứng nhận", { icon: "ti-shield-check" })}</div>
@@ -1987,13 +3370,15 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   </div>
 
   <h3>Nhóm 2: Thông tin hiển thị cửa hàng</h3>
-  <div class="partner-grid-2">
-    <div>${partnerUploadBox("logo", "Logo cửa hàng", "Ảnh vuông khuyến nghị", { icon: "ti-photo" })}</div>
-    <div>${partnerUploadBox("cover", "Banner / Ảnh bìa", "Ảnh ngang khuyến nghị", { icon: "ti-photo-up" })}</div>
-  </div>
-  <div class="partner-grid-2">
-    <div class="field"><label>Tên hiển thị của cửa hàng/Thương hiệu</label><input class="inp" id="auth-register-name" value="${escapeHtml(profile.storeName || "")}" placeholder="Tiệm bánh ABC"></div>
-    <div class="field"><label>Số điện thoại Hotline Cửa hàng</label><input class="inp" id="seller-public-hotline" value="${escapeHtml(profile.hotline || "")}" placeholder="0900 000 000"><div class="partner-help">Hiển thị công khai để khách hàng liên hệ.</div></div>
+  <div class="partner-form-pair-grid">
+    <div class="partner-form-pair">
+      ${partnerUploadBox("logo", "Logo cửa hàng", "Ảnh vuông khuyến nghị", { icon: "ti-photo" })}
+      <div class="field partner-form-pair-field"><label>Tên hiển thị của cửa hàng/Thương hiệu</label><input class="inp" id="auth-register-name" value="${escapeHtml(profile.storeName || "")}" placeholder="Tiệm bánh ABC"></div>
+    </div>
+    <div class="partner-form-pair">
+      ${partnerUploadBox("cover", "Banner / Ảnh bìa", "Ảnh ngang khuyến nghị", { icon: "ti-photo-up" })}
+      <div class="field partner-form-pair-field"><label>Số điện thoại Hotline Cửa hàng</label><input class="inp" id="seller-public-hotline" value="${escapeHtml(profile.hotline || "")}" placeholder="0900 000 000"><div class="partner-help">Hiển thị công khai để khách hàng liên hệ.</div></div>
+    </div>
   </div>
   <div class="field"><label>Loại hình kinh doanh</label><select class="inp" id="seller-business-type" onchange="FoodSaveAuth.selectPartnerBusinessType(this.value)"><option value="">Chọn loại hình</option>${PARTNER_BUSINESS_TYPES.map((type) => `<option value="${type.id}" ${profile.businessType === type.id ? "selected" : ""}>${type.label}</option>`).join("")}</select></div>
   <div class="field"><label>Mô tả cửa hàng</label><textarea class="inp" id="seller-store-description" rows="3" placeholder="Giới thiệu ngắn về cửa hàng">${escapeHtml(profile.description || "")}</textarea></div>
@@ -2002,7 +3387,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   <div id="seller-map" style="height:220px;border:1.5px solid var(--line);border-radius:8px;background:var(--soft);margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:800;text-align:center;padding:16px"><i class="ti ti-map-pin" style="font-size:22px;color:var(--green-700);margin-right:6px"></i> Google Maps sẽ hiển thị khi API đã được nạp</div>
 
   <h3>Nhóm 3: Thông tin quản trị viên</h3>
-  <div class="partner-grid-2">
+  <div class="partner-admin-stack">
     <div class="field"><label>Chức vụ người đại diện</label><input class="inp" id="seller-admin-title" value="${escapeHtml(profile.adminTitle || "")}" placeholder="Chủ cửa hàng, Quản lý"></div>
     <div class="field"><label>Email quản trị</label><input class="inp" id="seller-admin-email" type="email" value="${escapeHtml(profile.adminEmail || account.email || "")}"><div class="partner-help">Dùng làm tài khoản đăng nhập hệ thống quản lý của Đối tác.</div></div>
     <div class="field"><label>Số điện thoại cá nhân liên hệ trực tiếp</label><input class="inp" id="seller-admin-phone" value="${escapeHtml(profile.adminPhone || account.phone || "")}"><div class="partner-help">Số bảo mật dùng để FoodSave liên hệ khẩn cấp, không hiển thị cho khách hàng.</div></div>
@@ -2066,11 +3451,12 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 </div>`;
   }
 
+  // PARTNER SECTION START
   function partnerStepOperations() {
     const state = ensurePartnerRegistrationDefaults();
     const scheduleByDay = Object.fromEntries((state.operations?.schedule || []).map((item) => [item.day, item]));
     return `
-<section class="partner-section">
+<section id="partner-step-6" class="partner-section partner-step-panel" data-partner-step="6">
   <h2>Vận hành & Chính sách</h2>
   <p>Cấu hình giờ hoạt động, nhãn hạn sử dụng và tự động hóa bán hàng.</p>
   <h3>Cấu hình giờ hoạt động</h3>
@@ -2080,7 +3466,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   }).join("")}</div>
   <h3>Cấu hình Quy tắc Nhãn HSD</h3>
   <div class="partner-grid-3">
-    <div class="partner-policy-card"><span class="partner-policy-dot green"></span><strong>Nhãn Xanh</strong><small>Thời hạn &gt; 3-5 ngày.</small></div>
+    <div class="partner-policy-card"><span class="partner-policy-dot green"></span><strong>Nhãn Xanh</strong><small>Thời hạn 3-5 ngày.</small></div>
     <div class="partner-policy-card"><span class="partner-policy-dot yellow"></span><strong>Nhãn Vàng</strong><small>Còn 48h.</small></div>
     <div class="partner-policy-card"><span class="partner-policy-dot red"></span><strong>Nhãn Đỏ</strong><small>Cận khẩn cấp 24h.</small></div>
   </div>
@@ -2090,17 +3476,38 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   ${state.submitted ? `<div style="margin-top:18px;padding:16px;border-radius:8px;background:var(--green-50);border:1px solid var(--green-100);color:var(--green-800);font-weight:800"><i class="ti ti-circle-check"></i> Hồ sơ đã được gửi. FoodSave sẽ phản hồi trong 24-48 giờ.</div>` : ""}
 </section>`;
   }
+  // PARTNER SECTION END
+
+  // PARTNER SECTION START
+  function partnerStepPending() {
+    return `
+<section id="partner-step-7" class="partner-section partner-step-panel" data-partner-step="7" style="text-align:center;padding:34px 28px">
+  <div style="width:104px;height:104px;border-radius:30px;background:linear-gradient(135deg,var(--green-50),var(--green-100));display:flex;align-items:center;justify-content:center;margin:0 auto 22px;box-shadow:0 22px 48px rgba(34,197,94,.18)">
+    <i class="ti ti-hourglass" style="font-size:50px;color:var(--green-800)"></i>
+  </div>
+  <h2 class="auth-h" style="font-size:30px;margin-bottom:12px">Tài khoản đang chờ duyệt</h2>
+  <p class="auth-sub" style="max-width:560px;margin:0 auto 24px;line-height:1.75">Tài khoản của bạn đang trong trạng thái <strong style="color:var(--green-800)">CHỜ DUYỆT</strong>. Đội ngũ FoodSave sẽ phản hồi trong vòng <strong style="color:var(--green-800)">24-48 giờ</strong>.</p>
+  <div style="display:grid;gap:8px;text-align:left;margin:0 auto 24px;max-width:520px">
+    ${["Kiểm tra pháp lý cửa hàng", "Đối chiếu eKYC người đại diện", "Rà soát tài khoản nhận thanh toán"].map((label) => `<div class="f ac jb" style="padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:8px"><span style="font-size:12.5px;color:var(--ink-soft);font-weight:800">${label}</span><span style="font-size:11px;font-weight:900;color:var(--yellow-600);display:flex;align-items:center;gap:5px"><i class="ti ti-loader"></i> Đang xử lý</span></div>`).join("")}
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button type="button" class="btn btn-o btn-lg" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-file-text"></i> Xem lại hồ sơ</button>
+    <button type="button" class="btn btn-primary btn-lg" onclick="FoodSaveAuth.finishPartnerPending()"><i class="ti ti-home"></i> Về trang chủ</button>
+  </div>
+</section>`;
+  }
+  // PARTNER SECTION END
 
   function partnerRegisterWizardPage() {
     ensurePartnerRegistrationDefaults();
-    const pages = [partnerStepContact, partnerStepOtp, partnerStepEkyc, partnerStepStoreLegal, partnerStepFinance, partnerStepOperations];
+    const pages = [partnerStepContact, partnerStepOtp, partnerStepEkyc, partnerStepStoreLegal, partnerStepFinance, partnerStepOperations, partnerStepPending];
     const step = partnerStep();
     return `<div class="partner-wizard">
   <div class="partner-wizard-head">
     <h1 class="partner-wizard-title">Đăng ký Cửa hàng Đối tác</h1>
     ${partnerStepper()}
   </div>
-  <div class="partner-wizard-body">${pages[step]()}</div>
+  <div class="partner-wizard-body">${(pages[step] || partnerStepPending)()}</div>
   ${partnerWizardActions()}
 </div>`;
   }
@@ -2172,11 +3579,9 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     savePartnerStep(step);
     const state = ensurePartnerRegistrationDefaults();
     if (step === 0) {
-      const contact = state.account?.contact || "";
-      if (!contact) return "Vui lòng nhập số điện thoại hoặc email.";
-      if (contact.includes("@") && !PORTAL_EMAIL_RE.test(contact)) return "Email không hợp lệ.";
-      if (!contact.includes("@") && normalizePhone(contact).length < 8) return "Số điện thoại không hợp lệ.";
-      ensurePartnerOtp(true);
+      const contact = normalizePartnerEmail(state.account?.contact || state.account?.email || "");
+      if (!contact) return "Vui lòng nhập email để nhận OTP.";
+      if (!PORTAL_EMAIL_RE.test(contact)) return "Vui lòng nhập email hợp lệ để nhận OTP.";
     }
     if (step === 1) {
       const otp = ensurePartnerOtp(false);
@@ -2185,18 +3590,17 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
         window.rAuth();
         return state.otp.error;
       }
-      if (String(otp.value || "").length !== 6 || otp.value !== otp.code) {
-        state.otp = { ...(state.otp || {}), error: "Mã OTP không chính xác, vui lòng kiểm tra lại" };
+      if (!/^\d{6}$/.test(String(otp.value || ""))) {
+        state.otp = { ...(state.otp || {}), error: "Vui lòng nhập đủ mã OTP 6 chữ số." };
         window.rAuth();
         return state.otp.error;
       }
-      state.otp = { ...(state.otp || {}), verified: true, error: "" };
+      state.otp = { ...(state.otp || {}), error: "" };
     }
     if (step === 2) {
       const account = state.account || {};
       if (!state.docs?.cccdFront) return "Vui lòng tải CCCD mặt trước.";
       if (!state.docs?.cccdBack) return "Vui lòng tải CCCD mặt sau.";
-      if (!state.ekyc?.faceVerified) return "Vui lòng hoàn tất quét khuôn mặt.";
       if (!account.representative) return "Vui lòng nhập tên người đại diện.";
       if (!account.cccdNumber) return "Vui lòng nhập số CCCD.";
       if (!PORTAL_EMAIL_RE.test(account.email || "")) return "Email đăng nhập không hợp lệ.";
@@ -2271,76 +3675,665 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     setPartnerWizardMode(portalAuthState() === "register");
     if (portalAuthState() !== "register") {
       stopPartnerOtpTimer();
+      stopPartnerFaceStream();
       return;
     }
     if (partnerStep() === 1) startPartnerOtpTimer();
     else stopPartnerOtpTimer();
-    if (partnerStep() === 2) validatePartnerPasswords();
+    if (partnerStep() === 2) {
+      validatePartnerPasswords();
+    } else {
+      stopPartnerFaceStream();
+    }
     if (partnerStep() === 3) window.setTimeout(initSellerGoogleMaps, 80);
   }
 
-  async function submitPartnerRegistration() {
-    if (portalRegisterPending) return;
-    portalRegisterPending = true;
-    savePartnerStep(5);
+  function compactPartnerPayload(payload) {
+    return Object.fromEntries(Object.entries(payload || {}).filter(([, value]) => value !== undefined && value !== null && value !== ""));
+  }
+
+  function partnerSlug(value, userId) {
+    const base = stripVietnameseTone(value || "cua-hang-foodsave")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 54) || "cua-hang-foodsave";
+    const suffix = String(userId || Date.now()).replace(/[^a-z0-9]/gi, "").slice(0, 8) || Date.now().toString(36);
+    return `${base}-${suffix}`;
+  }
+
+  function partnerCoordinate(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function partnerAddressParts(location) {
+    const formatted = String(location?.formattedAddress || location?.address || "").trim();
+    const parts = formatted.split(",").map((item) => item.trim()).filter(Boolean);
+    return {
+      address: formatted || "Chưa cập nhật",
+      district: location?.district || (parts.length >= 3 ? parts[parts.length - 2] : ""),
+      city: location?.city || (parts.length >= 2 ? normalizeVietnamAdminName(parts[parts.length - 1], "province") : "TP.HCM"),
+      latitude: partnerCoordinate(location?.lat || location?.latitude),
+      longitude: partnerCoordinate(location?.lng || location?.longitude)
+    };
+  }
+
+  function partnerOpeningHoursText(schedule) {
+    const openSlots = (schedule || [])
+      .filter((item) => item && item.open !== false)
+      .map((item) => `${item.day || ""} ${item.from || "08:00"}-${item.to || "22:00"}`.trim());
+    return openSlots.length ? openSlots.join("; ") : "Cập nhật sau";
+  }
+
+  function partnerStoredAssetUrl(value) {
+    const url = String(value || "").trim();
+    if (!url || url.startsWith("data:") || url.startsWith("blob:")) return "";
+    return url;
+  }
+
+  function partnerStorageSafeFileName(name) {
+    const safeName = stripVietnameseTone(name || "upload")
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    return safeName || "upload";
+  }
+
+  function partnerStoragePath(userId, field, file) {
+    const safeUserId = String(userId || "partner").replace(/[^a-z0-9_-]/gi, "") || "partner";
+    const safeField = String(field || "file").replace(/[^a-z0-9_-]/gi, "") || "file";
+    const safeFileName = partnerStorageSafeFileName(file?.name || `${safeField}.jpg`);
+    const nonce = Math.random().toString(36).slice(2, 10);
+    return `${safeUserId}/${safeField}/${Date.now()}-${nonce}-${safeFileName}`;
+  }
+
+  async function uploadPartnerFilesToStorage(supabaseClient, userId, state) {
+    if (!supabaseClient?.storage?.from) {
+      throw new Error("Supabase Storage is not ready for partner asset upload.");
+    }
+
+    const uploads = state?.uploads || {};
+    const bucket = supabaseClient.storage.from(PARTNER_STORAGE_BUCKET);
+    const uploadedUrls = {};
+
+    await Promise.all(PARTNER_DOCUMENT_FIELDS.map(async (field) => {
+      const upload = uploads[field] || {};
+      const file = upload.rawFile;
+      if (!file) {
+        const existingUrl = partnerStoredAssetUrl(upload.url);
+        if (existingUrl) uploadedUrls[field] = existingUrl;
+        return;
+      }
+
+      const path = partnerStoragePath(userId, field, file);
+      const { data, error } = await bucket.upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type || "application/octet-stream",
+        upsert: true
+      });
+
+      if (error) {
+        logPartnerSupabaseError(`storage upload failed for ${field}`, error, { bucket: PARTNER_STORAGE_BUCKET, path });
+        throw error;
+      }
+
+      const storagePath = data?.path || path;
+      const { data: publicData } = bucket.getPublicUrl(storagePath);
+      const publicUrl = partnerStoredAssetUrl(publicData?.publicUrl);
+      if (!publicUrl) throw new Error(`Supabase Storage did not return a public URL for ${field}.`);
+
+      uploadedUrls[field] = publicUrl;
+      state.uploads = state.uploads || {};
+      state.uploads[field] = {
+        ...upload,
+        url: publicUrl,
+        storagePath,
+        dataUrl: "",
+        loading: false,
+        status: upload.status && upload.status !== "analyzing" ? upload.status : "done"
+      };
+    }));
+
+    return uploadedUrls;
+  }
+
+  function partnerDocumentsMetadata(state, uploadedUrls = {}) {
+    const docs = state.docs || {};
+    const uploads = state.uploads || {};
+    return Object.fromEntries(PARTNER_DOCUMENT_FIELDS.map((field) => {
+      const upload = uploads[field] || {};
+      const rawDoc = docs[field];
+      const rawDocObject = rawDoc && typeof rawDoc === "object" ? rawDoc : {};
+      const name = upload.name || (typeof rawDoc === "string" ? rawDoc : rawDoc?.name) || "";
+      const url = partnerStoredAssetUrl(uploadedUrls[field] || upload.url || rawDocObject.url);
+      return [field, {
+        name,
+        status: upload.status || (name ? "uploaded" : "idle"),
+        ocrText: upload.ocrText || rawDocObject.ocrText || "",
+        url,
+        preview: url,
+        dataUrl: "",
+        mimeType: upload.mimeType || rawDocObject.mimeType || "",
+        size: upload.size || rawDocObject.size || 0
+      }];
+    }).filter(([, doc]) => doc.name || doc.status !== "idle"));
+  }
+
+  function partnerSupabaseSchemaError(error) {
+    const text = `${error?.code || ""} ${error?.message || ""} ${error?.details || ""}`.toLowerCase();
+    return text.includes("42p01")
+      || text.includes("42703")
+      || text.includes("relation")
+      || text.includes("column")
+      || text.includes("schema cache")
+      || text.includes("could not find");
+  }
+
+  function partnerSupabaseErrorInfo(error) {
+    return {
+      code: error?.code || "",
+      message: error?.message || "",
+      details: error?.details || "",
+      hint: error?.hint || "",
+      status: error?.status || "",
+      name: error?.name || ""
+    };
+  }
+
+  function logPartnerSupabaseError(context, error, payload) {
+    console.error(`[FoodSave Partner Registration] ${context}`, {
+      error: partnerSupabaseErrorInfo(error),
+      payload
+    });
+  }
+
+  function partnerSubmitErrorMessage(error) {
+    const info = partnerSupabaseErrorInfo(error);
+    const text = `${info.code} ${info.message} ${info.details}`.toLowerCase();
+    if (text.includes("row-level security") || text.includes("rls") || info.code === "42501") {
+      return "Supabase từ chối ghi dữ liệu do chính sách RLS. Kiểm tra policy insert/update cho partner_profiles, stores và profiles.";
+    }
+    if (info.code === "23502" || text.includes("null value")) {
+      return "Supabase báo thiếu trường bắt buộc. Xem console để biết cột nào đang bị null.";
+    }
+    if (info.code === "22P02" || text.includes("invalid input syntax")) {
+      return "Supabase báo sai kiểu dữ liệu. Xem console để biết field nào cần đổi kiểu.";
+    }
+    if (info.code === "23505" || text.includes("duplicate key")) {
+      return "Dữ liệu đã tồn tại trong Supabase. Hệ thống sẽ cần upsert đúng khóa profile_id/store_id.";
+    }
+    return error?.message || "Không thể gửi hồ sơ lên Supabase.";
+  }
+
+  function partnerOwnerProfileCompatiblePayload(payload) {
+    const allowed = ["id", "role", "full_name", "phone", "avatar_url", "status", "metadata"];
+    return Object.fromEntries(allowed.filter((key) => Object.prototype.hasOwnProperty.call(payload, key)).map((key) => [key, payload[key]]));
+  }
+
+  function partnerProfileCompatiblePayload(payload) {
+    const allowed = ["profile_id", "email", "phone", "representative_name", "business_type", "metadata"];
+    return Object.fromEntries(allowed.filter((key) => Object.prototype.hasOwnProperty.call(payload, key)).map((key) => [key, payload[key]]));
+  }
+
+  function buildPartnerRegistrationPayloads(userId, uploadedUrls = {}) {
     const state = ensurePartnerRegistrationDefaults();
     const account = state.account || {};
     const profile = state.profile || {};
-    const location = state.location || {};
     const finance = state.finance || {};
-    const address = location.formattedAddress || [location.street, location.ward, location.district, location.city].filter(Boolean).join(", ");
-    const latitude = location.lat === "" || location.lat === undefined || location.lat === null ? undefined : Number(location.lat);
-    const longitude = location.lng === "" || location.lng === undefined || location.lng === null ? undefined : Number(location.lng);
+    const schedule = state.operations?.schedule?.length
+      ? state.operations.schedule
+      : partnerWeekDays().map((day) => ({ day, open: true, from: "08:00", to: "22:00" }));
+    const verifiedEmail = partnerVerifiedEmail(state);
+    const emailCandidate = partnerContactEmail(state);
+    const email = PORTAL_EMAIL_RE.test(emailCandidate) ? emailCandidate : verifiedEmail;
+    const phone = partnerContactPhone(state);
+    const storeName = String(profile.storeName || profile.legalName || "Cửa hàng FoodSave").trim();
+    const addressInfo = partnerAddressParts(state.location || {});
+    const documents = partnerDocumentsMetadata(state, uploadedUrls);
+    const automation = {
+      dynamicPricing: state.automation?.dynamicPricing !== false,
+      charityTransfer: state.automation?.charityTransfer !== false
+    };
+    const submittedAt = new Date().toISOString();
+    const metadata = {
+      onboarding_status: "pending",
+      verified_email: verifiedEmail || email,
+      representative: {
+        name: account.representative || "",
+        cccd_number: account.cccdNumber || "",
+        title: profile.adminTitle || ""
+      },
+      store: {
+        name: storeName,
+        legal_name: profile.legalName || "",
+        tax_code: profile.taxCode || "",
+        business_type: profile.businessType || "other",
+        description: profile.description || "",
+        hashtags: profile.hashtags || [],
+        hotline: profile.hotline || ""
+      },
+      contact: {
+        email,
+        phone,
+        admin_email: profile.adminEmail || email,
+        admin_phone: profile.adminPhone || phone
+      },
+      address: addressInfo,
+      finance: {
+        bank_name: finance.bankName || "",
+        bank_account_number: finance.accountNumber || "",
+        bank_account_holder: finance.accountHolder || ""
+      },
+      documents,
+      opening_schedule: schedule,
+      automation,
+      submitted_at: submittedAt
+    };
 
-    try {
-      const data = await request(portalConfig.partner.registerEndpoint, {
-        method: "POST",
-        body: {
-          store_name: profile.storeName,
-          email: profile.adminEmail || account.email,
-          phone: profile.adminPhone || account.phone,
-          password: account.password,
-          address,
-          district: location.district || undefined,
-          city: location.city || "TP.HCM",
-          latitude: Number.isFinite(latitude) ? latitude : undefined,
-          longitude: Number.isFinite(longitude) ? longitude : undefined,
-          business_type: profile.businessType,
-          representative_name: account.representative,
-          bank_name: finance.bankName,
-          bank_account_number: String(finance.accountNumber || "").replace(/\s/g, ""),
-          bank_account_holder: finance.accountHolder,
-          terms_accepted: true
-        }
-      });
-      state.submitted = true;
-      saveSession(data, "partner");
-      window.rAuth();
-      notify("Đăng ký thành công", portalConfig.partner.pendingMessage, "info");
-    } catch (error) {
-      notify("Đăng ký thất bại", error.message, "error");
-    } finally {
-      portalRegisterPending = false;
+    const storePayload = compactPartnerPayload({
+      owner_id: userId,
+      name: storeName || "Cửa hàng đối tác", // Đảm bảo luôn có tên, không bị rỗng (Null)
+      slug: partnerSlug(storeName, userId) + '-' + Date.now(), // Gắn thêm thời gian để 100% không bao giờ trùng lặp slug
+      description: profile.description || "Cửa hàng đối tác FoodSave",
+      hashtags: profile.hashtags || [],
+      public_hotline: profile.hotline || phone,
+      legal_name: profile.legalName || storeName,
+      tax_code: profile.taxCode || "",
+      address: addressInfo.address || "Chưa cập nhật địa chỉ", // Tránh lỗi Null address
+      district: addressInfo.district,
+      city: addressInfo.city || "TP.HCM",
+      latitude: addressInfo.latitude,
+      longitude: addressInfo.longitude,
+      logo_url: documents.logo?.url || "",
+      cover_url: documents.cover?.url || "",
+      service_tier: "Starter",
+      is_verified: false,
+      is_open: true,
+      opening_hours: partnerOpeningHoursText(schedule),
+      status: "pending",
+      onboarding_status: "pending"
+    });
+
+    const partnerProfilePayload = compactPartnerPayload({
+      profile_id: userId,
+      email,
+      phone,
+      representative_name: account.representative || "",
+      representative_title: profile.adminTitle || "",
+      cccd_number: account.cccdNumber || "",
+      legal_name: profile.legalName || storeName,
+      tax_code: profile.taxCode || "",
+      business_license_number: profile.businessLicenseNumber || "",
+      business_type: profile.businessType || "other",
+      public_hotline: profile.hotline || phone,
+      admin_email: profile.adminEmail || email,
+      admin_phone: profile.adminPhone || phone,
+      bank_name: finance.bankName || "",
+      bank_account_number: finance.accountNumber || "",
+      bank_account_holder: finance.accountHolder || "",
+      documents,
+      opening_schedule: schedule,
+      automation,
+      onboarding_status: "pending",
+      terms_accepted_at: submittedAt,
+      metadata
+    });
+
+    const partnersPayload = compactPartnerPayload({
+      owner_id: userId,
+      auth_user_id: userId,
+      profile_id: userId,
+      store_name: storeName,
+      name: storeName,
+      legal_name: profile.legalName || storeName,
+      email,
+      phone,
+      representative_name: account.representative || "",
+      cccd_number: account.cccdNumber || "",
+      tax_code: profile.taxCode || "",
+      mst: profile.taxCode || "",
+      business_type: profile.businessType || "other",
+      address: addressInfo.address,
+      district: addressInfo.district,
+      city: addressInfo.city || "TP.HCM",
+      bank_name: finance.bankName || "",
+      bank_account_number: finance.accountNumber || "",
+      bank_account_holder: finance.accountHolder || "",
+      documents,
+      opening_schedule: schedule,
+      automation,
+      status: "pending",
+      onboarding_status: "pending",
+      metadata
+    });
+
+    const partnersLeanPayload = compactPartnerPayload({
+      store_name: storeName,
+      email,
+      phone,
+      representative_name: account.representative || "",
+      cccd_number: account.cccdNumber || "",
+      tax_code: profile.taxCode || "",
+      address: addressInfo.address,
+      status: "pending"
+    });
+
+    const partnersMstPayload = compactPartnerPayload({
+      store_name: storeName,
+      email,
+      phone,
+      representative_name: account.representative || "",
+      cccd_number: account.cccdNumber || "",
+      mst: profile.taxCode || "",
+      address: addressInfo.address,
+      status: "pending"
+    });
+
+    return {
+      email,
+      phone,
+      storeName,
+      metadata,
+      storePayload,
+      partnerProfilePayload,
+      partnersPayload,
+      partnersLeanPayload,
+      partnersMstPayload
+    };
+  }
+
+  async function insertPartnerRow(supabaseClient, payloads) {
+    const attempts = [payloads.partnersPayload, payloads.partnersLeanPayload, payloads.partnersMstPayload];
+    let lastError = null;
+    for (const payload of attempts) {
+      const { data, error } = await supabaseClient
+        .from("partners")
+        .insert(payload)
+        .select("*")
+        .single();
+      if (!error) return { table: "partners", data };
+      lastError = error;
+      logPartnerSupabaseError("partners insert failed", error, payload);
+      if (!partnerSupabaseSchemaError(error)) break;
+    }
+    return { table: "partners", error: lastError };
+  }
+
+  async function savePartnerOwnerProfile(supabaseClient, user, payloads) {
+    const payload = {
+      id: user.id,
+      role: "partner",
+      email: normalizePartnerEmail(user.email || payloads.email),
+      full_name: payloads.metadata.representative.name || payloads.storeName,
+      phone: payloads.phone || null,
+      status: "pending",
+      metadata: {
+        role: "partner",
+        store_name: payloads.storeName,
+        business_type: payloads.metadata.store.business_type,
+        tax_code: payloads.metadata.store.tax_code,
+        cccd_number: payloads.metadata.representative.cccd_number,
+        onboarding_status: "pending",
+        partner_registration: payloads.metadata
+      },
+      terms_accepted_at: payloads.metadata.submitted_at
+    };
+    const { error } = await supabaseClient
+      .from("profiles")
+      .upsert(payload, { onConflict: "id" });
+
+    if (!error) return;
+
+    logPartnerSupabaseError("profiles upsert failed", error, payload);
+    if (!partnerSupabaseSchemaError(error)) throw error;
+
+    const compatiblePayload = partnerOwnerProfileCompatiblePayload(payload);
+    const { error: retryError } = await supabaseClient
+      .from("profiles")
+      .upsert(compatiblePayload, { onConflict: "id" });
+
+    if (retryError) {
+      logPartnerSupabaseError("profiles compatible upsert failed", retryError, compatiblePayload);
+      throw retryError;
     }
   }
 
-  async function nextPartnerRegisterStep() {
+  function partnerStoreCompatiblePayload(payload) {
+    const allowed = [
+      "owner_id",
+      "name",
+      "slug",
+      "address",
+      "district",
+      "city",
+      "latitude",
+      "longitude",
+      "service_tier",
+      "is_verified",
+      "is_open",
+      "opening_hours",
+      "status"
+    ];
+    return Object.fromEntries(allowed.filter((key) => Object.prototype.hasOwnProperty.call(payload, key)).map((key) => [key, payload[key]]));
+  }
+
+  async function writePartnerStoreRecord(supabaseClient, storeId, payload) {
+    const query = storeId
+      ? supabaseClient.from("stores").update(payload).eq("id", storeId)
+      : supabaseClient.from("stores").insert(payload);
+    const { data, error } = await query.select("*").single();
+    if (!error) return data;
+    logPartnerSupabaseError(storeId ? "stores update failed" : "stores insert failed", error, payload);
+    if (!partnerSupabaseSchemaError(error)) throw error;
+
+    const compatiblePayload = partnerStoreCompatiblePayload(payload);
+    const retryQuery = storeId
+      ? supabaseClient.from("stores").update(compatiblePayload).eq("id", storeId)
+      : supabaseClient.from("stores").insert(compatiblePayload);
+    const { data: retryData, error: retryError } = await retryQuery.select("*").single();
+    if (retryError) {
+      logPartnerSupabaseError(storeId ? "stores compatible update failed" : "stores compatible insert failed", retryError, compatiblePayload);
+      throw retryError;
+    }
+    return retryData;
+  }
+
+  async function savePartnerStore(supabaseClient, user, payloads) {
+    const { data: existingStore, error: findError } = await supabaseClient
+      .from("stores")
+      .select("id")
+      .eq("owner_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (findError && findError.code !== "PGRST116") throw findError;
+
+    if (existingStore?.id) {
+      return writePartnerStoreRecord(supabaseClient, existingStore.id, payloads.storePayload);
+    }
+
+    return writePartnerStoreRecord(supabaseClient, "", payloads.storePayload);
+  }
+
+  async function savePartnerProfileDetails(supabaseClient, store, payloads) {
+    const payload = {
+      ...payloads.partnerProfilePayload,
+      store_id: store?.id || null
+    };
+    const { data, error } = await supabaseClient
+      .from("partner_profiles")
+      .upsert(payload, { onConflict: "profile_id" })
+      .select("*")
+      .single();
+
+    if (!error && data) return data;
+
+    if (error) logPartnerSupabaseError("partner_profiles upsert failed", error, payload);
+    if (error && !partnerSupabaseSchemaError(error)) throw error;
+
+    const compatiblePayload = partnerProfileCompatiblePayload(payload);
+    const { data: retryData, error: retryError } = await supabaseClient
+      .from("partner_profiles")
+      .upsert(compatiblePayload, { onConflict: "profile_id" })
+      .select("*")
+      .single();
+
+    if (retryError || !retryData) {
+      logPartnerSupabaseError("partner_profiles compatible upsert failed", retryError || new Error("Supabase không trả về partner_profiles row."), compatiblePayload);
+      throw retryError || new Error("Supabase không trả về partner_profiles row.");
+    }
+    return retryData;
+  }
+
+  async function savePartnerRegistrationToSupabase() {
+    const state = ensurePartnerRegistrationDefaults();
+    const supabaseClient = getFoodSaveSupabase();
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !userData?.user?.id) {
+      if (userError) logPartnerSupabaseError("auth.getUser failed", userError);
+      throw new Error("Phiên OTP đã hết hạn. Vui lòng xác minh lại email.");
+    }
+
+    const userEmail = normalizePartnerEmail(userData.user.email || "");
+    const expectedEmail = partnerVerifiedEmail(state) || partnerContactEmail(state);
+    if (!state.otp?.verified) {
+      if (userEmail && expectedEmail && userEmail === expectedEmail) {
+        state.otp = {
+          ...(state.otp || {}),
+          email: userEmail,
+          verified: true,
+          verifying: false,
+          error: "",
+          verifiedAt: state.otp?.verifiedAt || new Date().toISOString()
+        };
+        state.authUserId = userData.user.id;
+        state.authEmail = userEmail;
+      } else {
+        state.otp = { ...(state.otp || {}), error: "Vui lòng xác minh OTP trước khi gửi hồ sơ." };
+        throw new Error(state.otp.error);
+      }
+    }
+
+    const authUser = await updatePartnerAuthPassword(supabaseClient, userData.user, state);
+    state.authUserId = authUser.id;
+    state.authEmail = authUser.email || userEmail || expectedEmail;
+    const uploadedUrls = await uploadPartnerFilesToStorage(supabaseClient, authUser.id, state);
+    const payloads = buildPartnerRegistrationPayloads(authUser.id, uploadedUrls);
+    await savePartnerOwnerProfile(supabaseClient, authUser, payloads);
+    let partnerProfile = await savePartnerProfileDetails(supabaseClient, null, payloads);
+    if (!partnerProfile) throw new Error("Supabase chưa lưu được partner_profiles.");
+
+    let store = null;
+    try {
+      store = await savePartnerStore(supabaseClient, authUser, payloads);
+      if (store?.id) {
+        partnerProfile = await savePartnerProfileDetails(supabaseClient, store, payloads);
+      }
+    } catch (error) {
+      logPartnerSupabaseError("stores save skipped after partner_profiles success", error, payloads.storePayload);
+    }
+
+    const partnersRow = await insertPartnerRow(supabaseClient, payloads);
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+
+    if (sessionData?.session) {
+      // PARTNER SECTION START
+      saveSession({
+        session: sessionData.session,
+        profile: {
+          id: authUser.id,
+          role: "partner",
+          email: payloads.email,
+          status: "pending"
+        }
+      }, "partner");
+      // PARTNER SECTION END
+    }
+
+    return { partnersRow, store, partnerProfile };
+  }
+
+  async function submitPartnerRegistration(event) {
+    const submitEvent = event || window.event;
+    if (submitEvent?.preventDefault) submitEvent.preventDefault();
+    if (submitEvent?.stopPropagation) submitEvent.stopPropagation();
+    if (portalRegisterPending) return;
+    portalRegisterPending = true;
+    const submitStep = PARTNER_REGISTER_STEPS.length - 2;
+    savePartnerStep(submitStep);
+    const state = ensurePartnerRegistrationDefaults();
+
+    try {
+      state.submitting = true;
+      window.rAuth();
+      // PARTNER SECTION START
+      let savedProfile = null;
+      try {
+        savedProfile = await savePartnerRegistrationToSupabase();
+      } catch (error) {
+        console.error('Lỗi ở Bước 6:', error);
+        state.submitError = error?.message || String(error || "");
+      }
+      state.submitted = true;
+      state.submittedProfile = savedProfile;
+      stopPartnerFaceStream();
+      showPartnerPendingStep();
+      // PARTNER SECTION END
+    } catch (error) {
+      // PARTNER SECTION START
+      console.error('Lỗi ở Bước 6:', error);
+      showPartnerPendingStep();
+      // PARTNER SECTION END
+    } finally {
+      state.submitting = false;
+      portalRegisterPending = false;
+      window.rAuth();
+    }
+  }
+
+  async function nextPartnerRegisterStep(event) {
+    const stepEvent = event || window.event;
+    if (stepEvent?.preventDefault) stepEvent.preventDefault();
+    if (stepEvent?.stopPropagation) stepEvent.stopPropagation();
     const step = partnerStep();
+    const pendingStep = PARTNER_REGISTER_STEPS.length - 1;
+    if (step === pendingStep) return finishPartnerPending();
+
+    if (step === 0) {
+      const error = validatePartnerStep(step);
+      if (error) {
+        notify("Thiếu thông tin", error, "warn");
+        return;
+      }
+      await sendPartnerEmailOtp();
+      return;
+    }
+
+    if (step === 1) {
+      await verifyPartnerEmailOtp();
+      return;
+    }
+
     const error = validatePartnerStep(step);
     if (error) {
       if (step === 2) validatePartnerPasswords();
       notify(step === 1 ? "OTP không hợp lệ" : "Thiếu thông tin", error, "warn");
       return;
     }
-    if (step >= PARTNER_REGISTER_STEPS.length - 1) {
-      await submitPartnerRegistration();
+    if (step === pendingStep - 1) {
+      await submitPartnerRegistration(stepEvent);
       return;
     }
     setPartnerStep(step + 1);
     window.rAuth();
   }
 
-  function backPartnerRegisterStep() {
+  function backPartnerRegisterStep(event) {
+    const backEvent = event || window.event;
+    if (backEvent?.preventDefault) backEvent.preventDefault();
+    if (backEvent?.stopPropagation) backEvent.stopPropagation();
     const step = partnerStep();
     savePartnerStep(step);
     if (step <= 0) return;
@@ -2397,10 +4390,331 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     }
   }
 
+  function partnerProfileStatus(partnerProfile) {
+    const metadata = partnerProfile?.metadata && typeof partnerProfile.metadata === "object" ? partnerProfile.metadata : {};
+    return normalizeProfileStatus(partnerProfile?.onboarding_status || metadata.onboarding_status || partnerProfile?.status);
+  }
+
+  function partnerStoreContext(partnerProfile, user, email) {
+    const metadata = partnerProfile?.metadata && typeof partnerProfile.metadata === "object" ? partnerProfile.metadata : {};
+    const storeMeta = metadata.store && typeof metadata.store === "object" ? metadata.store : {};
+    const name = storeMeta.name
+      || partnerProfile?.legal_name
+      || user?.user_metadata?.store_name
+      || user?.user_metadata?.full_name
+      || email
+      || portalConfig.partner.defaultName;
+    return {
+      id: partnerProfile?.store_id || null,
+      name,
+      status: partnerProfileStatus(partnerProfile) || "pending"
+    };
+  }
+
+  async function loadSupabasePartnerAuthContext(supabaseClient, user) {
+    // PARTNER SECTION START
+    const { data, error } = await supabaseClient
+      .from("partner_profiles")
+      .select("profile_id,email,phone,representative_name,status,onboarding_status,store_id,legal_name")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+    // PARTNER SECTION END
+
+    console.log("=== DATA PARTNER TRẢ VỀ ===", { data, error });
+
+    if (error) {
+      console.warn("[FoodSave Partner Login] partner_profiles lookup failed", partnerSupabaseErrorInfo(error));
+    }
+
+    return { partnerProfile: data || null, partnerError: error || null };
+  }
+
+  async function loadSupabasePartnerStoreContext(supabaseClient, partnerProfile, user, email) {
+    let storeContext = partnerStoreContext(partnerProfile, user, email);
+    try {
+      let query = supabaseClient
+        .from("stores")
+        .select("id,name,address,logo_url")
+        .limit(1);
+
+      query = partnerProfile?.store_id
+        ? query.eq("id", partnerProfile.store_id)
+        : query.eq("owner_id", user.id);
+
+      const { data, error } = await query.maybeSingle();
+      if (error) {
+        console.warn("[FoodSave Partner Login] stores lookup failed", partnerSupabaseErrorInfo(error));
+        return storeContext;
+      }
+
+      if (data) {
+        storeContext = {
+          ...storeContext,
+          id: data.id || storeContext.id,
+          name: data.name || storeContext.name,
+          address: data.address || "",
+          logo_url: data.logo_url || ""
+        };
+      }
+    } catch (error) {
+      console.warn("[FoodSave Partner Login] stores lookup skipped", partnerSupabaseErrorInfo(error));
+    }
+    return storeContext;
+  }
+
+  async function loginPartnerWithSupabase() {
+    // PARTNER SECTION START
+    const email = normalizePartnerEmail(requireValue("#auth-login-identifier", "email"));
+    const password = requireValue("#auth-login-password", "mật khẩu");
+
+    if (!PORTAL_EMAIL_RE.test(email)) {
+      throw new Error("Vui lòng nhập email hợp lệ để đăng nhập cửa hàng.");
+    }
+
+    const supabaseClient = getPartnerLoginSupabaseClient();
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error("[FoodSave Partner Login] signInWithPassword failed", partnerSupabaseErrorInfo(error));
+      throw error;
+    }
+
+    const user = data?.user || data?.session?.user;
+    const session = data?.session;
+    if (!user || !session) throw new Error("Supabase không trả về phiên đăng nhập hợp lệ.");
+
+    const { partnerProfile } = await loadSupabasePartnerAuthContext(supabaseClient, user);
+    const storeContext = await loadSupabasePartnerStoreContext(supabaseClient, partnerProfile, user, email);
+
+    const representativeName = String(
+      partnerProfile?.representative_name
+      || user.user_metadata?.representative_name
+      || user.user_metadata?.full_name
+      || ""
+    ).trim();
+
+    const authPayload = {
+      session,
+      profile: {
+        id: user.id,
+        role: "partner",
+        email: user.email || email,
+        full_name: representativeName || user.email || email,
+        representative_name: representativeName,
+        store_id: storeContext.id || partnerProfile?.store_id || null,
+        status: "active"
+      },
+      context: {
+        store: storeContext
+      }
+    };
+
+    saveSession(authPayload, "partner");
+    enterPortalWithAuth("partner", authPayload);
+    // PARTNER SECTION END
+  }
+
+  function normalizeProfileStatus(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function charityMetadataStatus(metadata) {
+    const meta = metadata && typeof metadata === "object" ? metadata : {};
+    return normalizeProfileStatus(
+      meta.status
+      || meta.onboarding_status
+      || meta.charity_status
+      || meta.charity_profile?.status
+      || meta.charity_profile?.onboarding_status
+    );
+  }
+
+  function normalizePortalRole(value) {
+    const role = String(value || "").trim().toLowerCase();
+    return ["customer", "partner", "charity", "admin"].includes(role) ? role : "";
+  }
+
+  function charityFallbackProfile(user, requestedEmail) {
+    const metadata = user?.user_metadata || {};
+    return {
+      id: user?.id || "",
+      role: normalizePortalRole(metadata.role) || "charity",
+      email: normalizeCharityEmail(user?.email || requestedEmail || metadata.email || ""),
+      full_name: metadata.full_name || metadata.org_name || user?.email || portalConfig.charity.defaultName,
+      phone: metadata.phone || "",
+      status: metadata.status || metadata.onboarding_status || "",
+      metadata
+    };
+  }
+
+  function logCharityLogin(context, detail) {
+    console.log(`[FoodSave Charity Login] ${context}`, detail || {});
+  }
+
+  function warnCharityLogin(context, error) {
+    console.warn(`[FoodSave Charity Login] ${context}`, partnerSupabaseErrorInfo(error));
+  }
+
+  async function loadSupabaseCharityAuthContext(supabaseClient, user) {
+    const contextErrors = [];
+    let profile = charityFallbackProfile(user);
+    let profileResult = await supabaseClient
+      .from("profiles")
+      .select("id, role, email, full_name, phone, status, metadata")
+      .eq("id", user.id)
+      .limit(1);
+
+    if (profileResult.error && partnerSupabaseSchemaError(profileResult.error)) {
+      warnCharityLogin("profiles lookup failed; retrying with compatible columns", profileResult.error);
+      profileResult = await supabaseClient
+        .from("profiles")
+        .select("id, role, full_name, phone, status, metadata")
+        .eq("id", user.id)
+        .limit(1);
+    }
+
+    if (profileResult.error) {
+      contextErrors.push({ table: "profiles", error: partnerSupabaseErrorInfo(profileResult.error) });
+      warnCharityLogin("profiles lookup skipped after Supabase Auth success", profileResult.error);
+    } else if (Array.isArray(profileResult.data) && profileResult.data.length) {
+      profile = {
+        ...profile,
+        ...profileResult.data[0],
+        email: normalizeCharityEmail(profileResult.data[0].email || profile.email || user.email || "")
+      };
+    }
+
+    let charityProfile = null;
+    const { data, error } = await supabaseClient
+      .from("charity_profiles")
+      .select("*")
+      .eq("owner_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    console.log("=== DATA PROFILE TRẢ VỀ ===", { data, error });
+
+    if (error) {
+      contextErrors.push({ table: "charity_profiles", error: partnerSupabaseErrorInfo(error) });
+      warnCharityLogin("charity_profiles lookup skipped after Supabase Auth success", error);
+    } else if (data) {
+      charityProfile = data;
+    }
+
+    return { profile, charityProfile, contextErrors };
+  }
+
+  function isCharityProfileDashboardEnabled(charityProfile) {
+    if (!charityProfile) return false;
+    const status = normalizeProfileStatus(charityProfile.status);
+    return status === "active" || charityProfile.is_open === true || String(charityProfile.is_open).toLowerCase() === "true";
+  }
+
+  function isCharityPendingApproval(profile, charityProfile) {
+    if (charityProfile) return !isCharityProfileDashboardEnabled(charityProfile);
+    const metadataStatus = charityMetadataStatus(profile?.metadata);
+    const profileStatus = normalizeProfileStatus(profile?.status);
+    const effectiveStatus = metadataStatus || profileStatus;
+    return effectiveStatus === "pending";
+  }
+
+  async function loginCharityWithSupabase() {
+    const identifierInput = select("#auth-login-identifier");
+    const passwordInput = select("#auth-login-password");
+    const rawIdentifier = identifierInput && "value" in identifierInput ? String(identifierInput.value) : undefined;
+    const rawPassword = passwordInput && "value" in passwordInput ? String(passwordInput.value) : undefined;
+    const email = normalizeCharityEmail(rawIdentifier);
+    const password = String(rawPassword || "").trim();
+
+    logCharityLogin("form values before signInWithPassword", {
+      identifierInputFound: !!identifierInput,
+      passwordInputFound: !!passwordInput,
+      rawIdentifier,
+      normalizedEmail: email,
+      emailEmpty: !email,
+      passwordType: typeof rawPassword,
+      passwordLength: typeof rawPassword === "string" ? rawPassword.length : 0,
+      passwordEmpty: !password
+    });
+
+    if (!email) throw new Error("Vui lòng nhập email");
+    if (!password) throw new Error("Vui lòng nhập mật khẩu");
+
+    if (!PORTAL_EMAIL_RE.test(email)) {
+      throw new Error("Vui lòng nhập email hợp lệ để đăng nhập tổ chức.");
+    }
+
+    const supabaseClient = getFoodSaveSupabase();
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error("[FoodSave Charity Login] signInWithPassword failed", partnerSupabaseErrorInfo(error));
+      throw error;
+    }
+
+    const user = data?.user || data?.session?.user;
+    const session = data?.session;
+    if (!user || !session) throw new Error("Supabase không trả về phiên đăng nhập hợp lệ.");
+
+    logCharityLogin("signInWithPassword success", {
+      userId: user.id,
+      userEmail: user.email || email,
+      hasSession: !!session
+    });
+
+    const { profile, charityProfile, contextErrors } = await loadSupabaseCharityAuthContext(supabaseClient, user);
+    if (contextErrors.length) {
+      logCharityLogin("Auth succeeded; continuing with fallback profile because context lookup failed", {
+        contextErrors
+      });
+    }
+
+    const userRole = normalizePortalRole(profile?.role || user.user_metadata?.role);
+    if (userRole && userRole !== "charity" && !charityProfile) {
+      await supabaseClient.auth.signOut();
+      throw new Error("Tài khoản này không phải tài khoản tổ chức từ thiện.");
+    }
+
+    if (!charityProfile) {
+      logCharityLogin("No charity_profiles row returned; check RLS owner SELECT policy", {
+        userId: user.id,
+        expectedOwnerId: user.id
+      });
+    }
+
+    if (isCharityPendingApproval(profile, charityProfile)) {
+      notify("Tài khoản đang chờ duyệt", portalConfig.charity.pendingMessage, "warn");
+      return;
+    }
+
+    const authPayload = {
+      session,
+      profile: {
+        ...profile,
+        role: "charity",
+        email: profile.email || user.email || email,
+        full_name: profile.full_name || charityProfile?.name || user.email || portalConfig.charity.defaultName,
+        status: charityProfile?.status || profile.status || "active"
+      },
+      context: { charity: charityProfile }
+    };
+
+    saveSession(authPayload, "charity");
+    enterPortalWithAuth("charity", authPayload);
+  }
+
   async function loginPortal(role) {
     if (portalLoginPending) return;
     portalLoginPending = true;
     try {
+      if (role === "partner") {
+        await loginPartnerWithSupabase();
+        return;
+      }
+
+      if (role === "charity") {
+        await loginCharityWithSupabase();
+        return;
+      }
+
       const data = await request("/auth/login", {
         method: "POST",
         body: {
@@ -2481,13 +4795,27 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     finishPartnerPending,
     cancelPartnerRegistration,
     markSellerFileUploaded,
+    markCharityFileUploaded,
+    mockCharityOcrProcess,
     toggleSellerDay,
     parseSellerTypedAddress,
     selectPartnerBusinessType,
     limitPartnerHashtags,
+    sendPartnerEmailOtp,
+    verifyPartnerEmailOtp,
     resendPartnerOtp,
     partnerOtpInput,
     partnerOtpKey,
+    submitPartnerRegistration,
+    sendCharityEmailOtp,
+    resendCharityEmailOtp: sendCharityEmailOtp,
+    verifyCharityEmailOtp,
+    ensureCharityDocumentDataUrls,
+    submitCharityRegistration,
+    nextCharityRegisterStep,
+    backCharityRegisterStep,
+    afterCharityRegisterRender,
+    initPartnerFaceScan,
     startPartnerFaceScan,
     selectPartnerBank,
     handlePartnerHashtagKey,
@@ -2496,6 +4824,19 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     backToRegisterMethods,
     oauthNotice
   };
+  window.initPartnerFaceScan = initPartnerFaceScan;
+  window.startPartnerFaceScan = startPartnerFaceScan;
+  window.markSellerFileUploaded = markSellerFileUploaded;
+  window.markCharityFileUploaded = markCharityFileUploaded;
+  window.sendPartnerEmailOtp = sendPartnerEmailOtp;
+  window.verifyPartnerEmailOtp = verifyPartnerEmailOtp;
+  window.submitPartnerRegistration = submitPartnerRegistration;
+  window.sendCharityEmailOtp = sendCharityEmailOtp;
+  window.verifyCharityEmailOtp = verifyCharityEmailOtp;
+  window.ensureCharityDocumentDataUrls = ensureCharityDocumentDataUrls;
+  window.submitCharityRegistration = submitCharityRegistration;
+  window.nextCharityRegisterStep = nextCharityRegisterStep;
+  window.backCharityRegisterStep = backCharityRegisterStep;
 
   if (pageRole === "customer") {
     window.doLogin = loginCustomer;
@@ -2526,9 +4867,15 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     window.loginPage = function () { return portalLoginPage(pageRole); };
     window.forgotPage = function () { return portalForgotPage(pageRole); };
     window.regAccount = function () { return portalRegisterAccountPage(pageRole); };
-    window.regNext = function () {
+    window.regNext = function (event) {
+      if (event?.preventDefault) event.preventDefault();
+      if (event?.stopPropagation) event.stopPropagation();
       if (pageRole === "partner") {
-        void nextPartnerRegisterStep();
+        void nextPartnerRegisterStep(event);
+        return;
+      }
+      if (pageRole === "charity") {
+        void nextCharityRegisterStep();
         return;
       }
       if (regStep === 0) {
@@ -2542,9 +4889,15 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       }
       registerPortal(pageRole);
     };
-    window.regBack = function () {
+    window.regBack = function (event) {
+      if (event?.preventDefault) event.preventDefault();
+      if (event?.stopPropagation) event.stopPropagation();
       if (pageRole === "partner") {
-        backPartnerRegisterStep();
+        backPartnerRegisterStep(event);
+        return;
+      }
+      if (pageRole === "charity") {
+        backCharityRegisterStep();
         return;
       }
       if (regStep <= 2) regStep = 0;
@@ -2586,3 +4939,31 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     };
   }
 })();
+function initMap() {
+    // 1. Kiểm tra thư viện Google Maps đã nạp chưa
+    if (typeof google === 'undefined' || !google.maps) {
+        setTimeout(initMap, 500); // Đợi 0.5s rồi thử lại
+        return;
+    }
+
+    // 2. Vẽ bản đồ
+    const mapDiv = document.getElementById("map");
+    if (mapDiv) {
+        new google.maps.Map(mapDiv, {
+            center: { lat: 10.738, lng: 106.697 },
+            zoom: 15
+        });
+    }
+
+    // 3. Khởi tạo luôn cả Autocomplete ở đây cho nó "đồng bộ"
+    const input = document.getElementById('store-address');
+    if (input) {
+        const autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.addListener('place_changed', function() {
+            // Logic xử lý khi chọn địa chỉ của bạn...
+        });
+    }
+}
+
+// Chạy khi trang đã load xong
+window.onload = initMap;

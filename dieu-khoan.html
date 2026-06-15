@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều Khoản Sử Dụng Dịch Vụ FoodSave</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            color-scheme: light;
+            --fs-green-950: #0a0a0a;
+            --fs-green-900: #131313;
+            --fs-green-800: #16a34a;
+            --fs-green-700: #22c55e;
+            --fs-green-50: #f0fdf4;
+            --fs-green-100: #dcfce7;
+            --fs-green-200: #bbf7d0;
+            --fs-yellow: #facc15;
+            --fs-yellow-soft: #fef9c3;
+            --fs-line: #e5e7eb;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            color: #181818;
+            background: #fafafa;
+        }
+
+        ::selection {
+            background: var(--fs-yellow);
+            color: var(--fs-green-950);
+        }
+
+        h1, h2, h3, h4, .brand-word {
+            font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+        }
+
+        .legal-brand {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            min-width: max-content;
+            padding: 0.25rem 1.1rem 0.38rem 0;
+            border-radius: 0.85rem;
+            text-decoration: none;
+            transition: transform 0.25s ease, filter 0.25s ease;
+        }
+
+        .legal-brand:hover {
+            transform: translateY(-1px);
+            filter: saturate(1.06);
+        }
+
+        .brand-logo-line {
+            position: relative;
+            display: inline-flex;
+            align-items: flex-start;
+            padding-right: 1.05rem;
+        }
+
+        .brand-word {
+            position: relative;
+            display: inline-flex;
+            align-items: baseline;
+            width: fit-content;
+            color: var(--fs-green-950);
+            font-size: 1.38rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .brand-word > span {
+            color: var(--fs-green-800);
+            position: relative;
+        }
+
+        .brand-dot {
+            position: absolute;
+            right: 0.1rem;
+            top: -0.42rem;
+            width: 0.72rem;
+            height: 0.72rem;
+            border-radius: 999px;
+            background: var(--fs-yellow);
+            box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.42);
+            animation: foodsaveLogoPulse 2.2s ease-out infinite;
+            pointer-events: none;
+        }
+
+        .brand-word::after {
+            content: "";
+            position: absolute;
+            left: 0.02em;
+            right: 0.02em;
+            bottom: -0.15em;
+            height: 0.12em;
+            min-height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--fs-green-950) 0 50%, var(--fs-yellow) 50% 100%);
+            transform-origin: left;
+            transform: scaleX(0.78);
+            transition: transform 0.25s ease, filter 0.25s ease;
+        }
+
+        .legal-brand:hover .brand-word::after {
+            transform: scaleX(1);
+            filter: saturate(1.22);
+        }
+
+        .brand-tagline {
+            color: #6b7280;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            line-height: 1.15;
+            margin-top: 0.1rem;
+            text-transform: uppercase;
+        }
+
+        @keyframes foodsaveLogoPulse {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.5); }
+            55% { transform: scale(1); box-shadow: 0 0 0 0.42em rgba(250, 204, 21, 0.16); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0.72em rgba(250, 204, 21, 0); }
+        }
+
+        .policy-section {
+            scroll-margin-top: 7.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            padding: 1.25rem;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        @media (min-width: 640px) {
+            .policy-section {
+                padding: 1.75rem;
+            }
+        }
+
+        .policy-title {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            letter-spacing: -0.01em;
+            line-height: 1.35;
+        }
+
+        .policy-title::before {
+            content: "";
+            width: 0.5rem;
+            height: 1.75rem;
+            border-radius: 999px;
+            background: var(--fs-green-700);
+            flex: 0 0 auto;
+            margin-top: 0.125rem;
+        }
+
+        .legal-copy :where(p, li, td) {
+            line-height: 1.75;
+        }
+
+        .nav-link[aria-current="true"] {
+            background: var(--fs-green-50);
+            color: var(--fs-green-800);
+            font-weight: 800;
+        }
+
+        .nav-link[aria-current="true"] svg {
+            color: var(--fs-green-800);
+        }
+
+        table thead {
+            background: var(--fs-green-50);
+            color: #14532d;
+        }
+
+        .bg-rose-500 { background-color: var(--fs-green-700) !important; }
+        .bg-rose-50 { background-color: var(--fs-green-50) !important; }
+        .bg-rose-50\/70 { background-color: rgba(240, 253, 244, 0.72) !important; }
+        .border-rose-200 { border-color: var(--fs-green-200) !important; }
+        .text-rose-500,
+        .text-rose-600,
+        .text-rose-700,
+        .text-rose-800,
+        .text-rose-900 { color: var(--fs-green-800) !important; }
+        .shadow-rose-500\/20 { --tw-shadow-color: rgba(34, 197, 94, 0.2) !important; }
+
+        .legal-footer {
+            border-top: 4px solid var(--fs-green-700);
+            background: var(--fs-green-950);
+            color: #dcfce7;
+        }
+
+        .legal-footer .brand-word {
+            color: #f8fafc;
+            text-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        }
+
+        .legal-footer .brand-word > span {
+            color: #4ade80;
+        }
+
+        .legal-footer .brand-dot {
+            box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.38), 0 0 18px rgba(250, 204, 21, 0.28);
+        }
+
+        .legal-footer p {
+            color: rgba(232, 245, 237, 0.74);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+    <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <a href="index" class="legal-brand" aria-label="Về trang chủ FoodSave">
+                <span class="brand-logo-line">
+                    <span class="brand-word">FOOD<span>SAVE</span></span>
+                    <span class="brand-dot" aria-hidden="true"></span>
+                </span>
+                <span class="brand-tagline">Cứu thực phẩm · Bảo vệ hành tinh</span>
+            </a>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    Phiên bản 3.2 - Cập nhật: 16/05/2026
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">
+                    <i data-lucide="scale" class="h-3.5 w-3.5"></i>
+                    Điều khoản dịch vụ
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-4">
+            <aside class="lg:col-span-1">
+                <div class="sticky top-24 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="mb-4 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Mục lục</p>
+                            <h2 class="mt-1 text-sm font-extrabold text-slate-900">Điều khoản sử dụng</h2>
+                        </div>
+                        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-rose-500">
+                            <i data-lucide="list-tree" class="h-5 w-5"></i>
+                        </div>
+                    </div>
+                    <nav id="terms-nav" class="space-y-1" aria-label="Mục lục điều khoản">
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-1" aria-current="true"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 1. Định nghĩa</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-2" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 2. Đăng ký tài khoản</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-3" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 3. Dịch vụ mua hàng</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-4" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 4. Giá cả & thanh toán</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-5" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 5. Đổi trả & hoàn tiền</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-6" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 6. Hủy đơn hàng</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-7" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 7. An toàn thực phẩm</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-8" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 8. Điểm uy tín</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-9" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 9. Vi phạm & xử lý</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-10" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 10. Sở hữu trí tuệ</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-11" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 11. Giới hạn trách nhiệm</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-12" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 12. Thay đổi điều khoản</span></a>
+                        <a class="nav-link flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900" href="#dieu-13" aria-current="false"><i data-lucide="chevron-right" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400"></i><span>Điều 13. Luật áp dụng</span></a>
+                    </nav>
+                    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <h3 class="flex items-center gap-2 text-xs font-extrabold text-slate-700">
+                            <i data-lucide="life-buoy" class="h-4 w-4 text-rose-500"></i>
+                            Hỗ trợ pháp lý
+                        </h3>
+                        <p class="mt-2 text-[11px] leading-relaxed text-slate-500">Mọi khiếu nại về điều khoản, xử phạt hoặc tranh chấp vui lòng gửi về bộ phận pháp lý FoodSave.</p>
+                        <a class="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-rose-500 hover:underline" href="mailto:legal@foodsave.vn">
+                            legal@foodsave.vn
+                            <i data-lucide="arrow-up-right" class="h-3.5 w-3.5"></i>
+                        </a>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="space-y-6 lg:col-span-3">
+                <div class="rounded-3xl border border-rose-200 bg-rose-50/70 p-6 sm:p-8">
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-white px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-rose-600">
+                        <i data-lucide="file-check-2" class="h-3.5 w-3.5"></i>
+                        Văn bản pháp lý
+                    </span>
+                    <h1 class="mt-4 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">ĐIỀU KHOẢN SỬ DỤNG DỊCH VỤ FOODSAVE</h1>
+                    <p class="mt-3 text-sm font-semibold leading-relaxed text-rose-800">Có hiệu lực từ ngày 15/05/2026 · Phiên bản 3.2 · Cập nhật lần cuối: 16/05/2026</p>
+                    <p class="mt-1 text-sm leading-relaxed text-rose-800">Áp dụng cho mọi người dùng truy cập website foodsave.vn và ứng dụng di động FoodSave</p>
+                </div>
+
+                <div class="rounded-3xl border border-rose-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/20">
+                            <i data-lucide="alert-circle" class="h-5 w-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-extrabold uppercase tracking-wide text-rose-700">LƯU Ý TRƯỚC KHI SỬ DỤNG</h2>
+                            <p class="mt-2 text-sm leading-relaxed text-slate-600">Bằng việc truy cập, đăng ký tài khoản hoặc đặt hàng trên FoodSave, bạn xác nhận đã đọc, hiểu rõ và đồng ý không điều kiện với tất cả các điều khoản dưới đây. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng ngừng sử dụng dịch vụ ngay lập tức.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <article id="dieu-1" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 1. ĐỊNH NGHĨA</h2>
+                    <div class="mt-5 grid grid-cols-1 gap-3">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">"FoodSave"</h3>
+                            <p class="mt-1 text-sm text-slate-600">là nền tảng thương mại điện tử kết nối thực phẩm cận hạn được vận hành bởi Công ty TNHH FoodSave Việt Nam (mã số doanh nghiệp 0317456789), có trụ sở tại 19 Nguyễn Hữu Thọ, Phường Tân Hưng, Quận 7, TP.HCM.</p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <h3 class="text-sm font-extrabold text-slate-900">"Người dùng"</h3>
+                                <p class="mt-1 text-sm text-slate-600">là cá nhân từ đủ 16 tuổi trở lên hoặc tổ chức hợp pháp đã đăng ký tài khoản và sử dụng dịch vụ.</p>
+                            </div>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <h3 class="text-sm font-extrabold text-slate-900">"Cửa hàng đối tác"</h3>
+                                <p class="mt-1 text-sm text-slate-600">là thương nhân có giấy phép kinh doanh hợp lệ và giấy chứng nhận An toàn thực phẩm (ATTP) còn hiệu lực, đã ký Hợp đồng đối tác với FoodSave.</p>
+                            </div>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <h3 class="text-sm font-extrabold text-slate-900">"Tổ chức từ thiện"</h3>
+                                <p class="mt-1 text-sm text-slate-600">là tổ chức xã hội, từ thiện có quyết định thành lập hợp pháp đã ký Hợp đồng tài trợ với FoodSave để nhận thực phẩm donation.</p>
+                            </div>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <h3 class="text-sm font-extrabold text-slate-900">"Đơn hàng"</h3>
+                                <p class="mt-1 text-sm text-slate-600">là hợp đồng mua bán điện tử giữa Người dùng và Cửa hàng đối tác thông qua nền tảng FoodSave.</p>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">"Sản phẩm cận hạn"</h3>
+                            <p class="mt-1 text-sm text-slate-600">là thực phẩm còn an toàn sử dụng nhưng có thời hạn sử dụng ngắn, được phân loại 3 nhãn theo mốc thống nhất:</p>
+                            <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                                    <span class="inline-flex rounded-full bg-emerald-500 px-3 py-1 text-xs font-extrabold text-white">Xanh</span>
+                                    <p class="mt-2 text-sm font-bold text-emerald-800">3-5 ngày</p>
+                                </div>
+                                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                                    <span class="inline-flex rounded-full bg-amber-500 px-3 py-1 text-xs font-extrabold text-white">Vàng</span>
+                                    <p class="mt-2 text-sm font-bold text-amber-800">48h</p>
+                                </div>
+                                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                                    <span class="inline-flex rounded-full bg-rose-500 px-3 py-1 text-xs font-extrabold text-white">Đỏ</span>
+                                    <p class="mt-2 text-sm font-bold text-rose-800">24h</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <h3 class="text-sm font-extrabold text-slate-900">"Đặt cọc bảo vệ"</h3>
+                                <p class="mt-1 text-sm text-slate-600">là khoản tiền 100% giá trị đơn hàng Người dùng thanh toán trước, được FoodSave giữ trong ví ký quỹ cho đến khi Người dùng xác nhận nhận hàng thành công.</p>
+                            </div>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <h3 class="text-sm font-extrabold text-slate-900">"FoodSafe Cover"</h3>
+                                <p class="mt-1 text-sm text-slate-600">là chương trình bảo hiểm miễn phí của FoodSave cho mọi đơn hàng dưới 200.000đ, bồi thường tối đa 500.000đ cho các trường hợp hư hỏng do lỗi từ Cửa hàng.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="dieu-2" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 2. ĐĂNG KÝ TÀI KHOẢN</h2>
+                    <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">2.1. Thông tin đăng ký</h3>
+                            <p class="mt-1 text-sm text-slate-600">Người dùng phải cung cấp thông tin chính xác, đầy đủ khi đăng ký bao gồm: họ tên thật, email, số điện thoại di động Việt Nam, địa chỉ giao hàng. FoodSave không chấp nhận thông tin giả mạo, thông tin của người khác hoặc thông tin mượn.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">2.2. Giới hạn tài khoản</h3>
+                            <p class="mt-1 text-sm text-slate-600">Mỗi cá nhân chỉ được phép tạo 01 (một) tài khoản trên FoodSave. Việc tạo nhiều tài khoản nhằm lạm dụng khuyến mãi, voucher hoặc đánh giá sẽ bị xử lý theo Điều 12.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">2.3. Bảo mật đăng nhập</h3>
+                            <p class="mt-1 text-sm text-slate-600">Người dùng có trách nhiệm bảo mật thông tin đăng nhập (email, mật khẩu, mã OTP). Mọi giao dịch phát sinh từ tài khoản đều được coi là do chủ tài khoản thực hiện. FoodSave không chịu trách nhiệm với thiệt hại do mất tài khoản nếu Người dùng không thông báo kịp thời.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">2.4. Người dùng dưới 16 tuổi</h3>
+                            <p class="mt-1 text-sm text-slate-600">Người dùng dưới 16 tuổi cần có sự đồng ý bằng văn bản của cha mẹ/người giám hộ hợp pháp (theo Điều 9 Nghị định 13/2023/NĐ-CP về Bảo vệ Dữ liệu Cá nhân của Trẻ em).</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                        <h3 class="text-sm font-extrabold text-rose-800">2.5. Đối với Cửa hàng đối tác và Tổ chức từ thiện</h3>
+                        <p class="mt-1 text-sm text-rose-800">Bắt buộc cung cấp đầy đủ giấy phép kinh doanh/quyết định thành lập, giấy ATTP (đối với cửa hàng thực phẩm), CCCD/CMND người đại diện pháp luật. FoodSave thực hiện xác minh KYC trong 24-48 giờ qua AI + OCR + kiểm tra GPS.</p>
+                    </div>
+                </article>
+
+                <article id="dieu-3" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 3. DỊCH VỤ MUA HÀNG</h2>
+                    <div class="mt-5">
+                        <h3 class="text-sm font-extrabold text-slate-900">3.1. Đặt hàng</h3>
+                        <p class="mt-1 text-sm text-slate-600">Người dùng đặt đơn hàng qua các bước:</p>
+                        <div class="relative mt-4 space-y-4 before:absolute before:bottom-4 before:left-4 before:top-4 before:w-px before:bg-slate-200">
+                            <div class="relative pl-12"><span class="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-sm font-extrabold text-white">1</span><div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Chọn sản phẩm từ Catalog, thêm vào giỏ hàng.</div></div>
+                            <div class="relative pl-12"><span class="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-sm font-extrabold text-white">2</span><div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Chọn cửa hàng pickup, khung giờ nhận hàng (4 lựa chọn: 30 phút, 2 giờ, tối nay, mai).</div></div>
+                            <div class="relative pl-12"><span class="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-sm font-extrabold text-white">3</span><div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Áp dụng voucher (nếu có), chọn phương thức thanh toán.</div></div>
+                            <div class="relative pl-12"><span class="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-sm font-extrabold text-white">4</span><div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Thanh toán đặt cọc 100% giá trị đơn (chỉ phương thức online).</div></div>
+                            <div class="relative pl-12"><span class="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-sm font-extrabold text-white">5</span><div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Nhận mã QR — đến cửa hàng đưa QR để nhận sản phẩm.</div></div>
+                        </div>
+                    </div>
+                    <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">3.2. Hoàn tất đơn hàng</h3>
+                            <p class="mt-1 text-sm text-slate-600">Đơn hàng được coi là hoàn tất khi (a) Người dùng quét QR tại cửa hàng và nhận sản phẩm, HOẶC (b) Cửa hàng xác nhận giao hàng thành công trên hệ thống. Tiền đặt cọc sẽ được chuyển từ ví ký quỹ FoodSave sang Cửa hàng đối tác (trừ phí hoa hồng) trong 24 giờ tiếp theo.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">3.3. Hạn nhận hàng</h3>
+                            <p class="mt-1 text-sm text-slate-600">Người dùng phải đến cửa hàng nhận sản phẩm trong khung giờ đã chọn. Nếu trễ hơn 30 phút sau khung giờ pickup, đơn hàng sẽ bị tự động hủy và Người dùng bị áp dụng quy định Vắng mặt (Điều 9).</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">3.4. Kiểm tra sản phẩm</h3>
+                            <p class="mt-1 text-sm text-slate-600">Người dùng có quyền và có trách nhiệm kiểm tra sản phẩm trước khi quét QR xác nhận nhận hàng. Sau khi quét QR, mọi khiếu nại về chất lượng/số lượng phải được thực hiện trong 72 giờ kèm bằng chứng (ảnh/video).</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="dieu-4" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 4. GIÁ CẢ VÀ THANH TOÁN</h2>
+                    <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <i data-lucide="receipt" class="h-5 w-5 text-rose-500"></i>
+                            <h3 class="mt-2 text-sm font-extrabold text-slate-900">Thuế VAT 10%</h3>
+                            <p class="mt-1 text-sm text-slate-600">Đối với sản phẩm chế biến.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <i data-lucide="coins" class="h-5 w-5 text-rose-500"></i>
+                            <h3 class="mt-2 text-sm font-extrabold text-slate-900">Phí dịch vụ FoodSave</h3>
+                            <p class="mt-1 text-sm text-slate-600">2.000đ/đơn, cố định, không phụ thuộc giá trị.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <i data-lucide="heart-handshake" class="h-5 w-5 text-rose-500"></i>
+                            <h3 class="mt-2 text-sm font-extrabold text-slate-900">Đóng góp từ thiện</h3>
+                            <p class="mt-1 text-sm text-slate-600">1.000đ/đơn, Người dùng có thể tăng/bỏ.</p>
+                        </div>
+                    </div>
+                    <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                        <h3 class="text-sm font-extrabold text-slate-900">4.2. Phương thức thanh toán</h3>
+                        <div class="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 md:grid-cols-2">
+                            <div class="rounded-xl bg-slate-50 px-3 py-2"><strong>Ví điện tử:</strong> MoMo, ZaloPay, ShopeePay, VNPay-QR, Viettel Money.</div>
+                            <div class="rounded-xl bg-slate-50 px-3 py-2"><strong>Thẻ ngân hàng:</strong> Thẻ ATM nội địa (Napas), thẻ tín dụng/ghi nợ quốc tế (Visa, Master, JCB, AMEX).</div>
+                            <div class="rounded-xl bg-slate-50 px-3 py-2"><strong>Cổng thanh toán:</strong> VNPay, OnePay, Payoo.</div>
+                            <div class="rounded-xl bg-slate-50 px-3 py-2"><strong>Mua trước trả sau:</strong> Kredivo, FundiiN (chỉ áp dụng đơn ≥ 200.000đ).</div>
+                            <div class="rounded-xl bg-rose-50 px-3 py-2 font-bold text-rose-700 md:col-span-2"><strong>COD (Cash on Delivery):</strong> Thanh toán tại cửa hàng khi nhận hàng — KHÔNG áp dụng cho đơn nhãn Đỏ.</div>
+                        </div>
+                    </div>
+                    <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">4.3. Hoá đơn điện tử</h3>
+                            <p class="mt-1 text-sm text-slate-600">Hoá đơn VAT điện tử được phát hành tự động trong 24 giờ sau khi đơn hàng hoàn tất, gửi qua email đăng ký theo Nghị định 123/2020/NĐ-CP và Thông tư 78/2021/TT-BTC.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">4.4. Bảo mật thanh toán</h3>
+                            <p class="mt-1 text-sm text-slate-600">FoodSave KHÔNG lưu trữ số thẻ tín dụng đầy đủ. Toàn bộ dữ liệu thẻ được tokenize theo chuẩn PCI-DSS Level 1 và xử lý bởi các đối tác thanh toán đã được cấp phép Ngân hàng Nhà nước Việt Nam.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="dieu-5" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 5. CHÍNH SÁCH ĐỔI TRẢ VÀ HOÀN TIỀN</h2>
+                    <p class="mt-5 text-sm text-slate-600">Người dùng có quyền yêu cầu đổi trả/hoàn tiền theo Điều 36 Luật Bảo vệ Quyền lợi Người tiêu dùng 2023 trong các trường hợp:</p>
+                    <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                            <h3 class="text-sm font-extrabold text-emerald-800">5.1. Hoàn tiền 100% — Cửa hàng có lỗi</h3>
+                            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-800">
+                                <li>Sản phẩm hết hạn sử dụng trước khi giao.</li>
+                                <li>Sản phẩm hư hỏng, có mùi lạ, biến chất khi nhận.</li>
+                                <li>Bao bì rách, không nguyên vẹn, có dấu hiệu nhiễm bẩn.</li>
+                                <li>Sản phẩm sai loại, sai số lượng so với đơn hàng.</li>
+                                <li>Cửa hàng từ chối giao hàng không lý do.</li>
+                            </ul>
+                        </div>
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                            <h3 class="text-sm font-extrabold text-amber-800">5.2. Hoàn 50% — Khách hủy muộn</h3>
+                            <p class="mt-2 text-sm text-amber-800">Người dùng hủy đơn sau 5 phút kể từ khi đặt sẽ bị phạt 50% giá trị đơn (đã trừ phí dịch vụ và voucher).</p>
+                        </div>
+                        <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                            <h3 class="text-sm font-extrabold text-rose-800">5.3. Không hoàn tiền</h3>
+                            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-800">
+                                <li>Không đến lấy hàng: -15 điểm uy tín/lần; dưới 40 điểm có thể bị chặn theo Điều 8.</li>
+                                <li>Sản phẩm đã được sử dụng/mở bao bì trừ trường hợp 5.1.</li>
+                                <li>Khiếu nại sau 72 giờ kể từ khi nhận hàng.</li>
+                                <li>Đơn hàng đã được xác nhận hoàn tất bởi Người dùng quét QR.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                        <h3 class="text-sm font-extrabold text-slate-900">5.4. Quy trình hoàn tiền</h3>
+                        <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-600">
+                            <li>Người dùng gửi yêu cầu qua chức năng "Khiếu nại" hoặc email support@foodsave.vn trong 72 giờ.</li>
+                            <li>Bằng chứng kèm theo: ảnh sản phẩm (góc rộng + cận cảnh), video mở bao bì (nếu có), mã đơn hàng.</li>
+                            <li>FoodSave xử lý trong 24 giờ làm việc.</li>
+                            <li>Tiền hoàn về phương thức thanh toán gốc: Ví điện tử 1-3 giờ; Thẻ ATM nội địa 3-7 ngày làm việc; Thẻ quốc tế 7-14 ngày làm việc.</li>
+                            <li>Trường hợp tranh chấp, FoodSave là trọng tài độc lập theo Điều 36.4 Luật BVQLNTD 2023.</li>
+                        </ol>
+                    </div>
+                </article>
+
+                <article id="dieu-6" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 6. HUỶ ĐƠN HÀNG</h2>
+                    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-3">Thời điểm hủy</th>
+                                    <th class="px-4 py-3">Hoàn tiền</th>
+                                    <th class="px-4 py-3">Phạt</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-sm text-slate-600">
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">≤ 5 phút sau đặt</td><td class="px-4 py-3 font-bold text-emerald-600">100%</td><td class="px-4 py-3">Không phạt</td></tr>
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">5 phút - 30 phút sau đặt</td><td class="px-4 py-3 font-bold text-amber-600">50%</td><td class="px-4 py-3">50% giá trị đơn</td></tr>
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">Đến nhận trễ giờ</td><td class="px-4 py-3 font-bold text-rose-600">Theo quyết định xử lý</td><td class="px-4 py-3">-10 điểm uy tín</td></tr>
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">Không đến lấy hàng</td><td class="px-4 py-3 font-bold text-rose-600">0%</td><td class="px-4 py-3">-15 điểm uy tín/lần</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                        <h3 class="text-sm font-extrabold text-amber-800">6.2. Cửa hàng hủy</h3>
+                        <p class="mt-1 text-sm text-amber-800">Cửa hàng phải hủy đơn trước thời điểm giao 60 phút. Nếu hủy muộn hoặc không giao:</p>
+                        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-800">
+                            <li>Hoàn 100% cho Người dùng + voucher 30.000đ bồi thường.</li>
+                            <li>Phạt Cửa hàng: trừ điểm uy tín, cảnh cáo 1 lần.</li>
+                            <li>Vi phạm 3 lần/tháng: khoá đăng SP 7 ngày, đánh giá hạ rating.</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <article id="dieu-7" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 7. AN TOÀN THỰC PHẨM</h2>
+                    <p class="mt-5 text-sm text-slate-600"><strong>7.1.</strong> Cửa hàng đối tác chịu trách nhiệm toàn bộ về chất lượng và an toàn thực phẩm theo Luật An toàn Thực phẩm 2010 (sửa đổi 2018) và Nghị định 15/2018/NĐ-CP.</p>
+                    <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                        <h3 class="text-sm font-extrabold text-slate-900">7.2. Yêu cầu bắt buộc đối với cửa hàng</h3>
+                        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+                            <li>Giấy chứng nhận cơ sở đủ điều kiện An toàn Thực phẩm còn hiệu lực.</li>
+                            <li>Nhân viên có giấy khám sức khoẻ định kỳ 6 tháng.</li>
+                            <li>Sản phẩm có nhãn mác đầy đủ (theo Nghị định 43/2017/NĐ-CP về nhãn hàng hoá).</li>
+                            <li>Bảo quản đúng nhiệt độ ghi trên bao bì.</li>
+                            <li>Cung cấp đầy đủ thông tin hạn sử dụng, ngày sản xuất, thành phần dinh dưỡng, cảnh báo dị ứng.</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                        <h3 class="text-sm font-extrabold text-rose-800">7.3. FoodSafe Cover Insurance</h3>
+                        <p class="mt-1 text-sm text-rose-800">Miễn phí cho mọi đơn dưới 200.000đ. Bồi thường tối đa 500.000đ/sự cố cho các trường hợp:</p>
+                        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-800">
+                            <li>Ngộ độc thực phẩm có xác nhận của cơ quan y tế.</li>
+                            <li>Dị ứng nặng do thông tin thành phần không chính xác.</li>
+                            <li>Sản phẩm hư hỏng nghiêm trọng gây thiệt hại tài sản.</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <article id="dieu-8" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 8. ĐIỂM UY TÍN</h2>
+                    <p class="mt-5 text-sm text-slate-600">FoodSave áp dụng hệ thống Điểm uy tín thống nhất cho Người dùng. Người dùng mới khởi đầu với <strong>100 điểm</strong>; điểm được cập nhật theo hành vi nhận hàng thực tế.</p>
+                    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                            <h3 class="flex items-center gap-2 text-sm font-extrabold text-emerald-800"><i data-lucide="plus-circle" class="h-5 w-5"></i>8.1. Cộng điểm</h3>
+                            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-800">
+                                <li>Nhận hàng thành công: +5 điểm.</li>
+                            </ul>
+                        </div>
+                        <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                            <h3 class="flex items-center gap-2 text-sm font-extrabold text-rose-800"><i data-lucide="minus-circle" class="h-5 w-5"></i>8.2. Trừ điểm</h3>
+                            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-800">
+                                <li>Lấy trễ giờ so với khung giờ đã cam kết: -10 điểm.</li>
+                                <li>Không đến lấy hàng/bỏ đơn: -15 điểm/lần.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-3">Hạng</th>
+                                    <th class="px-4 py-3">Điểm</th>
+                                    <th class="px-4 py-3">Quyền lợi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-sm text-slate-600">
+                                <tr><td class="px-4 py-3 font-extrabold text-emerald-700">Tin cậy</td><td class="px-4 py-3">≥85</td><td class="px-4 py-3">Tài khoản vận hành bình thường, được ưu tiên giữ đơn trong các khung giờ cao điểm.</td></tr>
+                                <tr><td class="px-4 py-3 font-extrabold text-amber-700">Hạn chế</td><td class="px-4 py-3">40 đến dưới 85</td><td class="px-4 py-3">Một số quyền giữ chỗ/ưu tiên có thể bị giới hạn cho đến khi điểm được cải thiện.</td></tr>
+                                <tr><td class="px-4 py-3 font-extrabold text-rose-700">Chặn</td><td class="px-4 py-3">&lt;40</td><td class="px-4 py-3">Tài khoản bị chặn hoặc tạm khóa theo quy trình xử lý vi phạm.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article id="dieu-9" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 9. VI PHẠM VÀ XỬ LÝ</h2>
+                    <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+                        <h3 class="text-sm font-extrabold text-slate-900">9.1. Các hành vi bị cấm</h3>
+                        <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="user-x" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Tạo nhiều tài khoản (multi-account fraud).</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="bot" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Sử dụng bot, script tự động đặt đơn.</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="receipt-x" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Lạm dụng chính sách hoàn tiền (&gt;3 lần khiếu nại/tháng không có căn cứ).</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="star-off" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Đánh giá giả mạo, đánh giá bị mua chuộc.</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="ticket-x" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Sử dụng voucher sai mục đích (mua đi bán lại sản phẩm).</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="message-square-warning" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Phỉ báng, đe doạ cửa hàng/nhân viên.</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="copyright" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Vi phạm bản quyền hình ảnh, nội dung.</div>
+                            <div class="flex gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"><i data-lucide="shield-alert" class="mt-0.5 h-4 w-4 shrink-0 text-rose-500"></i>Hack, can thiệp hệ thống FoodSave.</div>
+                        </div>
+                    </div>
+                    <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-3">Mức độ</th>
+                                    <th class="px-4 py-3">Lần đầu</th>
+                                    <th class="px-4 py-3">Lần thứ 2</th>
+                                    <th class="px-4 py-3">Lần thứ 3+</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-sm text-slate-600">
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">Nhẹ</td><td class="px-4 py-3">Cảnh cáo hành vi</td><td class="px-4 py-3">Khoá 24 giờ</td><td class="px-4 py-3">Khoá 7 ngày</td></tr>
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">Trung bình</td><td class="px-4 py-3">Khoá 7 ngày; trừ điểm theo Điều 8 nếu là lấy trễ/bỏ đơn</td><td class="px-4 py-3">Khoá 30 ngày</td><td class="px-4 py-3">Khoá vĩnh viễn</td></tr>
+                                <tr><td class="px-4 py-3 font-bold text-slate-900">Nghiêm trọng</td><td class="px-4 py-3 font-bold text-rose-600">Khoá vĩnh viễn + truy cứu pháp luật</td><td class="px-4 py-3">—</td><td class="px-4 py-3">—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-5 text-sm text-slate-600"><strong>9.3. Quyền khiếu nại:</strong> Người dùng bị xử phạt có quyền khiếu nại qua email legal@foodsave.vn trong 30 ngày kể từ ngày bị xử phạt, kèm theo bằng chứng. FoodSave xem xét và phản hồi trong 7 ngày làm việc.</p>
+                </article>
+
+                <article id="dieu-10" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 10. SỞ HỮU TRÍ TUỆ</h2>
+                    <div class="mt-5 space-y-3 text-sm text-slate-600">
+                        <p><strong>10.1.</strong> Toàn bộ nội dung trên FoodSave bao gồm thiết kế, logo, hình ảnh, văn bản, code phần mềm, cơ sở dữ liệu thuộc quyền sở hữu hợp pháp của Công ty TNHH FoodSave Việt Nam, được bảo hộ theo Luật Sở hữu Trí tuệ 2005 (sửa đổi 2022).</p>
+                        <p><strong>10.2.</strong> Người dùng KHÔNG được sao chép, sửa đổi, phân phối, sử dụng cho mục đích thương mại bất kỳ phần nào của nền tảng FoodSave mà không có sự đồng ý bằng văn bản của Công ty.</p>
+                        <p><strong>10.3.</strong> Đánh giá, bình luận, ảnh do Người dùng đăng tải: Người dùng cấp cho FoodSave quyền sử dụng miễn phí, không độc quyền, có hiệu lực toàn cầu để hiển thị, sao chép, phân phối nội dung đó nhằm mục đích vận hành nền tảng và quảng bá.</p>
+                    </div>
+                </article>
+
+                <article id="dieu-11" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 11. GIỚI HẠN TRÁCH NHIỆM</h2>
+                    <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">11.1. Nền tảng trung gian</h3>
+                            <p class="mt-1 text-sm text-slate-600">FoodSave là nền tảng trung gian kết nối Người dùng và Cửa hàng. FoodSave KHÔNG là người bán/người cung cấp dịch vụ trực tiếp đối với sản phẩm. Mọi tranh chấp về chất lượng sản phẩm, dịch vụ giao nhận sẽ được FoodSave hỗ trợ giải quyết với tư cách trung gian.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">11.2. Hạn mức bồi thường</h3>
+                            <p class="mt-1 text-sm text-slate-600">Tổng trách nhiệm bồi thường của FoodSave (nếu có) cho bất kỳ Người dùng nào trong 12 tháng KHÔNG vượt quá 10.000.000 VNĐ hoặc tổng giá trị các đơn hàng đã đặt trong 12 tháng, tùy số nào lớn hơn.</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                            <h3 class="text-sm font-extrabold text-slate-900">11.3. Tổn thất gián tiếp</h3>
+                            <p class="mt-1 text-sm text-slate-600">FoodSave KHÔNG chịu trách nhiệm với các tổn thất gián tiếp, bao gồm: thiệt hại do gián đoạn dịch vụ, lỗi kỹ thuật, mất dữ liệu, thiệt hại uy tín cá nhân/doanh nghiệp.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="dieu-12" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 12. THAY ĐỔI ĐIỀU KHOẢN</h2>
+                    <p class="mt-5 text-sm text-slate-600">FoodSave có quyền sửa đổi, bổ sung Điều khoản này. Thay đổi quan trọng (ảnh hưởng tới quyền lợi Người dùng) sẽ được thông báo qua email và push notification ít nhất 15 ngày trước khi áp dụng. Việc Người dùng tiếp tục sử dụng dịch vụ sau ngày có hiệu lực được coi là chấp thuận thay đổi.</p>
+                </article>
+
+                <article id="dieu-13" class="policy-section legal-copy">
+                    <h2 class="policy-title text-lg font-extrabold text-slate-950">ĐIỀU 13. LUẬT ÁP DỤNG VÀ GIẢI QUYẾT TRANH CHẤP</h2>
+                    <p class="mt-5 text-sm text-slate-600"><strong>13.1. Luật áp dụng:</strong> Điều khoản này được điều chỉnh và giải thích theo pháp luật Việt Nam, bao gồm nhưng không giới hạn: Luật Bảo vệ Quyền lợi Người tiêu dùng 2023, Luật Giao dịch Điện tử 2023, Luật An toàn Thực phẩm 2010, Bộ luật Dân sự 2015, Luật Sở hữu Trí tuệ.</p>
+                    <div class="relative mt-5 space-y-5 before:absolute before:bottom-3 before:left-3 before:top-3 before:w-px before:bg-slate-200">
+                        <div class="relative pl-10">
+                            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-white"><i data-lucide="messages-square" class="h-3.5 w-3.5"></i></span>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Thương lượng trực tiếp giữa các bên (ưu tiên) — qua hệ thống Khiếu nại.</div>
+                        </div>
+                        <div class="relative pl-10">
+                            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-white"><i data-lucide="handshake" class="h-3.5 w-3.5"></i></span>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Hoà giải thông qua FoodSave với tư cách trung gian (15 ngày).</div>
+                        </div>
+                        <div class="relative pl-10">
+                            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white"><i data-lucide="scale" class="h-3.5 w-3.5"></i></span>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Trung tâm Trọng tài Quốc tế Việt Nam (VIAC) — nếu giá trị tranh chấp ≥ 50.000.000đ.</div>
+                        </div>
+                        <div class="relative pl-10">
+                            <span class="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white"><i data-lucide="landmark" class="h-3.5 w-3.5"></i></span>
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Toà án Nhân dân có thẩm quyền tại TP.HCM — đối với các trường hợp khác.</div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <footer class="legal-footer">
+        <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <a href="index" class="legal-brand" aria-label="Về trang chủ FoodSave">
+                <span class="brand-logo-line">
+                    <span class="brand-word">FOOD<span>SAVE</span></span>
+                    <span class="brand-dot" aria-hidden="true"></span>
+                </span>
+            </a>
+            <div class="text-left sm:text-right">
+                <p>© 2026 Bản quyền thuộc về Công ty TNHH FoodSave Việt Nam. Bảo lưu mọi quyền.</p>
+                <p class="mt-2 text-[11px]">Tài liệu điều khoản sử dụng dịch vụ FoodSave được trình bày nhằm minh bạch quyền, nghĩa vụ và trách nhiệm của các bên khi sử dụng nền tảng.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+            window.lucide.createIcons();
+        }
+
+        const navLinks = Array.from(document.querySelectorAll("#terms-nav .nav-link"));
+        const sections = Array.from(document.querySelectorAll(".policy-section[id]"));
+
+        function setActiveNav(sectionId) {
+            navLinks.forEach((link) => {
+                const isActive = link.getAttribute("href") === "#" + sectionId;
+                link.setAttribute("aria-current", isActive ? "true" : "false");
+            });
+        }
+
+        navLinks.forEach((link) => {
+            link.addEventListener("click", (event) => {
+                event.preventDefault();
+                const target = document.querySelector(link.getAttribute("href"));
+                if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    history.replaceState(null, "", link.getAttribute("href"));
+                }
+            });
+        });
+
+        if ("IntersectionObserver" in window && sections.length > 0) {
+            const visibleEntries = new Map();
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        visibleEntries.set(entry.target.id, entry);
+                    } else {
+                        visibleEntries.delete(entry.target.id);
+                    }
+                });
+
+                if (visibleEntries.size === 0) {
+                    return;
+                }
+
+                const current = Array.from(visibleEntries.values()).sort((first, second) => {
+                    return Math.abs(first.boundingClientRect.top) - Math.abs(second.boundingClientRect.top);
+                })[0];
+
+                setActiveNav(current.target.id);
+            }, {
+                root: null,
+                rootMargin: "-20% 0px -60% 0px",
+                threshold: [0, 0.12, 0.35]
+            });
+
+            sections.forEach((section) => observer.observe(section));
+            setActiveNav(sections[0].id);
+        }
+
+        (function setupLegalLogoBackLink() {
+            const source = new URLSearchParams(window.location.search).get("source");
+            const logoLinks = document.querySelectorAll("header .legal-brand, footer .legal-brand");
+            const targets = {
+                user: "FOODSAVE_USER.html",
+                partner: "FOODSAVE_PARTNER.html"
+            };
+
+            logoLinks.forEach((logoLink) => {
+                if (targets[source]) {
+                    logoLink.setAttribute("href", targets[source]);
+                    return;
+                }
+
+                logoLink.setAttribute("href", "index.html");
+                logoLink.addEventListener("click", (event) => {
+                    if (window.history.length > 1) {
+                        event.preventDefault();
+                        window.history.back();
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

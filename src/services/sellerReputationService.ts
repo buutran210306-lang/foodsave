@@ -29,12 +29,11 @@ interface CancellationMutationResult {
   trustScoreBefore: number;
 }
 
-const CANCELLATION_PENALTY_POINTS = 5;
-const NORMAL_ORDER_RECOVERY_POINTS = 1;
-const CHARITY_ORDER_RECOVERY_POINTS = 2;
-const BAN_THRESHOLD = 50;
-const RESTRICTION_TRUST_THRESHOLD = 70;
-const RESTRICTION_RATING_THRESHOLD = 3.5;
+const CANCELLATION_PENALTY_POINTS = 15;
+const NORMAL_ORDER_RECOVERY_POINTS = 5;
+const CHARITY_ORDER_RECOVERY_POINTS = 5;
+const BAN_THRESHOLD = 40;
+const RESTRICTION_TRUST_THRESHOLD = 85;
 
 const toIsoString = (value: Date | string): string => {
   return value instanceof Date ? value.toISOString() : value;
@@ -259,8 +258,6 @@ export const sellerReputationService = {
       await ensureSellerReputation(client, sellerId);
       const current = await fetchReputationForUpdate(client, sellerId);
       const trustScore = Number(current.trust_score);
-      const ratingAverage = Number(current.rating_avg);
-
       if (current.status === "Banned") {
         return mapReputation(current);
       }
@@ -285,13 +282,13 @@ export const sellerReputationService = {
         const reputation = mapReputation(banned);
         realtimePayload = buildStatusPayload(
           reputation,
-          "TRUST_SCORE_BELOW_50",
-          "Tài khoản cửa hàng đã bị khóa vĩnh viễn do điểm uy tín dưới 50."
+          "TRUST_SCORE_BELOW_40",
+          "Tài khoản cửa hàng đã bị khóa vĩnh viễn do điểm uy tín dưới 40."
         );
         return reputation;
       }
 
-      if (trustScore < RESTRICTION_TRUST_THRESHOLD || ratingAverage < RESTRICTION_RATING_THRESHOLD) {
+      if (trustScore < RESTRICTION_TRUST_THRESHOLD) {
         const restrictedResult = await client.query<SellerReputationRow>(
           `
             update public.seller_reputation
@@ -311,8 +308,8 @@ export const sellerReputationService = {
         const reputation = mapReputation(restricted);
         realtimePayload = buildStatusPayload(
           reputation,
-          trustScore < RESTRICTION_TRUST_THRESHOLD ? "TRUST_SCORE_BELOW_70" : "RATING_AVERAGE_BELOW_3_5",
-          "Cửa hàng tạm thời bị chặn đăng món mới trong 48 giờ."
+          "TRUST_SCORE_BELOW_85",
+          "Cửa hàng tạm thời bị chặn đăng món mới trong 48 giờ do điểm uy tín từ 40 đến dưới 85."
         );
         return reputation;
       }

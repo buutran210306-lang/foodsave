@@ -58,6 +58,45 @@ const pickupWindows: Record<CreateOrderBody["pickup_slot_key"], string> = {
   tomorrow: "Mai 9-12h"
 };
 
+const CUSTOMER_REPUTATION_RULES = {
+  initialScore: 100,
+  pickupSuccessDelta: 5,
+  latePickupDelta: -10,
+  noShowDelta: -15,
+  trustedThreshold: 85,
+  restrictedThreshold: 40
+} as const;
+
+const customerReputationRank = (score: number): string => {
+  if (score >= CUSTOMER_REPUTATION_RULES.trustedThreshold) return "Tin cậy";
+  if (score >= CUSTOMER_REPUTATION_RULES.restrictedThreshold) return "Hạn chế";
+  return "Chặn";
+};
+
+const applyCustomerReputationDelta = async (customerId: string, delta: number, reason: string): Promise<void> => {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("points")
+    .eq("id", customerId)
+    .single();
+
+  if (error) handleSupabaseError(error, "Failed to load customer profile");
+
+  const storedPoints = Number((data as { points: number | null } | null)?.points);
+  const currentScore = Number.isFinite(storedPoints) ? storedPoints : CUSTOMER_REPUTATION_RULES.initialScore;
+  const nextScore = Math.max(0, currentScore + delta);
+  const { error: updateError } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      points: nextScore,
+      rank: customerReputationRank(nextScore)
+    })
+    .eq("id", customerId);
+
+  if (updateError) handleSupabaseError(updateError, "Failed to update customer reputation");
+  logger.info("Updated customer reputation score", { customerId, reason, delta, currentScore, nextScore });
+};
+
 const getOwnedStoreIds = async (ownerId: string): Promise<string[]> => {
   const { data, error } = await supabaseAdmin
     .from("stores")
@@ -270,18 +309,6 @@ export const orderService = {
       related_id: order.id
     });
 
-    const { data: customerProfile, error: profileLoadError } = await supabaseAdmin
-      .from("profiles")
-      .select("points")
-      .eq("id", customerId)
-      .single();
-    if (profileLoadError) handleSupabaseError(profileLoadError, "Failed to load customer profile");
-    const currentPoints = (customerProfile as { points: number } | null)?.points ?? 0;
-    const { error: pointsError } = await supabaseAdmin
-      .from("profiles")
-      .update({ points: currentPoints + 2 })
-      .eq("id", customerId);
-    if (pointsError) handleSupabaseError(pointsError, "Failed to update customer points");
     await supabaseAdmin.from("cart_items").delete().eq("user_id", customerId);
 
     return {
@@ -396,6 +423,7 @@ export const orderService = {
 
     if (shouldRewardSeller) {
       await sellerReputationService.handleOrderSuccess(order.store_id, body.is_charity_order);
+      await applyCustomerReputationDelta(order.customer_id, CUSTOMER_REPUTATION_RULES.pickupSuccessDelta, "pickup_completed");
       try {
         await ecoImpactService.recordOrderImpact(order.id);
       } catch (error) {

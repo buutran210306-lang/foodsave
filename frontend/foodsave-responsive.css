@@ -98,7 +98,32 @@ body > main:not(#app):not(#landingMain),
 .value-pillars,
 .story-cols,
 .stagger-group,
-.pos-g {
+.pos-g,
+.stat-grid,
+.cat-grid,
+.reg-stepper,
+.reg-grid-2,
+.reg-grid-3,
+.password-rules,
+.face-panel,
+.partner-face-card,
+.hotline-grid,
+.hotline-footer-actions,
+.metric-row,
+.hqs-layout,
+.counter-layout,
+.persona-flow,
+.featured-mosaic,
+.quote-layout,
+.labels-grid,
+.hero-bowl-grid,
+.hero-mag-grid,
+.hero-v2-grid,
+.page-hero-headline,
+.page-hero-body,
+.milestone-grid,
+.faq-cta,
+.howto-journey {
   min-width: 0;
 }
 
@@ -123,6 +148,25 @@ body > main:not(#app):not(#landingMain),
 .map-list,
 .DP {
   min-width: 0;
+}
+
+.product-art,
+.product-image,
+.product-photo,
+.store-cover,
+.thumb,
+.food-item,
+.food-orb,
+.piece-img,
+.banner-art,
+.donation-img,
+.card-img,
+.gallery-tile,
+.hero-media,
+.t-av,
+.partner-upload {
+  min-width: 0;
+  overflow: hidden;
 }
 
 h1,
@@ -193,9 +237,23 @@ table {
 .product-photo img,
 .store-cover img,
 .thumb img,
+.food-item img,
+.food-orb img,
+.piece-img img,
+.banner-art img,
+.donation-img img,
+.card-img img,
+.gallery-tile img,
+.hero-media img,
+.partner-upload-preview,
+.t-av img,
+.avatar img,
+img[data-partner-avatar],
+img[id$="-avatar-img"],
 img.product-img,
 img.store-img {
   width: 100%;
+  max-width: 100%;
   height: 100%;
   object-fit: cover;
 }
@@ -303,6 +361,8 @@ img.store-img {
   .grid-4,
   .G5,
   .G4,
+  .stat-grid,
+  .metric-row,
   .partner-grid-3,
   .pillars-grid,
   .steps-grid,
@@ -332,6 +392,11 @@ img.store-img {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
+  .cat-grid,
+  .reg-stepper {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
   .auth-wrap,
   .hero-grid,
   .hero,
@@ -344,7 +409,22 @@ img.store-img {
   .account-grid,
   .market-grid,
   .prod-grid,
-  .pos-g {
+  .pos-g,
+  .face-panel,
+  .partner-face-card,
+  .faq-cta,
+  .page-hero-headline,
+  .page-hero-body,
+  .milestone-grid,
+  .hqs-layout,
+  .counter-layout,
+  .persona-flow,
+  .featured-mosaic,
+  .quote-layout,
+  .labels-grid,
+  .hero-bowl-grid,
+  .hero-mag-grid,
+  .hero-v2-grid {
     grid-template-columns: 1fr !important;
   }
 }
@@ -484,9 +564,36 @@ img.store-img {
   .value-pillars,
   .story-cols,
   .stagger-group,
-  .pos-g {
+  .pos-g,
+  .stat-grid,
+  .reg-grid-2,
+  .reg-grid-3,
+  .password-rules,
+  .face-panel,
+  .partner-face-card,
+  .hotline-grid,
+  .hotline-footer-actions,
+  .metric-row,
+  .hqs-layout,
+  .counter-layout,
+  .persona-flow,
+  .featured-mosaic,
+  .quote-layout,
+  .labels-grid,
+  .hero-bowl-grid,
+  .hero-mag-grid,
+  .hero-v2-grid,
+  .page-hero-headline,
+  .page-hero-body,
+  .milestone-grid,
+  .faq-cta {
     grid-template-columns: 1fr !important;
     width: 100%;
+  }
+
+  .cat-grid,
+  .reg-stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .product-grid,
@@ -569,8 +676,35 @@ img.store-img {
   .value-pillars,
   .story-cols,
   .stagger-group,
-  .pos-g {
+  .pos-g,
+  .stat-grid,
+  .reg-grid-2,
+  .reg-grid-3,
+  .password-rules,
+  .face-panel,
+  .partner-face-card,
+  .hotline-grid,
+  .hotline-footer-actions,
+  .metric-row,
+  .hqs-layout,
+  .counter-layout,
+  .persona-flow,
+  .featured-mosaic,
+  .quote-layout,
+  .labels-grid,
+  .hero-bowl-grid,
+  .hero-mag-grid,
+  .hero-v2-grid,
+  .page-hero-headline,
+  .page-hero-body,
+  .milestone-grid,
+  .faq-cta {
     grid-template-columns: 1fr !important;
+  }
+
+  .cat-grid,
+  .reg-stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .product-grid,
@@ -605,6 +739,16 @@ img.store-img {
   .wizard-stepper,
   .tabs {
     display: flex;
+  }
+
+  .filter-card,
+  .filter-panel,
+  .filters,
+  aside[class*="filter"] {
+    position: static !important;
+    top: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .nav > *,
@@ -787,6 +931,30 @@ img.store-img {
     width: auto;
   }
 
+  .hero-actions,
+  .actions,
+  .P-a,
+  .partner-wizard-actions,
+  .wizard-actions,
+  .sticky-actions {
+    gap: 10px !important;
+  }
+
+  .product,
+  .product-card,
+  .deal-card,
+  .store-card,
+  .cart-card,
+  .checkout-summary,
+  .card {
+    max-width: 100%;
+  }
+
+  .cat-grid,
+  .reg-stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
   .btn.full,
   .cta.full,
   button.full,
@@ -822,12 +990,17 @@ img.store-img {
 
 @media (max-width: 640px) {
   div[style*="grid-template-columns:1fr 1fr"],
+  div[style*="grid-template-columns:1.05fr"],
   div[style*="grid-template-columns:1.1fr"],
   div[style*="grid-template-columns:1.2fr"],
   div[style*="grid-template-columns:1.4fr"],
   div[style*="grid-template-columns:repeat(2"],
   div[style*="grid-template-columns:repeat(3"],
-  div[style*="grid-template-columns:repeat(4"] {
+  div[style*="grid-template-columns:repeat(4"],
+  div[style*="grid-template-columns:repeat(5"],
+  div[style*="grid-template-columns:repeat(6"],
+  div[style*="grid-template-columns:7fr"],
+  div[style*="grid-template-columns:minmax"] {
     grid-template-columns: 1fr !important;
   }
 }
