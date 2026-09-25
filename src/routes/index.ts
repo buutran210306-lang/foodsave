@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { adminRoutes } from "./adminRoutes";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { authRoutes } from "./authRoutes";
 import { cartRoutes } from "./cartRoutes";
@@ -32,3 +33,4 @@ apiRoutes.use("/charity", charityRoutes);
 apiRoutes.use("/notifications", authMiddleware, notificationRoutes);
 apiRoutes.use("/partner", authMiddleware, partnerRoutes);
 apiRoutes.use("/seller-reputation", authMiddleware, sellerReputationRoutes);
+apiRoutes.use("/admin", authMiddleware, adminRoutes);

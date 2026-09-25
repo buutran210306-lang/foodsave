@@ -1,5 +1,5 @@
 export type UserRole = "customer" | "partner" | "charity" | "admin";
-export type ProfileStatus = "active" | "pending" | "suspended";
+export type ProfileStatus = "active" | "pending" | "suspended" | "rejected";
 export type ProductLabel = "green" | "yellow" | "red";
 export type OrderStatus = "pending" | "confirmed" | "ready" | "completed" | "cancelled";
 export type PaymentMethod = "momo" | "zalopay" | "vnpay" | "card" | "vietqr" | "cash";

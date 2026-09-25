@@ -219,9 +219,9 @@ or:
 
 Backend service functions are implemented in `src/services/sellerReputationService.ts`:
 
-- `handleSellerCancellation(sellerId, orderId)` subtracts 5 trust points, inserts a `seller_violations` row, checks penalties, and emits `STORE_STATUS_CHANGED`.
-- `checkAndApplyPenalties(sellerId)` bans sellers below 50 trust points, restricts sellers below 70 trust points or below 3.5 average rating, extends `restricted_until` by 48 hours, and emits `STORE_STATUS_CHANGED`.
-- `handleOrderSuccess(sellerId, isCharityOrder)` adds 1 point for a normal order or 2 points for a charity order, restores eligible restricted sellers to `Active`, and emits `STORE_STATUS_CHANGED`.
+- `handleSellerCancellation(sellerId, orderId)` subtracts 15 trust points, inserts a `seller_violations` row, checks penalties, and emits `STORE_STATUS_CHANGED`.
+- `checkAndApplyPenalties(sellerId)` bans sellers below 40 trust points, restricts sellers from 40 to below 85 trust points, extends `restricted_until` by 48 hours, and emits `STORE_STATUS_CHANGED`.
+- `handleOrderSuccess(sellerId, isCharityOrder)` adds 5 trust points, restores eligible restricted sellers to `Active`, and emits `STORE_STATUS_CHANGED`.
 
 Order status updates are also linked:
 
@@ -237,8 +237,8 @@ Socket event payload:
   "trustScore": 65,
   "ratingAverage": 4.2,
   "restrictedUntil": "2026-06-04T10:00:00.000Z",
-  "reason": "TRUST_SCORE_BELOW_70",
-  "message": "Cửa hàng tạm thời bị chặn đăng món mới trong 48 giờ.",
+  "reason": "TRUST_SCORE_BELOW_85",
+  "message": "Cửa hàng tạm thời bị chặn đăng món mới trong 48 giờ do điểm uy tín từ 40 đến dưới 85.",
   "emittedAt": "2026-06-02T10:00:00.000Z"
 }
 ```

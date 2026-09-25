@@ -1,0 +1,19 @@
+# Dependencies & build output
+node_modules/
+dist/
+.netlify/
+
+# Environment files (never commit real keys)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Logs & OS / editor junk
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

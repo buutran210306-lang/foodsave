@@ -14,6 +14,20 @@ const phoneSchema = z.string().trim().min(8).max(32);
 const shortTextSchema = z.string().trim().min(1).max(180);
 const optionalShortTextSchema = z.string().trim().min(1).max(180).optional();
 const addressSchema = z.string().trim().min(3).max(500);
+const optionalLongTextSchema = z.string().trim().min(1).max(1200).optional();
+const timeOfDaySchema = z.string().trim().regex(/^\d{2}:\d{2}$/);
+const partnerHashtagsSchema = z.array(z.string().trim().min(1).max(40)).max(5).optional();
+const partnerDocumentsSchema = z.record(z.string().trim().min(1).max(500)).optional();
+const partnerOpeningScheduleSchema = z.array(z.object({
+  day: z.string().trim().min(1).max(40),
+  open: z.boolean().default(true),
+  from: timeOfDaySchema.optional(),
+  to: timeOfDaySchema.optional()
+}).strict()).max(14).optional();
+const partnerAutomationSchema = z.object({
+  dynamicPricing: z.boolean().optional(),
+  charityTransfer: z.boolean().optional()
+}).catchall(z.boolean()).optional();
 
 export const loginBodySchema = z.object({
   identifier: z.string().trim().min(3).max(180),
@@ -87,11 +101,22 @@ export const registerPartnerBodySchema = z.object({
   city: shortTextSchema.default("TP.HCM"),
   business_type: z.enum(["bakery", "restaurant", "convenience", "supermarket", "other"]),
   representative_name: shortTextSchema,
+  representative_title: optionalShortTextSchema,
+  cccd_number: optionalShortTextSchema,
+  legal_name: optionalShortTextSchema,
+  description: optionalLongTextSchema,
+  hashtags: partnerHashtagsSchema,
+  public_hotline: phoneSchema.optional(),
+  admin_email: emailSchema.optional(),
+  admin_phone: phoneSchema.optional(),
   business_license_number: optionalShortTextSchema,
   tax_code: optionalShortTextSchema,
   bank_name: optionalShortTextSchema,
   bank_account_number: optionalShortTextSchema,
   bank_account_holder: optionalShortTextSchema,
+  documents: partnerDocumentsSchema,
+  opening_schedule: partnerOpeningScheduleSchema,
+  automation: partnerAutomationSchema,
   latitude: z.coerce.number().min(-90).max(90).nullable().optional(),
   longitude: z.coerce.number().min(-180).max(180).nullable().optional(),
   terms_accepted: z.literal(true)

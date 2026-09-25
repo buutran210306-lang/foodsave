@@ -1,0 +1,127 @@
+create policy admin_view_partners
+on public.partner_profiles
+for select
+to authenticated
+using (auth.jwt()->>'role' = 'admin'); -- Hoặc điều kiện check admin của bạn
+-- Tạo policy cho phép Admin xem toàn bộ partner_profiles
+-- Lưu ý: Nếu bạn có cột 'role' trong bảng 'profiles' hoặc một cách xác định Admin, hãy dùng nó.
+-- Nếu muốn test nhanh xem có phải lỗi do policy này không, bạn dùng 'using (true)'
+-- Sau khi test xong thì nên giới hạn lại theo role admin sau nhé!
+
+create policy admin_view_partner_profiles
+on public.partner_profiles
+for select
+to authenticated
+using (true); -- Cho phép tất cả user đã đăng nhập xem. 
+-- Tốt nhất là: using (auth.jwt()->>'role' = 'admin') 
+-- nếu bạn đã set role admin trong auth.
+
+--- ==============================================================================
+-- PHẦN 1: TẠO TRIGGER (Bảo vệ gác cổng 24/7 tự động tạo Store cho Đối tác mới)
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.handle_partner_approval()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  new_store_id uuid;
+  generated_store_name text;
+  generated_slug text;
+  v_hashtags text[];
+BEGIN
+  IF NEW.onboarding_status = 'active' AND (OLD.onboarding_status IS NULL OR OLD.onboarding_status <> 'active') AND NEW.store_id IS NULL THEN
+    
+    generated_store_name := COALESCE(NEW.metadata->'store'->>'name', NEW.legal_name, NEW.representative_name, 'Cửa hàng Đối tác');
+    generated_slug := 'store-' || substr(NEW.profile_id::text, 1, 8) || '-' || extract(epoch from now())::int;
+
+    IF jsonb_typeof(NEW.metadata->'store'->'hashtags') = 'array' THEN
+      SELECT ARRAY(SELECT jsonb_array_elements_text(NEW.metadata->'store'->'hashtags')) INTO v_hashtags;
+    ELSE
+      v_hashtags := '{}'::text[];
+    END IF;
+
+    INSERT INTO public.stores (
+      owner_id, name, slug, address, district, city, latitude, longitude,
+      status, onboarding_status, is_open, public_hotline, legal_name, tax_code, description, hashtags
+    ) VALUES (
+      NEW.profile_id, generated_store_name, generated_slug,
+      COALESCE(NEW.metadata->'address'->>'address', 'Chưa cập nhật địa chỉ'), 
+      NEW.metadata->'address'->>'district', COALESCE(NEW.metadata->'address'->>'city', 'TP.HCM'),
+      (NEW.metadata->'address'->>'latitude')::double precision, (NEW.metadata->'address'->>'longitude')::double precision,
+      'active', 'active', false,
+      COALESCE(NEW.metadata->'store'->>'hotline', NEW.public_hotline), 
+      COALESCE(NEW.metadata->'store'->>'legal_name', NEW.legal_name), COALESCE(NEW.metadata->'store'->>'tax_code', NEW.tax_code),
+      NEW.metadata->'store'->>'description', v_hashtags
+    ) RETURNING id INTO new_store_id;
+
+    NEW.store_id := new_store_id;
+    UPDATE public.profiles SET status = 'active' WHERE id = NEW.profile_id;
+
+  ELSIF NEW.onboarding_status <> OLD.onboarding_status AND NEW.store_id IS NOT NULL THEN
+    UPDATE public.stores SET onboarding_status = NEW.onboarding_status, status = NEW.onboarding_status WHERE id = NEW.store_id;
+    UPDATE public.profiles SET status = NEW.onboarding_status WHERE id = NEW.profile_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trigger_auto_create_store_on_approval ON public.partner_profiles;
+CREATE TRIGGER trigger_auto_create_store_on_approval
+BEFORE UPDATE ON public.partner_profiles
+FOR EACH ROW EXECUTE FUNCTION public.handle_partner_approval();
+
+-- ==============================================================================
+-- PHẦN 2: DỌN DẸP DỮ LIỆU CŨ (Chạy 1 lần ngay bây giờ để đồng bộ data đang có)
+-- ==============================================================================
+DO $$
+DECLARE
+  r RECORD;
+  new_store_id uuid;
+  generated_store_name text;
+  generated_slug text;
+  v_hashtags text[];
+BEGIN
+  FOR r IN SELECT * FROM public.partner_profiles WHERE onboarding_status = 'active' AND store_id IS NULL
+  LOOP
+    generated_store_name := COALESCE(r.metadata->'store'->>'name', r.legal_name, r.representative_name, 'Cửa hàng Đối tác');
+    generated_slug := 'store-' || substr(r.profile_id::text, 1, 8) || '-' || extract(epoch from now())::int || '-' || floor(random()*1000)::int;
+
+    IF jsonb_typeof(r.metadata->'store'->'hashtags') = 'array' THEN
+      SELECT ARRAY(SELECT jsonb_array_elements_text(r.metadata->'store'->'hashtags')) INTO v_hashtags;
+    ELSE
+      v_hashtags := '{}'::text[];
+    END IF;
+
+    INSERT INTO public.stores (
+      owner_id, name, slug, address, district, city, latitude, longitude,
+      status, onboarding_status, is_open, public_hotline, legal_name, tax_code, description, hashtags
+    ) VALUES (
+      r.profile_id, generated_store_name, generated_slug,
+      COALESCE(r.metadata->'address'->>'address', 'Chưa cập nhật địa chỉ'), 
+      r.metadata->'address'->>'district', COALESCE(r.metadata->'address'->>'city', 'TP.HCM'),
+      (r.metadata->'address'->>'latitude')::double precision, (r.metadata->'address'->>'longitude')::double precision,
+      'active', 'active', false,
+      COALESCE(r.metadata->'store'->>'hotline', r.public_hotline),
+      COALESCE(r.metadata->'store'->>'legal_name', r.legal_name), COALESCE(r.metadata->'store'->>'tax_code', r.tax_code),
+      r.metadata->'store'->>'description', v_hashtags
+    ) RETURNING id INTO new_store_id;
+
+    UPDATE public.partner_profiles SET store_id = new_store_id WHERE profile_id = r.profile_id;
+    UPDATE public.profiles SET status = 'active' WHERE id = r.profile_id;
+  END LOOP;
+END $$;
+
+-- Cho phép tài khoản đã đăng nhập được phép đọc dữ liệu bảng stores của chính họ
+CREATE POLICY "Cho phép đối tác xem cửa hàng của mình"
+ON public.stores
+FOR SELECT
+USING (auth.uid() = owner_id);
+
+-- Cho phép tài khoản đã đăng nhập được phép đọc profile của chính họ
+CREATE POLICY "Cho phép đối tác xem profile của mình"
+ON public.partner_profiles
+FOR SELECT
+USING (auth.uid() = profile_id);
