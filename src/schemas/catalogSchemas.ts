@@ -55,7 +55,15 @@ export const createStoreBodySchema = z.object({
   city: z.string().trim().min(2).max(80),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
-  opening_hours: z.string().trim().max(120).nullable().optional()
+  opening_hours: z.string().trim().max(120).nullable().optional(),
+  opening_schedule: z.array(z.object({
+    day: z.union([z.string().trim().max(20), z.number().int().min(0).max(6)]),
+    open: z.boolean().optional(),
+    from: z.string().regex(/^\d{1,2}:\d{2}$/).optional(),
+    to: z.string().regex(/^\d{1,2}:\d{2}$/).optional()
+  }).strict()).max(7).optional(),
+  charity_transfer_enabled: z.boolean().optional(),
+  cover_url: z.string().url().nullable().optional()
 }).strict();
 
 export const updateStoreBodySchema = createStoreBodySchema.partial().extend({
@@ -63,42 +71,46 @@ export const updateStoreBodySchema = createStoreBodySchema.partial().extend({
   status: z.enum(["active", "pending", "suspended"]).optional()
 }).strict();
 
+export const foodGroupSchema = z.enum(["cooked", "fresh", "packaged"]);
+
 const createProductBodyBaseSchema = z.object({
-  store_id: z.string().uuid(),
+  // Đối tác không cần gửi: backend tự lấy cửa hàng của tài khoản đang đăng nhập
+  store_id: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(180),
-  description: z.string().trim().min(10).max(3000),
+  description: z.string().trim().max(3000).optional(),
   image_url: z.string().url().nullable().optional(),
+  image_urls: z.array(z.string().url()).max(3).optional(),
   emoji: z.string().trim().max(16).nullable().optional(),
   category: z.string().trim().min(2).max(80),
-  price_cents: z.number().int().min(0),
-  original_price_cents: z.number().int().min(0),
+  food_group: foodGroupSchema.optional(),
+  // Giá bán và nhãn do hệ thống tính theo giá gốc + thời gian còn lại; giá trị gửi lên bị bỏ qua
+  price_cents: z.number().int().min(0).optional(),
+  original_price_cents: z.number().int().min(1),
   label: productLabelSchema.optional(),
   expires_at: z.string().datetime(),
   stock_quantity: z.number().int().min(0),
   estimated_weight_kg: z.number().positive().max(1000).nullable().optional(),
   servings_count: z.number().int().positive().max(10000).nullable().optional(),
+  metadata: z.record(z.unknown()).optional(),
   is_donation: z.boolean().default(false),
   is_active: z.boolean().default(true)
 }).strict();
 
 export const createProductBodySchema = createProductBodyBaseSchema.refine((value) => {
-  return value.original_price_cents >= value.price_cents;
+  return new Date(value.expires_at).getTime() > Date.now();
 }, {
-  message: "original_price_cents must be greater than or equal to price_cents",
-  path: ["original_price_cents"]
+  message: "Hạn sử dụng phải sau thời điểm hiện tại",
+  path: ["expires_at"]
 });
 
 export const updateProductBodySchema = createProductBodyBaseSchema
-  .omit({ store_id: true })
+  .omit({ store_id: true, is_donation: true, is_active: true })
   .partial()
-  .strict()
-  .refine((value) => {
-    if (value.price_cents === undefined || value.original_price_cents === undefined) return true;
-    return value.original_price_cents >= value.price_cents;
-  }, {
-    message: "original_price_cents must be greater than or equal to price_cents",
-    path: ["original_price_cents"]
-  });
+  .extend({
+    is_donation: z.boolean().optional(),
+    is_active: z.boolean().optional()
+  })
+  .strict();
 
 export const createVoucherBodySchema = z.object({
   store_id: z.string().uuid().nullable().optional(),

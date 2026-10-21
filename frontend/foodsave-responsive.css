@@ -282,6 +282,135 @@ img.store-img {
   }
 }
 
+/* Laptop density: preserve the desktop layout while keeping working areas
+   visible on common 1366x768 and 1440x900 screens. */
+@media (min-width: 1025px) and (max-width: 1600px) {
+  .app-w {
+    min-width: 0;
+  }
+
+  .app-w .side {
+    width: clamp(216px, 17vw, 248px) !important;
+  }
+
+  .app-w .side-logo {
+    padding: 15px 14px 12px !important;
+  }
+
+  .app-w .side-org,
+  .app-w .side-store {
+    margin: 8px 10px !important;
+    padding: 11px 12px !important;
+  }
+
+  .app-w .side-nav {
+    padding: 4px 8px 10px !important;
+  }
+
+  .app-w .side-cat {
+    padding: 10px 10px 5px !important;
+  }
+
+  .app-w .ni {
+    padding: 9px 10px !important;
+    font-size: 12.5px !important;
+  }
+
+  .app-w .app-topbar {
+    height: 60px !important;
+    padding: 0 20px !important;
+  }
+
+  .app-w .app-topbar h2 {
+    font-size: 18px !important;
+  }
+
+  .app-w .content {
+    padding: 18px 20px !important;
+  }
+
+  .app-w .card {
+    margin-bottom: 12px !important;
+    padding: 16px !important;
+  }
+
+  .app-w .metric {
+    padding: 15px !important;
+  }
+
+  .app-w .metric-v,
+  .app-w .stat-num {
+    font-size: 24px !important;
+  }
+
+  .app-w .grid-2,
+  .app-w .grid-3,
+  .app-w .grid-4,
+  .app-w .stat-grid {
+    gap: 12px !important;
+  }
+
+  .app-w .t-s {
+    width: clamp(190px, 22vw, 260px) !important;
+  }
+
+  .market-grid {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .filter-card {
+    top: 76px !important;
+    max-height: calc(100vh - 92px) !important;
+    padding: 16px !important;
+  }
+
+  .product-grid,
+  #product-container,
+  .deal-grid,
+  .store-grid,
+  .catalog-grid {
+    gap: 14px !important;
+  }
+
+  .checkout-grid {
+    grid-template-columns: minmax(0, 1fr) 330px !important;
+    gap: 18px !important;
+  }
+
+  .account-grid {
+    grid-template-columns: 230px minmax(0, 1fr) !important;
+    gap: 18px !important;
+  }
+
+  .app-hero {
+    padding-block: 38px 30px !important;
+  }
+}
+
+@media (min-width: 1025px) and (max-height: 800px) {
+  .app-w .app-topbar {
+    height: 56px !important;
+  }
+
+  .app-w .content {
+    padding-block: 14px !important;
+  }
+
+  .app-w .card,
+  .app-w .metric {
+    padding: 14px !important;
+  }
+
+  .app-w .side-logo {
+    padding-block: 12px 10px !important;
+  }
+
+  .app-w .ni {
+    padding-block: 8px !important;
+  }
+}
+
 @media (min-width: 769px) and (max-width: 1024px) {
   body > main:not(#app):not(#landingMain),
   .wrap,
@@ -814,10 +943,6 @@ img.store-img {
     width: 100vw !important;
   }
 
-  #float-help {
-    right: 14px !important;
-    bottom: 88px !important;
-  }
 }
 
 @media (max-width: 640px) {

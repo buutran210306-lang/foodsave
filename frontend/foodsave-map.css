@@ -1,0 +1,10 @@
+/* Bộ chọn vị trí dùng chung (frontend/foodsave-map.js) */
+.seller-address-row{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.seller-address-row .inp{flex:1 1 260px;min-width:0}
+.seller-address-row .btn{height:46px;white-space:nowrap}
+.seller-address-results{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.seller-address-results:empty{display:none}
+.seller-address-option{display:flex;gap:8px;align-items:flex-start;text-align:left;padding:10px 12px;border:1px solid var(--line,#e5e7eb);border-radius:10px;background:#fff;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink-soft,#374151);cursor:pointer}
+.seller-address-option:hover{border-color:var(--green-700,#15803d);background:var(--green-50,#f0fdf4)}
+.foodsave-map-box{height:260px;border:1.5px solid var(--line,#e5e7eb);border-radius:8px;background:var(--soft,#f8fafc);margin-bottom:8px;overflow:hidden}
+.foodsave-map-box .leaflet-container,.leaflet-container{font:inherit}

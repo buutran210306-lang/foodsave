@@ -25,6 +25,27 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+  // Chu kỳ chạy tác vụ đổi nhãn khi chạy backend ở máy (npm run dev). 0 = tắt. Trên Netlify dùng Scheduled Function.
+  LABEL_AUTOMATION_INTERVAL_MS: z.coerce.number().int().min(0).default(300000),
+  // Ảnh minh chứng của TNV: thời hạn tổ chức duyệt (phút) trước khi tự gửi sang cửa hàng. Demo: đặt 1-2.
+  PHOTO_REVIEW_MINUTES: z.coerce.number().int().min(1).max(10080).default(360),
+  // Cho phép TNV tải ảnh từ thư viện (chỉ để demo trên laptop). Bản thật để false.
+  DEMO_MODE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  // Ảnh chụp cách cửa hàng / tổ chức quá số mét này thì bị gắn cờ GPS
+  PHOTO_GPS_MAX_METERS: z.coerce.number().int().min(50).max(50000).default(500),
+  // Marketing Studio: n8n nhận lệnh đăng bài. Để trống = chỉ gửi thông báo trong FoodSave, không đăng mạng xã hội.
+  N8N_WEBHOOK_URL: optionalNonEmptyString,
+  // Mật khẩu chung giữa FoodSave và n8n (n8n gửi kèm header x-n8n-secret khi đọc danh sách hàng cần đăng)
+  N8N_SECRET: optionalNonEmptyString,
+  // Phương án dự phòng: nếu n8n không gọi được thì FoodSave đăng Facebook trực tiếp. JSON: {"MA_FANPAGE":"TOKEN_FANPAGE"}
+  FACEBOOK_PAGE_TOKENS: optionalNonEmptyString,
+  // Fanpage trung tâm của FoodSave (bài tổng hợp, do trang Admin điều khiển)
+  CENTRAL_PAGE_ID: optionalNonEmptyString,
+  CENTRAL_PAGE_NAME: optionalNonEmptyString,
+  // Webhook n8n của workflow Fanpage FoodSave (để nút "Chạy thử ngay" của Admin). Trống = suy ra từ N8N_WEBHOOK_URL
+  N8N_CENTRAL_WEBHOOK_URL: optionalNonEmptyString,
+  // Địa chỉ trang người mua, dùng làm link trong bài đăng
+  PUBLIC_SITE_URL: z.string().url().default("http://localhost:5500/FOODSAVE_USER.html"),
   MOMO_API_BASE_URL: z.string().url().default("https://test-payment.momo.vn/v2/gateway/api"),
   MOMO_PARTNER_CODE: z.string().min(1).default("MOMO"),
   MOMO_ACCESS_KEY: z.string().min(1).default("F8BBA842ECF85"),

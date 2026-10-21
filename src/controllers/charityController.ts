@@ -6,6 +6,7 @@ import type {
   CreateGalleryItemBody,
   CreateImpactReportBody,
   CreateVolunteerBody,
+  GalleryUploadUrlBody,
   PublicGalleryQuery,
   UpdateCharityProfileBody,
   UpdateVolunteerBody
@@ -93,6 +94,12 @@ export const charityController = {
     const body = req.validated?.body as CreateGalleryItemBody;
     const item = await charityService.createGalleryItem(actor.userId, actor.role, body);
     sendSuccess(res, item, HTTP_STATUS.CREATED);
+  },
+
+  async createGalleryUploadUrl(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const body = req.validated?.body as GalleryUploadUrlBody;
+    sendSuccess(res, await charityService.createGalleryUploadUrl(actor.userId, actor.role, body));
   },
 
   async listPublicGalleryItems(req: Request, res: Response): Promise<void> {

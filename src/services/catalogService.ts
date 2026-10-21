@@ -9,21 +9,20 @@ import type {
   VoucherListQuery
 } from "../schemas/catalogSchemas";
 import type { PaginatedResponse } from "../types/api";
-import type { Product, ProductLabel, Store, UserRole, Voucher } from "../types/domain";
+import type { FoodGroup, Product, Store, UserRole, Voucher } from "../types/domain";
 import type { Coordinates } from "../utils/geoDistance";
 import { distanceKmBetween, formatDistanceText, geoBoundingBox, isValidCoordinates, roundDistanceKm } from "../utils/geoDistance";
-import { deriveProductLabel } from "../utils/productExpiryLabel";
-import { productExpiryLabelService } from "./productExpiryLabelService";
+import { computeProductLabelState, foodGroupFromCategory } from "../utils/productExpiryLabel";
+import { labelAutomationService } from "./labelAutomationService";
+import { ERROR_CODES } from "../constants/errors";
+import { HTTP_STATUS } from "../constants/http";
+import { AppError } from "../utils/appError";
+import { logger } from "../utils/logger";
 import { assertOwnerOrAdmin, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
 
-const productSelect = "*, stores!inner(id,name,slug,owner_id,emoji,logo_url,address,district,city,latitude,longitude,rating,is_verified,is_open,opening_hours,status)";
+const productSelect = "*, stores!inner(id,name,slug,owner_id,emoji,logo_url,address,district,city,latitude,longitude,rating,is_verified,is_open,opening_hours,opening_schedule,status)";
 const storeSelect = "*";
 const proximityCandidateLimit = 1000;
-
-const applyDerivedProductLabel = <T extends { expires_at: string; label: ProductLabel }>(product: T): T => ({
-  ...product,
-  label: deriveProductLabel(product.expires_at)
-});
 
 const queryLocation = (query: ProductListQuery | StoreListQuery): Coordinates | null => {
   const latitude = query.latitude ?? query.lat;
@@ -70,6 +69,48 @@ const storeDistance = (store: Store, userLocation: Coordinates): Store => {
   };
 };
 
+interface ProductStore {
+  id: string;
+  owner_id: string;
+  opening_schedule: unknown;
+}
+
+// Cửa hàng của người đăng: đối tác chỉ đăng cho cửa hàng mình sở hữu (stores.owner_id), không cần gửi store_id
+const resolveProductStore = async (actorId: string, actorRole: UserRole, storeId?: string): Promise<ProductStore> => {
+  let request = supabaseAdmin.from("stores").select("id,owner_id,opening_schedule");
+  if (storeId) {
+    request = request.eq("id", storeId);
+  } else if (actorRole === "admin") {
+    throw new AppError("store_id is required for admin", HTTP_STATUS.BAD_REQUEST, ERROR_CODES.VALIDATION_ERROR);
+  } else {
+    request = request.eq("owner_id", actorId).order("created_at", { ascending: true });
+  }
+
+  const { data, error } = await request.limit(1).maybeSingle();
+  if (error) handleSupabaseError(error, "Failed to load store");
+  const store = data as ProductStore | null;
+  if (!store) {
+    throw new AppError("Chưa tìm thấy cửa hàng của tài khoản này", HTTP_STATUS.NOT_FOUND, ERROR_CODES.RESOURCE_NOT_FOUND);
+  }
+  assertOwnerOrAdmin(store.owner_id, actorId, actorRole);
+  return store;
+};
+
+const runLabelAutomationSafely = async (productIds: string[]): Promise<void> => {
+  try {
+    await labelAutomationService.run({ productIds });
+  } catch (automationError) {
+    logger.warn("Không chạy được tác vụ nhãn sau khi lưu sản phẩm", automationError);
+  }
+};
+
+// Đổi giờ mở cửa thì tính lại nhãn của các sản phẩm đang bán
+const refreshStoreProductLabels = async (storeId: string): Promise<void> => {
+  const { data } = await supabaseAdmin.from("products").select("id").eq("store_id", storeId).eq("is_active", true);
+  const productIds = (data ?? []).map((row) => (row as { id: string }).id);
+  if (productIds.length > 0) await runLabelAutomationSafely(productIds);
+};
+
 const getStoreOwner = async (storeId: string): Promise<string> => {
   const { data, error } = await supabaseAdmin
     .from("stores")
@@ -84,8 +125,6 @@ const getStoreOwner = async (storeId: string): Promise<string> => {
 
 export const catalogService = {
   async listProducts(query: ProductListQuery): Promise<PaginatedResponse<Product>> {
-    await productExpiryLabelService.syncProductExpiryLabels();
-
     const { from, to } = getRange(query);
     const nowIso = new Date().toISOString();
     const userLocation = queryLocation(query);
@@ -131,7 +170,8 @@ export const catalogService = {
     const { data, error, count } = await request;
     if (error) handleSupabaseError(error, "Failed to list products");
 
-    const products = ((data ?? []) as Product[]).map(applyDerivedProductLabel);
+    // Nhãn và giá do tác vụ định kỳ (labelAutomationService) cập nhật trong database
+    const products = (data ?? []) as Product[];
     if (userLocation) {
       let nearbyProducts = products
         .map((product) => productDistance(product, userLocation))
@@ -154,8 +194,6 @@ export const catalogService = {
   },
 
   async getProduct(productId: string): Promise<Product> {
-    await productExpiryLabelService.syncProductExpiryLabels();
-
     const { data, error } = await supabaseAdmin
       .from("products")
       .select(productSelect)
@@ -165,7 +203,7 @@ export const catalogService = {
       .single();
 
     if (error) handleSupabaseError(error, "Failed to load product");
-    return applyDerivedProductLabel(data as Product);
+    return data as Product;
   },
 
   async listStores(query: StoreListQuery): Promise<PaginatedResponse<Store>> {
@@ -246,58 +284,120 @@ export const catalogService = {
     const ownerId = await getStoreOwner(storeId);
     assertOwnerOrAdmin(ownerId, actorId, actorRole);
 
+    // Chỉ Admin được đổi trạng thái duyệt của cửa hàng
+    const { status, ...ownerEditable } = body;
+    const payload = actorRole === "admin" && status ? { ...ownerEditable, status } : ownerEditable;
+
     const { data, error } = await supabaseAdmin
       .from("stores")
-      .update(body)
+      .update(payload)
       .eq("id", storeId)
       .select("*")
       .single();
 
     if (error) handleSupabaseError(error, "Failed to update store");
+    if (payload.opening_schedule !== undefined) {
+      await refreshStoreProductLabels(storeId);
+    }
     return data as Store;
   },
 
   async createProduct(actorId: string, actorRole: UserRole, body: CreateProductBody): Promise<Product> {
-    const ownerId = await getStoreOwner(body.store_id);
-    assertOwnerOrAdmin(ownerId, actorId, actorRole);
+    const store = await resolveProductStore(actorId, actorRole, body.store_id);
+    const foodGroup: FoodGroup = body.food_group ?? foodGroupFromCategory(body.category);
+    const imageUrls = body.image_urls ?? (body.image_url ? [body.image_url] : []);
+    // Giá bán do hệ thống tính theo nhãn, không lấy giá từ trình duyệt
+    const state = computeProductLabelState({
+      expiresAt: body.expires_at,
+      originalPriceVnd: body.original_price_cents,
+      foodGroup,
+      openingSchedule: store.opening_schedule
+    });
 
+    if (state.shouldStopSelling) {
+      throw new AppError(
+        "Sản phẩm còn dưới 1 giờ trước hạn sử dụng hoặc giờ đóng cửa, không thể đăng bán",
+        HTTP_STATUS.BAD_REQUEST,
+        ERROR_CODES.VALIDATION_ERROR
+      );
+    }
+
+    const { store_id: _ignoredStoreId, price_cents: _ignoredPrice, label: _ignoredLabel, ...productFields } = body;
     const { data, error } = await supabaseAdmin
       .from("products")
       .insert({
-        ...body,
-        label: deriveProductLabel(body.expires_at)
+        ...productFields,
+        store_id: store.id,
+        description: body.description?.trim() || body.name,
+        food_group: foodGroup,
+        image_urls: imageUrls,
+        image_url: imageUrls[0] ?? null,
+        label: state.label,
+        price_cents: body.is_donation ? 0 : state.priceVnd,
+        effective_deadline_at: state.deadline.toISOString(),
+        label_changed_at: new Date().toISOString()
       })
       .select("*")
       .single();
 
     if (error) handleSupabaseError(error, "Failed to create product");
-    return data as Product;
+    const created = data as Product;
+    // Đăng lúc đã vàng/đỏ thì gửi thông báo và chia phần từ thiện ngay, không chờ lượt chạy định kỳ
+    await runLabelAutomationSafely([created.id]);
+    return created;
   },
 
   async updateProduct(actorId: string, actorRole: UserRole, productId: string, body: UpdateProductBody): Promise<Product> {
     const { data: product, error: loadError } = await supabaseAdmin
       .from("products")
-      .select("id,store_id,expires_at,stores!inner(owner_id)")
+      .select("id,store_id,expires_at,category,food_group,original_price_cents,is_donation,stores!inner(owner_id,opening_schedule)")
       .eq("id", productId)
       .single();
 
     if (loadError) handleSupabaseError(loadError, "Failed to load product");
-    const loaded = product as { store_id: string; expires_at: string; stores: { owner_id: string } } | null;
-    assertOwnerOrAdmin(requireRecord(loaded, "Product was not found").stores.owner_id, actorId, actorRole);
-    const expiresAt = body.expires_at ?? requireRecord(loaded, "Product was not found").expires_at;
+    const loaded = requireRecord(
+      product as {
+        expires_at: string;
+        category: string;
+        food_group: FoodGroup | null;
+        original_price_cents: number;
+        is_donation: boolean;
+        stores: { owner_id: string; opening_schedule: unknown };
+      } | null,
+      "Product was not found"
+    );
+    assertOwnerOrAdmin(loaded.stores.owner_id, actorId, actorRole);
+
+    const { price_cents: _ignoredPrice, label: _ignoredLabel, ...productFields } = body;
+    const update: Record<string, unknown> = { ...productFields };
+    if (body.image_urls) update.image_url = body.image_urls[0] ?? null;
+    if (body.category && !body.food_group) update.food_group = foodGroupFromCategory(body.category);
+
+    const pricingChanged = body.expires_at !== undefined || body.original_price_cents !== undefined ||
+      body.food_group !== undefined || body.category !== undefined || body.is_donation !== undefined;
+    if (pricingChanged) {
+      const foodGroup = (update.food_group as FoodGroup | undefined) ?? loaded.food_group ?? foodGroupFromCategory(loaded.category);
+      const state = computeProductLabelState({
+        expiresAt: body.expires_at ?? loaded.expires_at,
+        originalPriceVnd: body.original_price_cents ?? loaded.original_price_cents,
+        foodGroup,
+        openingSchedule: loaded.stores.opening_schedule
+      });
+      update.label = state.label;
+      update.price_cents = (body.is_donation ?? loaded.is_donation) ? 0 : state.priceVnd;
+      update.effective_deadline_at = state.deadline.toISOString();
+    }
 
     const { data, error } = await supabaseAdmin
       .from("products")
-      .update({
-        ...body,
-        label: deriveProductLabel(expiresAt)
-      })
+      .update(update)
       .eq("id", productId)
       .select("*")
       .single();
 
     if (error) handleSupabaseError(error, "Failed to update product");
-    return applyDerivedProductLabel(data as Product);
+    if (pricingChanged) await runLabelAutomationSafely([productId]);
+    return data as Product;
   },
 
   async deleteProduct(actorId: string, actorRole: UserRole, productId: string): Promise<void> {

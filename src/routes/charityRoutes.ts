@@ -8,6 +8,7 @@ import {
   createGalleryItemBodySchema,
   createImpactReportBodySchema,
   createVolunteerBodySchema,
+  galleryUploadUrlBodySchema,
   publicGalleryQuerySchema,
   updateCharityProfileBodySchema,
   updateVolunteerBodySchema
@@ -31,4 +32,5 @@ charityRoutes.get("/profiles/:id/beneficiaries", validateRequest({ params: uuidP
 charityRoutes.post("/beneficiaries", validateRequest({ body: createBeneficiaryGroupBodySchema }), asyncHandler(charityController.createBeneficiaryGroup));
 charityRoutes.get("/profiles/:id/reports", validateRequest({ params: uuidParamSchema }), asyncHandler(charityController.listImpactReports));
 charityRoutes.post("/reports", validateRequest({ body: createImpactReportBodySchema }), asyncHandler(charityController.createImpactReport));
+charityRoutes.post("/gallery/upload-url", validateRequest({ body: galleryUploadUrlBodySchema }), asyncHandler(charityController.createGalleryUploadUrl));
 charityRoutes.post("/gallery", validateRequest({ body: createGalleryItemBodySchema }), asyncHandler(charityController.createGalleryItem));

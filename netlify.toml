@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Tác vụ đổi nhãn/giá và thông báo, chạy mỗi 5 phút
+[functions."label-automation"]
+  schedule = "*/5 * * * *"

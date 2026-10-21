@@ -25,6 +25,7 @@ export const createVolunteerBodySchema = z.object({
   vehicle: z.string().trim().min(2).max(180),
   zones: z.array(z.string().trim().min(1).max(80)).min(1).max(20),
   schedule: z.string().trim().min(2).max(240),
+  duty_role: z.enum(["pickup", "distribute", "both"]).default("both"),
   status: z.enum(["new", "active", "inactive"]).default("new")
 }).strict();
 
@@ -62,6 +63,11 @@ export const createGalleryItemBodySchema = z.object({
   is_public: z.boolean().default(true)
 }).strict();
 
+export const galleryUploadUrlBodySchema = z.object({
+  charity_id: z.string().uuid(),
+  content_type: z.enum(["image/jpeg", "image/png", "image/webp"])
+}).strict();
+
 export const publicGalleryQuerySchema = z.object({
   charity_id: z.string().uuid().optional()
 }).strict();
@@ -73,4 +79,5 @@ export type UpdateVolunteerBody = z.infer<typeof updateVolunteerBodySchema>;
 export type CreateBeneficiaryGroupBody = z.infer<typeof createBeneficiaryGroupBodySchema>;
 export type CreateImpactReportBody = z.infer<typeof createImpactReportBodySchema>;
 export type CreateGalleryItemBody = z.infer<typeof createGalleryItemBodySchema>;
+export type GalleryUploadUrlBody = z.infer<typeof galleryUploadUrlBodySchema>;
 export type PublicGalleryQuery = z.infer<typeof publicGalleryQuerySchema>;

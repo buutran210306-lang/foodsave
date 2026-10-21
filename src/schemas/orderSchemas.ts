@@ -14,7 +14,14 @@ export const createOrderBodySchema = z.object({
   payment_method: paymentMethodSchema,
   voucher_code: z.string().trim().min(3).max(40).optional(),
   donation_cents: z.number().int().min(0).max(10000000).default(0),
-  customer_note: z.string().trim().max(1000).optional()
+  customer_note: z.string().trim().max(1000).optional(),
+  receiver_name: z.string().trim().min(2).max(140).optional(),
+  receiver_phone: z.string().trim().min(8).max(20).optional(),
+  receiver_email: z.string().trim().email().max(200).optional()
+}).strict();
+
+export const confirmPaymentBodySchema = z.object({
+  payment_method: paymentMethodSchema.optional()
 }).strict();
 
 export const orderListQuerySchema = z.object({
@@ -68,6 +75,7 @@ export const momoWebhookMockBodySchema = z.object({
 export type CreateOrderBody = z.infer<typeof createOrderBodySchema>;
 export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
 export type UpdateOrderStatusBody = z.infer<typeof updateOrderStatusBodySchema>;
+export type ConfirmPaymentBody = z.infer<typeof confirmPaymentBodySchema>;
 export type CreateReviewBody = z.infer<typeof createReviewBodySchema>;
 export type CreateComplaintBody = z.infer<typeof createComplaintBodySchema>;
 export type UpdateComplaintBody = z.infer<typeof updateComplaintBodySchema>;

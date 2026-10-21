@@ -3,7 +3,7 @@ on public.partner_profiles
 for select
 to authenticated
 using (auth.jwt()->>'role' = 'admin'); -- Hoặc điều kiện check admin của bạn
--- Tạo policy cho phép Admin xem toàn bộ partner_profiles
+-- Tạo policy  ho phép Admin xem toàn bộ partner_profiles
 -- Lưu ý: Nếu bạn có cột 'role' trong bảng 'profiles' hoặc một cách xác định Admin, hãy dùng nó.
 -- Nếu muốn test nhanh xem có phải lỗi do policy này không, bạn dùng 'using (true)'
 -- Sau khi test xong thì nên giới hạn lại theo role admin sau nhé!

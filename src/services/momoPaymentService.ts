@@ -39,7 +39,8 @@ const sign = (rawSignature: string): string => {
 };
 
 const momoAmountFromOrder = (order: Order): number => {
-  const amount = Math.round(order.total_cents / 100);
+  // total_cents lưu thẳng số tiền VND
+  const amount = Math.round(order.total_cents);
   if (amount < 1000) {
     throw new AppError("MoMo requires a minimum payment amount of 1,000 VND", HTTP_STATUS.BAD_REQUEST, ERROR_CODES.VALIDATION_ERROR);
   }
@@ -147,7 +148,7 @@ export const momoPaymentService = {
     return { payment, order: syncedOrder };
   },
 
-  async applyMockWebhook(input: { order_id?: string; orderId?: string; resultCode: number }): Promise<Order> {
+  async applyMockWebhook(input: { order_id?: string | undefined; orderId?: string | undefined; resultCode: number }): Promise<Order> {
     let query = supabaseAdmin.from("orders").select("*");
     query = input.order_id ? query.eq("id", input.order_id) : query.eq("order_number", input.orderId ?? "");
 

@@ -4,6 +4,7 @@ import { requireRoles } from "../middlewares/authMiddleware";
 import { validateRequest } from "../middlewares/validateRequest";
 import { uuidParamSchema } from "../schemas/commonSchemas";
 import {
+  confirmPaymentBodySchema,
   createComplaintBodySchema,
   createMomoPaymentBodySchema,
   createOrderBodySchema,
@@ -24,6 +25,7 @@ orderRoutes.post("/payments/momo/webhook/mock", validateRequest({ body: momoWebh
 orderRoutes.get("/complaints/list", asyncHandler(orderController.listComplaints));
 orderRoutes.post("/complaints", requireRoles("customer", "admin"), validateRequest({ body: createComplaintBodySchema }), asyncHandler(orderController.createComplaint));
 orderRoutes.patch("/complaints/:id", requireRoles("partner", "admin"), validateRequest({ params: uuidParamSchema, body: updateComplaintBodySchema }), asyncHandler(orderController.updateComplaint));
+orderRoutes.post("/:id/confirm-payment", requireRoles("customer", "admin"), validateRequest({ params: uuidParamSchema, body: confirmPaymentBodySchema }), asyncHandler(orderController.confirmPayment));
 orderRoutes.post("/:id/payments/momo/refresh", validateRequest({ params: uuidParamSchema }), asyncHandler(orderController.refreshMomoPayment));
 orderRoutes.get("/:id/payments/momo/status", validateRequest({ params: uuidParamSchema }), asyncHandler(orderController.pollMomoPayment));
 orderRoutes.get("/:id", validateRequest({ params: uuidParamSchema }), asyncHandler(orderController.getOrder));

@@ -19,7 +19,7 @@ export const isValidCoordinate = (value: unknown, min: number, max: number): val
   return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 };
 
-export const isValidCoordinates = (coordinates: Partial<Coordinates>): coordinates is Coordinates => {
+export const isValidCoordinates = (coordinates: { latitude?: number | undefined; longitude?: number | undefined }): coordinates is Coordinates => {
   return isValidCoordinate(coordinates.latitude, -90, 90) && isValidCoordinate(coordinates.longitude, -180, 180);
 };
 

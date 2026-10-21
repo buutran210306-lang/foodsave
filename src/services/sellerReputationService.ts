@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
-import { postgresPool } from "../config/postgres";
+import { isPostgresAvailable, postgresPool } from "../config/postgres";
+import { supabaseAdmin } from "./supabaseService";
 import { ERROR_CODES } from "../constants/errors";
 import { HTTP_STATUS } from "../constants/http";
 import { emitStoreStatusChanged } from "../realtime/socketServer";
@@ -160,7 +161,7 @@ const assertSellerReadableByActor = async (sellerId: string, actorId: string, ac
   }
 };
 
-export const sellerReputationService = {
+const baseService = {
   async getSellerReputation(sellerId: string): Promise<SellerReputation> {
     await withTransaction(async (client) => {
       await ensureSellerReputation(client, sellerId);
@@ -402,3 +403,25 @@ export const sellerReputationService = {
     return sellerReputationService.checkAndApplyPenalties(sellerId);
   }
 };
+
+// Hồ sơ uy tín mặc định khi không dùng được PostgreSQL trực tiếp (đọc bằng Supabase, nếu chưa có thì điểm tối đa)
+const fallbackReputation = async (sellerId: string): Promise<SellerReputation> => {
+  const { data } = await supabaseAdmin.from("seller_reputation").select("seller_id,trust_score,rating_avg,status,restricted_until,created_at,updated_at").eq("seller_id", sellerId).maybeSingle();
+  if (data) return mapReputation(data as unknown as SellerReputationRow);
+  const now = new Date().toISOString();
+  return { seller_id: sellerId, trust_score: 100, rating_avg: 5, status: "Active", restricted_until: null, created_at: now, updated_at: now };
+};
+
+// Mọi hàm điểm uy tín đều tự bỏ qua (không báo lỗi, không chờ) khi chưa cấu hình PostgreSQL trực tiếp
+type ReputationService = typeof baseService;
+export const sellerReputationService = Object.fromEntries(
+  Object.entries(baseService).map(([name, fn]) => [
+    name,
+    async (...args: unknown[]): Promise<unknown> => {
+      if (await isPostgresAvailable()) return (fn as (...input: unknown[]) => Promise<unknown>)(...args);
+      logger.warn("Bỏ qua tính điểm uy tín (chưa có kết nối PostgreSQL): " + name);
+      return fallbackReputation(String(args[0]));
+    }
+  ])
+) as unknown as ReputationService;
+

@@ -1,6 +1,7 @@
 export type UserRole = "customer" | "partner" | "charity" | "admin";
 export type ProfileStatus = "active" | "pending" | "suspended" | "rejected";
 export type ProductLabel = "green" | "yellow" | "red";
+export type FoodGroup = "cooked" | "fresh" | "packaged";
 export type OrderStatus = "pending" | "confirmed" | "ready" | "completed" | "cancelled";
 export type PaymentMethod = "momo" | "zalopay" | "vnpay" | "card" | "vietqr" | "cash";
 export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
@@ -50,6 +51,8 @@ export interface Store {
   is_verified: boolean;
   is_open: boolean;
   opening_hours: string | null;
+  opening_schedule?: unknown;
+  charity_transfer_enabled?: boolean;
   status: ProfileStatus;
   created_at: string;
   updated_at: string;
@@ -63,6 +66,15 @@ export interface Product {
   image_url: string | null;
   emoji: string | null;
   category: string;
+  food_group: FoodGroup;
+  image_urls: string[];
+  metadata: Record<string, unknown>;
+  effective_deadline_at: string | null;
+  label_changed_at: string | null;
+  yellow_notified_at: string | null;
+  red_notified_at: string | null;
+  red_last_notified_at: string | null;
+  red_reminder_count: number;
   price_cents: number;
   original_price_cents: number;
   label: ProductLabel;
@@ -101,6 +113,9 @@ export interface Voucher {
 }
 
 export interface Order {
+  receiver_name?: string | null;
+  receiver_phone?: string | null;
+  receiver_email?: string | null;
   id: string;
   order_number: string;
   customer_id: string;
@@ -152,6 +167,17 @@ export interface Donation {
   status: DonationStatus;
   note: string | null;
   distance_text: string | null;
+  product_id: string | null;
+  quantity: number | null;
+  is_auto: boolean;
+  offer_expires_at: string | null;
+  store_confirmed_at: string | null;
+  volunteer_assigned_at: string | null;
+  packed_at: string | null;
+  pickup_code: string | null;
+  proof_photo_urls: string[];
+  proof_note: string | null;
+  proof_submitted_at: string | null;
   accepted_at: string | null;
   completed_at: string | null;
   created_at: string;

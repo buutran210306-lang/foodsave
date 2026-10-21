@@ -3,7 +3,7 @@ import { z } from "zod";
 export const ecoImpactSourceTypeSchema = z.enum(["order", "donation", "manual_adjustment"]);
 export const ecoImpactPeriodSchema = z.enum(["month", "year", "all"]).default("month");
 
-const dateRangeIsValid = (value: { date_from?: string; date_to?: string }): boolean => {
+const dateRangeIsValid = (value: { date_from?: string | undefined; date_to?: string | undefined }): boolean => {
   if (!value.date_from || !value.date_to) return true;
   return new Date(value.date_from).getTime() <= new Date(value.date_to).getTime();
 };

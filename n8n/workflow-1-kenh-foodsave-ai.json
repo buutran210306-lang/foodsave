@@ -1,0 +1,848 @@
+{
+  "name": "FoodSave · Fanpage FoodSave · AI đăng bài tổng hợp (3 tầng)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000001",
+      "name": "Mỗi 30 phút",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://DAN_TEN_MIEN_NETLIFY.netlify.app/api/v1/marketing/feed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000002",
+      "name": "Lấy bài tổng hợp từ FoodSave",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DAN_ID_CREDENTIAL_FOODSAVE",
+          "name": "FoodSave n8n secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "foodsave-central",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000003",
+      "name": "Nhận lệnh chạy thử",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "foodsave-central-webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"accepted\": true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000004",
+      "name": "Trả lời ngay",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== SỬA 2 DÒNG NÀY RỒI LƯU =====\nconst CONFIG = {\n  SECRET: 'DAN_N8N_SECRET_VAO_DAY' // trùng N8N_SECRET (chỉ dùng để kiểm tra lệnh \"Chạy thử ngay\" từ trang Admin)\n};\n// ===================================\n\nconst first = $input.first().json;\nlet items = [];\nif (first.body && first.body.bundle) {\n  // Lệnh \"Chạy thử ngay\" từ trang Admin FoodSave\n  const headers = first.headers || {};\n  if (CONFIG.SECRET && headers['x-n8n-secret'] !== CONFIG.SECRET) throw new Error('Sai mật khẩu x-n8n-secret');\n  items = [{ post_log_id: first.body.post_log_id, ai: first.body.ai, page_id: first.body.page_id, ...first.body.bundle }];\n} else {\n  // Lịch chạy: FoodSave trả về danh sách bài tổng hợp\n  const data = first.data || first;\n  items = (data.items || []).map((it) => ({ ...it, ai: { enabled: data.ai_enabled !== false }, page_id: data.page_id }));\n}\nreturn items.map((json) => ({ json }));\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000005",
+      "name": "Tách từng bài",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000006",
+      "name": "Lặp từng bài",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== SỬA CÁC DÒNG NÀY RỒI LƯU (không dán token vào chat hay Git) =====\nconst CONFIG = {\n  API: 'https://DAN_TEN_MIEN_NETLIFY.netlify.app/api/v1', // địa chỉ API của FoodSave (KHÔNG phải localhost khi dùng n8n Cloud)\n  SECRET: 'DAN_N8N_SECRET_VAO_DAY',\n  PAGE_ID: 'DAN_MA_FANPAGE_FOODSAVE',     // mã Fanpage trung tâm FoodSave (nếu FoodSave đã gửi page_id thì dùng giá trị đó)\n  PAGE_TOKEN: 'DAN_TOKEN_VAO_DAY',        // token Fanpage trung tâm FoodSave\n  OVERLAY: true\n};\n// =======================================================================\n\nconst bundle = $('Lặp từng bài').first().json;\nconst money = (n) => String(Math.round(Number(n) || 0)).replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.') + 'đ';\nconst items = bundle.items || [];\nconst useAi = Boolean(bundle.ai && bundle.ai.enabled);\nconst linkOk = /^https:/.test(bundle.link || '');\nconst maxDiscount = Math.max(0, ...items.map((i) => Number(i.discount_percent) || 0));\nconst minPrice = Math.min(...items.map((i) => Number(i.price_vnd) || 0));\nconst earliest = items.slice().sort((a, b) => a.hours_left - b.hours_left)[0] || {};\nconst hasRed = items.some((i) => i.label === 'red');\n\nconst facts = items.map((i, n) => `${n + 1}. ${i.name} (cửa hàng ${i.store_name}): giảm ${i.discount_percent}%, giá mới ${money(i.price_vnd)}${Number(i.original_price_vnd) > Number(i.price_vnd) ? ', giá cũ ' + money(i.original_price_vnd) : ''}, lấy trước ${i.deadline_text}, nhãn ${i.label === 'red' ? 'ĐỎ (sắp hết)' : 'VÀNG'}`).join('\\n');\nconst captionPrompt = [\n  'Bạn quản lý Fanpage FoodSave, ứng dụng giải cứu thực phẩm gần hết hạn. Viết MỘT bài đăng Facebook tiếng Việt tổng hợp các món sau (từ nhiều cửa hàng khác nhau) để người mua biết đang có hàng cần mua trước khi hết hạn.',\n  'DỮ KIỆN CỐ ĐỊNH (giữ nguyên từng con số và tên cửa hàng, KHÔNG sửa, thêm hay bịa):',\n  facts,\n  bundle.more_count > 0 ? `Ngoài ra còn ${bundle.more_count} món khác trên sàn (có thể nhắc \"…và ${bundle.more_count} món khác\").` : '',\n  `Giọng điệu: ${hasRed ? 'khẩn trương nhưng thân thiện, nhắc giờ lấy cuối cùng' : 'nhẹ nhàng, giá mềm hôm nay'}.`,\n  'Quy tắc: 6–8 dòng, emoji vừa phải, hashtag 3–5 cái (có #FoodSave). KHÔNG nhắc số lượng tồn kho. KHÔNG ghi \"ảnh minh hoạ\". Nêu khách tự đến cửa hàng nhận, không giao hàng.',\n  linkOk ? `Gắn đúng một link: ${bundle.link}` : 'Không gắn link.',\n  'Chỉ trả về nội dung bài đăng, không giải thích.'\n].filter(Boolean).join('\\n');\n\nconst imagePrompt = [\n  'Tạo ảnh nền poster quảng cáo cho Fanpage FoodSave: bàn ăn với vài món đồ ăn hấp dẫn, tươi, màu sắc ấm.',\n  hasRed ? 'Tông đỏ cam khẩn trương.' : 'Tông vàng ấm tươi sáng.',\n  'Chừa trống khoảng 25% phía dưới và góc trên bên trái để chèn chữ sau.',\n  'TUYỆT ĐỐI KHÔNG vẽ chữ, chữ số, logo hay watermark. Nếu có ảnh gốc đi kèm, lấy cảm hứng và giữ nhận diện món ăn.'\n].join('\\n');\n\nconst pageId = bundle.page_id || CONFIG.PAGE_ID;\nreturn [{\n  json: {\n    mode: 'central',\n    useAi,\n    overlayEnabled: CONFIG.OVERLAY,\n    label: hasRed ? 'red' : 'yellow',\n    pageId,\n    pageToken: CONFIG.PAGE_TOKEN,\n    postLogId: bundle.post_log_id || null,\n    callbackUrl: CONFIG.API + '/marketing/callback',\n    secret: CONFIG.SECRET,\n    imageUrl: bundle.hero_image_url || '',\n    fallbackCaption: bundle.message,\n    captionPrompt,\n    imagePrompt,\n    mustContain: items.map((i) => money(i.price_vnd)),\n    link: linkOk ? bundle.link : '',\n    overlay: {\n      title: 'FOODSAVE · HÀNG SẮP HẾT HẠN',\n      badge: `GIẢM TỚI ${maxDiscount}%`,\n      line1: items.slice(0, 3).map((i) => i.name).join(' · '),\n      line2: `Từ ${money(minPrice)} · lấy trước ${earliest.deadline_text || ''}`\n    }\n  }\n}];\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000007",
+      "name": "Chuẩn bị",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.imageUrl }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "orig"
+            }
+          }
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000008",
+      "name": "Tải ảnh gốc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        100
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Dựng yêu cầu gửi Gemini (caption + ảnh) và mã hóa ảnh gốc\nconst ctx = $('Chuẩn bị').first().json;\nconst item = $input.first();\nlet origB64 = '';\nlet mime = 'image/jpeg';\nif (item.binary && item.binary.orig) {\n  const buf = await this.helpers.getBinaryDataBuffer(0, 'orig');\n  origB64 = buf.toString('base64');\n  mime = item.binary.orig.mimeType || mime;\n}\nconst captionRequest = {\n  contents: [{ parts: [{ text: ctx.captionPrompt }] }],\n  generationConfig: { temperature: 0.6, maxOutputTokens: 600 }\n};\nconst imageParts = [{ text: ctx.imagePrompt }];\nif (origB64) imageParts.unshift({ inline_data: { mime_type: mime, data: origB64 } });\nconst imageRequest = {\n  contents: [{ parts: imageParts }],\n  generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }\n};\nreturn [{ json: { ...ctx, origB64, origMime: mime, captionRequest, imageRequest } }];\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000009",
+      "name": "Dựng yêu cầu AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a1f0c0de-0000-4000-8000-000000000010",
+              "leftValue": "={{ $json.useAi }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000011",
+      "name": "Dùng AI?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.captionRequest) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000012",
+      "name": "Gemini · viết caption",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        -20
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DAN_ID_CREDENTIAL_GEMINI",
+          "name": "Gemini API key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Dựng yêu cầu AI').first().json.imageRequest) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000013",
+      "name": "Gemini · tạo ảnh nền",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        -20
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DAN_ID_CREDENTIAL_GEMINI",
+          "name": "Gemini API key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tầng 1 (AI): kiểm tra kết quả Gemini. Không đạt thì dùng caption mẫu (tầng 2). Ảnh AI chỉ dùng khi caption AI đạt.\nconst ctx = $('Dựng yêu cầu AI').first().json;\nconst capRes = $('Gemini · viết caption').first().json || {};\nconst imgRes = $('Gemini · tạo ảnh nền').first().json || {};\n\nlet caption = '';\nlet tier = 'template';\ntry {\n  const text = capRes.candidates[0].content.parts.map((p) => p.text || '').join('').trim();\n  const stockMention = /còn\\s+\\d+\\s*(phần|suất|sản phẩm|món|cái|hộp)/i.test(text);\n  const fakeTag = /minh\\s*h[oọ]a/i.test(text);\n  const hasNumbers = (ctx.mustContain || []).every((x) => text.includes(x));\n  if (text.length > 30 && hasNumbers && !stockMention && !fakeTag) {\n    caption = text;\n    tier = 'ai';\n  }\n} catch (e) { /* dùng caption mẫu */ }\nif (!caption) caption = ctx.fallbackCaption;\nif (tier === 'ai' && ctx.link && !caption.includes(ctx.link)) caption += `\\n👉 ${ctx.link}`;\n\nlet imgB64 = ctx.origB64 || '';\nlet mime = ctx.origMime || 'image/jpeg';\nlet aiImage = false;\nif (tier === 'ai') {\n  try {\n    const parts = imgRes.candidates[0].content.parts;\n    const part = parts.find((p) => p.inlineData || p.inline_data);\n    const data = part && (part.inlineData || part.inline_data);\n    if (data && data.data) { imgB64 = data.data; mime = data.mimeType || data.mime_type || 'image/png'; aiImage = true; }\n  } catch (e) { /* giữ ảnh gốc */ }\n}\n\nconst out = { json: { ...ctx, caption, tier, aiImage, imgB64, imgMime: mime } };\ndelete out.json.origB64; delete out.json.captionRequest; delete out.json.imageRequest;\nif (imgB64) {\n  out.binary = { data: await this.helpers.prepareBinaryData(Buffer.from(imgB64, 'base64'), aiImage ? 'poster.png' : 'goc.jpg', mime) };\n}\nreturn [out];\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000014",
+      "name": "Gộp kết quả AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tầng 2 (mẫu): dùng caption mẫu của FoodSave + ảnh gốc, không gọi AI\nconst ctx = $('Dựng yêu cầu AI').first().json;\nconst out = { json: { ...ctx, caption: ctx.fallbackCaption, tier: 'template', aiImage: false, imgB64: ctx.origB64 || '', imgMime: ctx.origMime || 'image/jpeg' } };\ndelete out.json.origB64; delete out.json.captionRequest; delete out.json.imageRequest;\nif (ctx.origB64) {\n  out.binary = { data: await this.helpers.prepareBinaryData(Buffer.from(ctx.origB64, 'base64'), 'goc.jpg', ctx.origMime || 'image/jpeg') };\n}\nreturn [out];\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000015",
+      "name": "Dùng caption mẫu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a1f0c0de-0000-4000-8000-000000000016",
+              "leftValue": "={{ $json.tier === \"ai\" && $json.aiImage && $json.overlayEnabled }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000017",
+      "name": "Chèn chữ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "multiStep",
+        "operations": {
+          "operations": [
+            {
+              "operation": "resize",
+              "width": 1080,
+              "height": 1080,
+              "resizeOption": "ignoreAspectRatio"
+            },
+            {
+              "operation": "draw",
+              "primitive": "rectangle",
+              "color": "#10281c",
+              "startPositionX": 0,
+              "startPositionY": 850,
+              "endPositionX": 1080,
+              "endPositionY": 1080,
+              "cornerRadius": 0
+            },
+            {
+              "operation": "text",
+              "text": "={{ $('Gộp kết quả AI').first().json.overlay.title }}",
+              "fontSize": 46,
+              "fontColor": "#ffffff",
+              "positionX": 48,
+              "positionY": 80,
+              "lineLength": 30
+            },
+            {
+              "operation": "text",
+              "text": "={{ $('Gộp kết quả AI').first().json.overlay.badge }}",
+              "fontSize": 96,
+              "fontColor": "#fde047",
+              "positionX": 48,
+              "positionY": 200,
+              "lineLength": 20
+            },
+            {
+              "operation": "text",
+              "text": "={{ $('Gộp kết quả AI').first().json.overlay.line1 }}",
+              "fontSize": 54,
+              "fontColor": "#ffffff",
+              "positionX": 48,
+              "positionY": 930,
+              "lineLength": 38
+            },
+            {
+              "operation": "text",
+              "text": "={{ $('Gộp kết quả AI').first().json.overlay.line2 }}",
+              "fontSize": 38,
+              "fontColor": "#d1fae5",
+              "positionX": 48,
+              "positionY": 1020,
+              "lineLength": 48
+            }
+          ]
+        },
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000018",
+      "name": "Chèn chữ lên ảnh",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        -20
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chốt ảnh cuối cùng. Nếu bước chèn chữ lỗi (mất ảnh) thì dùng lại ảnh trước khi chèn chữ.\nconst src = $('Gộp kết quả AI').isExecuted ? $('Gộp kết quả AI').first().json : $('Dùng caption mẫu').first().json;\nconst item = $input.first();\nconst json = { ...src };\nconst b64 = json.imgB64;\ndelete json.imgB64;\nlet bin = item.binary && item.binary.data ? item.binary.data : null;\nif (!bin && b64) {\n  bin = await this.helpers.prepareBinaryData(Buffer.from(b64, 'base64'), 'poster.png', json.imgMime || 'image/png');\n}\njson.hasImage = Boolean(bin);\nconst out = { json };\nif (bin) out.binary = { data: bin };\nreturn [out];\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000019",
+      "name": "Chốt ảnh",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a1f0c0de-0000-4000-8000-000000000020",
+              "leftValue": "={{ $json.hasImage }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000021",
+      "name": "Có ảnh?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/v21.0/' + $json.pageId + '/photos' }}",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "source",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.caption }}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $json.pageToken }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000022",
+      "name": "Đăng ảnh lên Fanpage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a1f0c0de-0000-4000-8000-000000000023",
+              "leftValue": "={{ !!$json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000024",
+      "name": "Đăng ảnh thành công?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://graph.facebook.com/v21.0/' + $('Chốt ảnh').first().json.pageId + '/feed' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $('Chốt ảnh').first().json.caption, access_token: $('Chốt ảnh').first().json.pageToken }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000025",
+      "name": "Đăng chữ lên Fanpage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        180
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gom kết quả đăng Facebook để báo về FoodSave\nconst c = $('Chốt ảnh').first().json;\nconst photo = $('Đăng ảnh lên Fanpage').isExecuted ? $('Đăng ảnh lên Fanpage').first().json : null;\nconst text = $('Đăng chữ lên Fanpage').isExecuted ? $('Đăng chữ lên Fanpage').first().json : null;\nconst res = text && text.id ? text : (photo && photo.id ? photo : null);\nconst ok = Boolean(res);\nconst pick = (r) => (r && r.error ? (r.error.message || JSON.stringify(r.error)) : '');\nconst error = ok ? '' : String(pick(text) || pick(photo) || 'Facebook từ chối bài đăng').slice(0, 400);\nconst id = ok ? String(res.post_id || res.id) : '';\nreturn [{\n  json: {\n    post_log_id: c.postLogId,\n    callbackUrl: c.callbackUrl,\n    status: ok ? 'posted' : 'failed',\n    tier: c.tier,\n    external_id: id,\n    external_url: ok ? 'https://www.facebook.com/' + id : '',\n    error\n  }\n}];\n"
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000026",
+      "name": "Chuẩn bị báo cáo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callbackUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post_log_id: $json.post_log_id, status: $json.status, tier: $json.tier, external_id: $json.external_id || undefined, external_url: $json.external_url || undefined, error: $json.error || undefined }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "a1f0c0de-0000-4000-8000-000000000027",
+      "name": "Báo kết quả về FoodSave",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4560,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DAN_ID_CREDENTIAL_FOODSAVE",
+          "name": "FoodSave n8n secret"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Mỗi 30 phút": {
+      "main": [
+        [
+          {
+            "node": "Lấy bài tổng hợp từ FoodSave",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lấy bài tổng hợp từ FoodSave": {
+      "main": [
+        [
+          {
+            "node": "Tách từng bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nhận lệnh chạy thử": {
+      "main": [
+        [
+          {
+            "node": "Trả lời ngay",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tách từng bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tách từng bài": {
+      "main": [
+        [
+          {
+            "node": "Lặp từng bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lặp từng bài": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Chuẩn bị",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chuẩn bị": {
+      "main": [
+        [
+          {
+            "node": "Tải ảnh gốc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tải ảnh gốc": {
+      "main": [
+        [
+          {
+            "node": "Dựng yêu cầu AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dựng yêu cầu AI": {
+      "main": [
+        [
+          {
+            "node": "Dùng AI?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dùng AI?": {
+      "main": [
+        [
+          {
+            "node": "Gemini · viết caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dùng caption mẫu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini · viết caption": {
+      "main": [
+        [
+          {
+            "node": "Gemini · tạo ảnh nền",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini · tạo ảnh nền": {
+      "main": [
+        [
+          {
+            "node": "Gộp kết quả AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gộp kết quả AI": {
+      "main": [
+        [
+          {
+            "node": "Chèn chữ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dùng caption mẫu": {
+      "main": [
+        [
+          {
+            "node": "Chèn chữ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chèn chữ?": {
+      "main": [
+        [
+          {
+            "node": "Chèn chữ lên ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chốt ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chèn chữ lên ảnh": {
+      "main": [
+        [
+          {
+            "node": "Chốt ảnh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chốt ảnh": {
+      "main": [
+        [
+          {
+            "node": "Có ảnh?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Có ảnh?": {
+      "main": [
+        [
+          {
+            "node": "Đăng ảnh lên Fanpage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Đăng chữ lên Fanpage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đăng ảnh lên Fanpage": {
+      "main": [
+        [
+          {
+            "node": "Đăng ảnh thành công?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đăng ảnh thành công?": {
+      "main": [
+        [
+          {
+            "node": "Chuẩn bị báo cáo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Đăng chữ lên Fanpage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đăng chữ lên Fanpage": {
+      "main": [
+        [
+          {
+            "node": "Chuẩn bị báo cáo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chuẩn bị báo cáo": {
+      "main": [
+        [
+          {
+            "node": "Báo kết quả về FoodSave",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Báo kết quả về FoodSave": {
+      "main": [
+        [
+          {
+            "node": "Lặp từng bài",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -1601,39 +1601,3 @@ export const authService = {
     return { revoked: true };
   }
 };
-async registerPartner(body: any, meta: any) {
-    let createdUserId: string | null = null;
-    try {
-      // 1. Tạo tài khoản trong hệ thống
-      const user = await createAuthUser("partner", body.email, body.password, body.representative_name, body.phone, {
-        business_type: body.business_type,
-        store_name: body.store_name,
-        tax_code: body.tax_code
-      });
-      createdUserId = user.id;
-
-      // 2. Lưu hồ sơ vào bảng profiles
-      await upsertProfile(user.id, "partner", body.email, body.representative_name, body.phone, "pending", {});
-
-      // 3. Tạo cửa hàng
-      const { data: store } = await supabaseAdmin
-        .from("stores")
-        .insert({
-          owner_id: user.id,
-          name: body.store_name,
-          address: body.address,
-          tax_code: body.tax_code,
-          status: "pending"
-        })
-        .select("*")
-        .single();
-
-      // 4. Lưu hồ sơ đối tác
-      await upsertPartnerProfile(user.id, store.id, body, body.phone);
-
-      return { message: "Đăng ký thành công", user_id: user.id };
-    } catch (error) {
-      await deleteCreatedUser(createdUserId);
-      throw error;
-    }
-  }

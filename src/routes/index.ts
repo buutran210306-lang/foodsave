@@ -9,12 +9,14 @@ import { customerRoutes } from "./customerRoutes";
 import { donationRoutes } from "./donationRoutes";
 import { ecoImpactRoutes } from "./ecoImpactRoutes";
 import { healthRoutes } from "./healthRoutes";
+import { marketingRoutes } from "./marketingRoutes";
 import { notificationRoutes } from "./notificationRoutes";
 import { orderRoutes } from "./orderRoutes";
 import { partnerRoutes } from "./partnerRoutes";
 import { profileRoutes } from "./profileRoutes";
 import { sellerReputationRoutes } from "./sellerReputationRoutes";
 import { supportRoutes } from "./supportRoutes";
+import { volunteerRoutes } from "./volunteerRoutes";
 
 export const apiRoutes = Router();
 
@@ -22,6 +24,8 @@ apiRoutes.use("/health", healthRoutes);
 apiRoutes.use("/auth", authRoutes);
 apiRoutes.use("/catalog", catalogRoutes);
 apiRoutes.use("/support", supportRoutes);
+apiRoutes.use("/volunteer", volunteerRoutes);
+apiRoutes.use("/marketing", marketingRoutes);
 
 apiRoutes.use("/profile", authMiddleware, profileRoutes);
 apiRoutes.use("/cart", authMiddleware, cartRoutes);

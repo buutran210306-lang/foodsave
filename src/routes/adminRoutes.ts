@@ -30,3 +30,5 @@ adminRoutes.post(
   validateRequest({ params: adminUserParamSchema, body: rejectPartnerBodySchema }),
   asyncHandler(adminController.rejectPartner)
 );
+
+adminRoutes.post("/label-automation/run", asyncHandler(adminController.runLabelAutomation));

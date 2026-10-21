@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/http";
 import type {
+  ConfirmPaymentBody,
   CreateComplaintBody,
   CreateMomoPaymentBody,
   CreateOrderBody,
@@ -22,6 +23,14 @@ export const orderController = {
     const body = req.validated?.body as CreateOrderBody;
     const result = await orderService.createOrder(actor.userId, body);
     sendSuccess(res, result, HTTP_STATUS.CREATED);
+  },
+
+  async confirmPayment(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const params = req.validated?.params as UuidParams;
+    const body = req.validated?.body as ConfirmPaymentBody;
+    const order = await orderService.confirmPayment(actor.userId, actor.role, params.id, body.payment_method);
+    sendSuccess(res, order);
   },
 
   async createMomoPayment(req: Request, res: Response): Promise<void> {

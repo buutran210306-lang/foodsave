@@ -8,5 +8,16 @@ export const partnerController = {
     const actor = getActor(req);
     const dashboard = await partnerService.getDashboard(actor.userId);
     sendSuccess(res, dashboard);
+  },
+
+  async listProducts(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    sendSuccess(res, await partnerService.listOwnProducts(actor.userId));
+  },
+
+  async createProductImageUploadUrl(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const body = req.validated?.body as { content_type: string };
+    sendSuccess(res, await partnerService.createProductImageUploadUrl(actor.userId, body.content_type));
   }
 };

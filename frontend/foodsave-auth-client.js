@@ -3,7 +3,13 @@
 
   const LOCAL_API_BASE_URL = "http://localhost:8080/api/v1";
   const API_PATH = "/api/v1";
-  const AUTH_STORAGE_KEY = "foodsave.auth.session";
+  // Đổi cùng lúc với ?v=... trong thẻ <script> của các trang để trình duyệt tải bản mới
+  const FOODSAVE_CLIENT_VERSION = "2026-10-03e";
+  window.FOODSAVE_CLIENT_VERSION = FOODSAVE_CLIENT_VERSION;
+  console.info(`[FoodSave] auth-client phiên bản ${FOODSAVE_CLIENT_VERSION}`);
+  // Khóa cũ dùng chung cho mọi trang: đăng nhập trang này ghi đè phiên trang khác ("nhảy tài khoản").
+  // Nay mỗi trang lưu riêng: foodsave.auth.session.customer / .partner / .charity
+  const LEGACY_AUTH_STORAGE_KEY = "foodsave.auth.session";
   const PHONE_OTP_STORAGE_KEY = "foodsave.auth.phoneOtp";
   const SUPABASE_URL = "https://uqyqayrwhcicuctfnwix.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_tUk1J3EpJfW4h9SkPDg_hg_FAJPOUuX";
@@ -37,12 +43,14 @@
   }
 
   function resolveApiBaseUrl() {
-    const explicit = trimTrailingSlash(explicitApiBase());
-    if (explicit) return explicit;
-
     const location = window.location;
     const isHttp = location.protocol === "http:" || location.protocol === "https:";
     const isLocalHost = location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "::1";
+    // Chạy thử ở máy (Live Server): luôn gọi backend ở máy, bỏ qua địa chỉ Netlify ghi sẵn trong HTML
+    if (!isHttp || (isLocalHost && location.port !== "8080")) return LOCAL_API_BASE_URL;
+
+    const explicit = trimTrailingSlash(explicitApiBase());
+    if (explicit) return explicit;
 
     if (isHttp && !isLocalHost) {
       return `${location.origin}${API_PATH}`;
@@ -91,9 +99,18 @@
       throw new Error("Supabase JS chưa sẵn sàng. Hãy kiểm tra thứ tự nhúng script @supabase/supabase-js.");
     }
 
-    window.foodsaveSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Mỗi cổng (người mua / cửa hàng / từ thiện) lưu phiên Supabase riêng. Nếu dùng chung khóa mặc định,
+    // các trang cùng tên miền sẽ dùng nhầm phiên của nhau (vd trang cửa hàng gửi token của người mua).
+    window.foodsaveSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storageKey: supabaseStorageKeyForRole(pageRole), persistSession: true, autoRefreshToken: true }
+    });
     return window.foodsaveSupabase;
   }
+
+  function supabaseStorageKeyForRole(role) {
+    return `foodsave-${role || "customer"}-auth`;
+  }
+  window.foodsaveSupabaseStorageKey = supabaseStorageKeyForRole(pageRole);
 
   window.getFoodSaveSupabaseClient = getFoodSaveSupabase;
 
@@ -272,23 +289,36 @@
       context: payload.context,
       savedAt: new Date().toISOString()
     };
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    localStorage.setItem(authStorageKey(), JSON.stringify(session));
     window.FoodSaveCurrentAuth = session;
+    window.dispatchEvent(new CustomEvent("foodsave:session-saved", { detail: { role } }));
     return session;
+  }
+
+  function authStorageKey() {
+    return `${LEGACY_AUTH_STORAGE_KEY}.${pageRole}`;
   }
 
   function readSession() {
     try {
-      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      const raw = localStorage.getItem(authStorageKey());
+      if (raw) return JSON.parse(raw);
+      // Chuyển phiên cũ (khóa dùng chung) sang khóa riêng nếu đúng vai trò của trang này
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_AUTH_STORAGE_KEY) || "null");
+      if (legacy && legacy.role === pageRole) {
+        localStorage.setItem(authStorageKey(), JSON.stringify(legacy));
+        localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+        return legacy;
+      }
+      return null;
     } catch (error) {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(authStorageKey());
       return null;
     }
   }
 
   function clearSession() {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem(authStorageKey());
     window.FoodSaveCurrentAuth = null;
   }
 
@@ -936,15 +966,20 @@
 <button class="btn btn-o" style="width:100%;justify-content:center" onclick="aS='login';rAuth()"><i class="ti ti-arrow-left"></i> Quay lại</button>`;
   }
 
+  // 0 Xác thực email (email + OTP) · 1 Người đại diện · 2 Cửa hàng & pháp lý · 3 Vận hành & thanh toán · 4 Chờ duyệt
   const PARTNER_REGISTER_STEPS = [
-    "Liên hệ",
-    "OTP",
-    "eKYC",
-    "Cửa hàng",
-    "Tài chính",
-    "Vận hành",
+    "Xác thực email",
+    "Người đại diện",
+    "Cửa hàng & pháp lý",
+    "Vận hành & thanh toán",
     "Chờ duyệt"
   ];
+  // Màn hình "Chờ duyệt" không tính là một bước
+  const PARTNER_INPUT_STEPS = PARTNER_REGISTER_STEPS.length - 1;
+  const PARTNER_STEP_VERIFY = 0;
+  const PARTNER_STEP_REPRESENTATIVE = 1;
+  const PARTNER_STEP_STORE = 2;
+  const PARTNER_STEP_OPERATIONS = 3;
 
   const PARTNER_BUSINESS_TYPES = [
     { id: "bakery", label: "Tiệm bánh", icon: "ti-bread" },
@@ -1030,22 +1065,21 @@
     "hue": "Huế"
   };
 
+  // Luôn trả về CÙNG một object: các hàm async (gửi/xác minh OTP, gửi hồ sơ) giữ tham chiếu
+  // trong lúc chờ mạng; nếu tạo object mới mỗi lần vẽ lại giao diện thì dữ liệu ghi sau đó bị mất.
   function partnerState() {
-    const current = window.FoodSavePortalRegistration || {};
-    window.FoodSavePortalRegistration = {
-      ...current,
-      account: current.account || {},
-      profile: current.profile || {},
-      location: current.location || {},
-      operations: current.operations || {},
-      docs: current.docs || {},
-      uploads: current.uploads || {},
-      ekyc: current.ekyc || {},
-      otp: current.otp || {},
-      automation: current.automation || { dynamicPricing: true, charityTransfer: true },
-      finance: current.finance || {}
-    };
-    return window.FoodSavePortalRegistration;
+    const state = window.FoodSavePortalRegistration || (window.FoodSavePortalRegistration = {});
+    state.account = state.account || {};
+    state.profile = state.profile || {};
+    state.location = state.location || {};
+    state.operations = state.operations || {};
+    state.docs = state.docs || {};
+    state.uploads = state.uploads || {};
+    state.ekyc = state.ekyc || {};
+    state.otp = state.otp || {};
+    state.automation = state.automation || { dynamicPricing: true, charityTransfer: true };
+    state.finance = state.finance || {};
+    return state;
   }
 
   function setPartnerStep(step) {
@@ -1312,6 +1346,7 @@
       if (!docs.businessLicense) return "Giấy phép kinh doanh là bắt buộc.";
       if (!docs.cccdFront) return "CCCD mặt trước là bắt buộc.";
       if (!docs.cccdBack) return "CCCD mặt sau là bắt buộc.";
+      if (!docs.foodSafety) return "Giấy chứng nhận ATTP là bắt buộc.";
     }
 
     if (step === 3) {
@@ -1326,11 +1361,11 @@
 
   function partnerStepper() {
     const step = partnerStep();
-    const progress = Math.round(((step + 1) / PARTNER_REGISTER_STEPS.length) * 100);
+    const progress = Math.round((Math.min(step + 1, PARTNER_INPUT_STEPS) / PARTNER_INPUT_STEPS) * 100);
     return `
 <div class="f ac jb m16">
   <div style="font-size:12px;color:var(--muted);cursor:pointer;font-weight:700" onclick="${step === 4 ? "FoodSaveAuth.finishPartnerPending()" : "FoodSaveAuth.cancelPartnerRegistration()"}"><i class="ti ti-arrow-left"></i> ${step === 4 ? "Trang chủ" : "Đăng nhập"}</div>
-  <div style="font-size:11.5px;color:var(--green-800);font-weight:900;font-family:'Plus Jakarta Sans'">Bước ${step + 1}/${PARTNER_REGISTER_STEPS.length} · ${PARTNER_REGISTER_STEPS[step]}</div>
+  <div style="font-size:11.5px;color:var(--green-800);font-weight:900;font-family:'Plus Jakarta Sans'">${step < PARTNER_INPUT_STEPS ? `Bước ${step + 1}/${PARTNER_INPUT_STEPS} · ${PARTNER_REGISTER_STEPS[step]}` : PARTNER_REGISTER_STEPS[step]}</div>
 </div>
 <div style="height:4px;background:var(--line);border-radius:3px;margin-bottom:14px;overflow:hidden"><div style="height:100%;width:${progress}%;background:linear-gradient(90deg,var(--green-700),var(--yellow));border-radius:3px;transition:.4s"></div></div>
 <div class="f g6 m16" style="align-items:stretch;overflow-x:auto;padding-bottom:2px">
@@ -1407,13 +1442,13 @@ ${profile.businessType === type.id ? '<i class="ti ti-check" style="color:var(--
 }).join("")}</div>
 <div style="background:linear-gradient(135deg,var(--green-50),var(--green-100));border-radius:16px;padding:16px;margin-bottom:14px;border:1px solid var(--green-200)">
 <div style="font-size:11.5px;font-weight:900;color:var(--green-800);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:7px;font-family:'Plus Jakarta Sans'"><i class="ti ti-clock-hour-4"></i> Hệ thống nhãn HSD tự động</div>
-<div class="f g8 m10">${[{c:"var(--green-700)",l:"Xanh",d:"3-5 ngày"},{c:"var(--yellow)",l:"Vàng",d:"48h"},{c:"var(--red)",l:"Đỏ",d:"24h"}].map((item) => `<div style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:10px;border:1px solid var(--line)"><div style="width:12px;height:12px;border-radius:50%;background:${item.c};margin:0 auto 5px"></div><div style="font-size:11.5px;font-weight:900;color:${item.c};font-family:'Plus Jakarta Sans'">${item.l}</div><div style="font-size:9.5px;color:var(--muted);font-weight:700">${item.d}</div></div>`).join("")}</div>
-<div style="font-size:10px;color:var(--ink-soft);line-height:1.7;font-weight:600"><i class="ti ti-ban" style="color:var(--red)"></i> Chặn tự động: Gỡ SP khi còn ≤30-45p<br><i class="ti ti-tag" style="color:var(--yellow-600)"></i> Điều chỉnh giá linh hoạt khi gần hạn<br><i class="ti ti-heart" style="color:var(--green-700)"></i> Chuyển tặng từ thiện khi không bán được</div></div>
+<div class="f g8 m10">${[{c:"var(--green-700)",l:"Xanh",d:"Giảm 20%"},{c:"var(--yellow)",l:"Vàng",d:"Giảm 50%"},{c:"var(--red)",l:"Đỏ",d:"Giảm 80%"}].map((item) => `<div style="flex:1;text-align:center;padding:10px;background:#fff;border-radius:10px;border:1px solid var(--line)"><div style="width:12px;height:12px;border-radius:50%;background:${item.c};margin:0 auto 5px"></div><div style="font-size:11.5px;font-weight:900;color:${item.c};font-family:'Plus Jakarta Sans'">${item.l}</div><div style="font-size:9.5px;color:var(--muted);font-weight:700">${item.d}</div></div>`).join("")}</div>
+<div style="font-size:10px;color:var(--ink-soft);line-height:1.7;font-weight:600"><i class="ti ti-ban" style="color:var(--red)"></i> Tự động gỡ sản phẩm khi còn dưới 1 giờ<br><i class="ti ti-tag" style="color:var(--yellow-600)"></i> Nhãn theo nhóm hàng và giờ đóng cửa<br><i class="ti ti-heart" style="color:var(--green-700)"></i> 50% hàng nhãn đỏ chuyển tặng từ thiện</div></div>
 ${[
   {field:"businessLicense",label:"Giấy phép kinh doanh",required:"Bắt buộc",icon:"ti-file-certificate"},
   {field:"cccdFront",label:"CCCD mặt trước",required:"Bắt buộc",icon:"ti-id"},
   {field:"cccdBack",label:"CCCD mặt sau",required:"Bắt buộc",icon:"ti-id-badge-2"},
-  {field:"foodSafety",label:"Giấy ATVSTP",required:"Khuyến nghị",icon:"ti-shield-check"}
+  {field:"foodSafety",label:"Giấy ATVSTP",required:"Bắt buộc",icon:"ti-shield-check"}
 ].map((doc) => `<div class="m12">${partnerFileUpload(doc.field, doc.label, doc.required, doc.icon)}</div>`).join("")}
 <div style="padding:14px 16px;background:var(--blue-100);border-radius:12px;margin-bottom:14px;font-size:12px;color:var(--blue);display:flex;align-items:center;gap:8px"><i class="ti ti-robot" style="font-size:17px"></i><strong>AI + OCR</strong> tự động kiểm tra giấy tờ giả mạo trong 30 giây</div>
 <div class="f g8"><button class="btn btn-o btn-lg" style="flex:1;justify-content:center" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button><button class="btn btn-primary btn-lg" style="flex:1;justify-content:center" onclick="FoodSaveAuth.nextPartnerRegisterStep()">Tiếp tục <i class="ti ti-arrow-right"></i></button></div>`;
@@ -1548,58 +1583,57 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     });
   }
 
-  function initSellerGoogleMaps() {
-    const input = select("#seller-address-search");
-    const mapEl = select("#seller-map");
-    if (!input || !mapEl) return;
+  // ===== Bản đồ vị trí cửa hàng (dùng frontend/foodsave-map.js) =====
+  let sellerPicker = null;
 
-    if (!window.google?.maps?.places) {
-      mapEl.innerHTML = '<i class="ti ti-map-pin" style="font-size:22px;color:var(--green-700);margin-right:6px"></i> Chưa nạp Google Maps API. Bạn vẫn có thể nhập địa chỉ, hệ thống sẽ bóc tách theo dấu phẩy.';
+  function initSellerMap() {
+    const mapEl = select("#seller-map");
+    if (!mapEl) return;
+    if (!window.FoodSaveMap) {
+      mapEl.innerHTML = '<i class="ti ti-map-pin" style="font-size:22px;color:var(--green-700);margin-right:6px"></i> Chưa tải được bản đồ. Bạn vẫn có thể nhập địa chỉ tay.';
       return;
     }
-
-    const autocomplete = new window.google.maps.places.Autocomplete(input, {
-      componentRestrictions: { country: "vn" },
-      fields: ["address_components", "geometry", "formatted_address", "name"]
-    });
-
-    let map = null;
-    let marker = null;
-    if (window.google.maps.Map) {
-      const center = { lat: 10.7769, lng: 106.7009 };
-      map = new window.google.maps.Map(mapEl, { center, zoom: 13, mapTypeControl: false, streetViewControl: false, fullscreenControl: false });
-      marker = new window.google.maps.Marker({ map, position: center, draggable: true });
-      const geocoder = new window.google.maps.Geocoder();
-
-      const updateFromLatLng = (latLng) => {
-        marker.setPosition(latLng);
-        map.panTo(latLng);
-        partnerState().location = { ...(partnerState().location || {}), lat: latLng.lat(), lng: latLng.lng() };
-        if (!geocoder) return;
-        geocoder.geocode({ location: latLng }, (results, status) => {
-          if (status === "OK" && results?.[0]) {
-            const parsed = parseVietnamAddressFromPlace(results[0]);
-            applySellerAddress(parsed);
-            input.value = parsed.formattedAddress;
-          }
-        });
-      };
-
-      map.addListener("click", (event) => updateFromLatLng(event.latLng));
-      marker.addListener("dragend", (event) => updateFromLatLng(event.latLng));
-    }
-
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      const parsed = parseVietnamAddressFromPlace(place);
-      applySellerAddress(parsed);
-      if (place.geometry?.location && map && marker) {
-        map.setCenter(place.geometry.location);
-        map.setZoom(16);
-        marker.setPosition(place.geometry.location);
-      }
+    // Form được vẽ lại (chọn loại hình, thêm hashtag...) tạo khung bản đồ mới: dựng lại, giữ vị trí đã ghim
+    if (sellerPicker) sellerPicker.destroy();
+    const location = partnerState().location || {};
+    sellerPicker = window.FoodSaveMap.attachPicker({
+      mapEl,
+      input: select("#seller-address-search"),
+      results: select("#seller-address-results"),
+      status: select("#seller-map-status"),
+      locateButton: select("#seller-locate-btn"),
+      initial: { lat: location.lat, lng: location.lng },
+      beforeSearch: parseSellerTypedAddress,
+      onChange: (place) => applySellerAddress({
+        ...place,
+        ...(place.ward !== undefined ? { ward: normalizeVietnamAdminName(place.ward, "ward") } : {}),
+        ...(place.district !== undefined ? { district: normalizeVietnamAdminName(place.district, "district") } : {}),
+        ...(place.city !== undefined ? { city: normalizeVietnamAdminName(place.city, "province") } : {})
+      })
     });
   }
+
+  function searchSellerAddress() {
+    return sellerPicker ? sellerPicker.search() : undefined;
+  }
+
+  function chooseSellerAddressResult(index) {
+    if (sellerPicker) sellerPicker.choose(index);
+  }
+
+  function handleSellerAddressKey(event) {
+    if (event?.key !== "Enter") return;
+    event.preventDefault();
+    void searchSellerAddress();
+  }
+
+  function locateSellerCurrentPosition() {
+    return sellerPicker ? sellerPicker.locate() : undefined;
+  }
+
+  // Tên cũ vẫn được gọi ở vài nơi / export
+  const initSellerGoogleMaps = initSellerMap;
+
 
   function captureLegacyPortalAccount(role) {
     try {
@@ -1799,13 +1833,6 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       throw new Error(passwordError);
     }
 
-    console.log("=== DEBUG DỮ LIỆU ĐĂNG KÝ PARTNER ===", {
-      emailTruyenVao: emailVar,
-      passTruyenVao: passwordVar,
-      passLength: passwordVar.length,
-      passwordInputFound: credentials.passwordInputFound,
-      confirmInputFound: credentials.confirmInputFound
-    });
 
     // PARTNER SECTION START
     const minimalPartnerAuthMetadata = partnerUserMetadata({
@@ -1878,7 +1905,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   async function sendPartnerEmailOtp() {
     if (partnerOtpPending) return;
-    if (select("#partner-contact")) savePartnerStep(0);
+    if (select("#partner-contact")) savePartnerStep(PARTNER_STEP_VERIFY);
     const state = ensurePartnerRegistrationDefaults();
     const contact = splitPartnerContact(state.account?.contact || "");
     const email = normalizePartnerEmail(contact.email || state.account?.email || "");
@@ -1923,7 +1950,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
         sending: false,
         sentAt: new Date().toISOString()
       };
-      setPartnerStep(1);
+      setPartnerStep(PARTNER_STEP_VERIFY);
       notify("Đã gửi OTP", `Kiểm tra email ${email} để lấy mã 6 số.`, "info");
     } catch (error) {
       state.otp = {
@@ -1940,7 +1967,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   async function verifyPartnerEmailOtp() {
     if (partnerVerifyPending) return;
-    savePartnerStep(1);
+    savePartnerStep(PARTNER_STEP_VERIFY);
     const state = ensurePartnerRegistrationDefaults();
     const email = normalizePartnerEmail(state.otp?.email || state.otpEmail || state.account?.email || "");
     const token = String(state.otp?.value || "").replace(/\D/g, "");
@@ -1995,7 +2022,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       // PARTNER SECTION START
       state.sessionVerified = true;
       state.sessionVerifiedAt = state.otp.verifiedAt;
-      showPartnerRegisterStep(2);
+      showPartnerRegisterStep(PARTNER_STEP_REPRESENTATIVE);
       // PARTNER SECTION END
     } catch (error) {
       state.otp = {
@@ -2141,7 +2168,11 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     }
   }
 
-  const CHARITY_REGISTER_LAST_STEP = 5;
+  // 0 Xác thực email (email + OTP) · 1 Người đại diện · 2 Hồ sơ tổ chức · 3 Quy mô & điều phối · 4 Hoàn tất
+  const CHARITY_REGISTER_LAST_STEP = 4;
+  const CHARITY_STEP_VERIFY = 0;
+  const CHARITY_STEP_REPRESENTATIVE = 1;
+  const CHARITY_STEP_ORGANIZATION = 2;
 
   function charityState() {
     try {
@@ -2280,12 +2311,11 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const passwordError = passwordErrorText(passwordVar, credentials.confirmVar);
 
     if (passwordError) {
-      setCharityStep(2);
+      setCharityStep(CHARITY_STEP_REPRESENTATIVE);
       renderCharityAuth();
       throw new Error(passwordError);
     }
 
-    console.log("=== DEBUG DỮ LIỆU ĐĂNG KÝ ===", { emailTruyenVao: emailVar, passTruyenVao: passwordVar, passLength: passwordVar.length });
 
     const { data, error } = await supabaseClient.auth.updateUser({
       password: passwordVar,
@@ -2511,8 +2541,41 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       district: addressInfo.district || undefined,
       city: addressInfo.city || "TP.HCM",
       beneficiaries_count: charityNumber(scale.people),
+      // Vị trí trụ sở + bán kính phục vụ: dùng để gửi lô tặng của cửa hàng cho tổ chức ở gần
+      latitude: charityCoordinateValue(org.lat),
+      longitude: charityCoordinateValue(org.lng),
+      service_radius_km: charityServiceRadiusKm(scale.radius),
       status: "pending"
     };
+  }
+
+  function charityCoordinateValue(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number !== 0 ? number : null;
+  }
+
+  // "Dưới 3km" -> 3, "3-5km" -> 5, "5-10km" -> 10, "10-15km" -> 15, "Toàn thành phố" -> 30 (mặc định 5km)
+  function charityServiceRadiusKm(label) {
+    const text = String(label || "").toLowerCase();
+    if (text.includes("toàn")) return 30;
+    const numbers = (text.match(/\d+/g) || []).map(Number);
+    return numbers.length ? Math.max(...numbers) : 5;
+  }
+
+  const CHARITY_GEO_COLUMNS = ["latitude", "longitude", "service_radius_km"];
+
+  // Database chưa chạy migration 017 (thiếu cột vị trí): lưu tạm vào metadata để không hỏng đăng ký
+  function isMissingCharityGeoColumn(error) {
+    const text = `${error?.code || ""} ${error?.message || ""}`;
+    return /PGRST204|42703|column/i.test(text) && CHARITY_GEO_COLUMNS.some((column) => text.includes(column));
+  }
+
+  function withoutCharityGeoColumns(payload) {
+    const copy = { ...payload };
+    const geo = {};
+    CHARITY_GEO_COLUMNS.forEach((column) => { geo[column] = copy[column]; delete copy[column]; });
+    copy.metadata = { ...(copy.metadata || {}), location: geo };
+    return copy;
   }
 
   function charityFormValue(id, fallback = "") {
@@ -2633,7 +2696,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       state.otpExpired = false;
       state.otpVerified = false;
       state.otpSentAt = new Date().toISOString();
-      setCharityStep(1);
+      setCharityStep(CHARITY_STEP_VERIFY);
       notify("Đã gửi OTP", `Kiểm tra email ${email} để lấy mã 6 số.`, "info");
     } catch (error) {
       state.otpError = error.message || "Không thể gửi OTP. Vui lòng thử lại.";
@@ -2692,7 +2755,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       state.authUserId = user?.id || state.authUserId || "";
       state.authEmail = user?.email || email;
       state.otpError = "";
-      setCharityStep(2);
+      setCharityStep(CHARITY_STEP_REPRESENTATIVE);
       notify("Xác thực thành công", "Email đã được xác minh bằng OTP.", "info");
     } catch (error) {
       state.otpVerified = false;
@@ -2733,24 +2796,24 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     if (findError) throw findError;
 
     const existing = Array.isArray(existingRows) ? existingRows[0] : null;
-    if (existing?.id) {
-      const { id, ...updatablePayload } = charityProfilePayload;
-      const { data, error } = await supabaseClient
-        .from("charity_profiles")
-        .update({ ...updatablePayload, slug: existing.slug || charityProfilePayload.slug })
-        .eq("id", existing.id)
-        .select("*")
-        .single();
-      if (error) throw error;
-      return data;
+    const write = (payload) => {
+      if (existing?.id) {
+        const { id, ...updatablePayload } = payload;
+        return supabaseClient
+          .from("charity_profiles")
+          .update({ ...updatablePayload, slug: existing.slug || payload.slug })
+          .eq("id", existing.id)
+          .select("*")
+          .single();
+      }
+      return supabaseClient.from("charity_profiles").insert(payload).select("*").single();
+    };
+
+    let { data, error } = await write(charityProfilePayload);
+    if (error && isMissingCharityGeoColumn(error)) {
+      console.warn("[FoodSave Charity] Database chưa có cột vị trí (migration 017). Lưu vị trí vào metadata.", error);
+      ({ data, error } = await write(withoutCharityGeoColumns(charityProfilePayload)));
     }
-
-    const { data, error } = await supabaseClient
-      .from("charity_profiles")
-      .insert(charityProfilePayload)
-      .select("*")
-      .single();
-
     if (error) throw error;
     return data;
   }
@@ -2761,16 +2824,41 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const state = charityState();
 
     if (!state.otpVerified) {
-      setCharityStep(1);
+      setCharityStep(CHARITY_STEP_VERIFY);
       state.otpError = "Vui lòng xác minh OTP trước khi gửi hồ sơ.";
       renderCharityAuth();
       notify("Chưa xác minh OTP", state.otpError, "warn");
       return;
     }
 
+    // Giấy tờ bắt buộc: CCCD 2 mặt của người đại diện
+    const docs = state.docs || {};
+    const uploaded = (key) => docs[key]?.status === "done";
+    if (!uploaded("cccdFront") || !uploaded("cccdBack")) {
+      notify("Thiếu giấy tờ", "Vui lòng tải đủ 2 mặt CCCD của người đại diện.", "warn");
+      setCharityStep(CHARITY_STEP_REPRESENTATIVE);
+      renderCharityAuth();
+      return;
+    }
+
+    // Giấy tờ bắt buộc: giấy phép hoạt động hoặc quyết định thành lập
+    if (!uploaded("license") && !uploaded("decision")) {
+      notify("Thiếu giấy tờ", "Vui lòng tải Giấy phép hoạt động hoặc Quyết định thành lập.", "warn");
+      setCharityStep(CHARITY_STEP_ORGANIZATION);
+      renderCharityAuth();
+      return;
+    }
+
+    if (!(Number(state.org?.lat) && Number(state.org?.lng))) {
+      notify("Chưa ghim vị trí", "Vui lòng ghim vị trí trụ sở trên bản đồ (bấm Vị trí hiện tại, Tìm, hoặc bấm lên bản đồ).", "warn");
+      setCharityStep(CHARITY_STEP_ORGANIZATION);
+      renderCharityAuth();
+      return;
+    }
+
     if (!String(state.org?.name || "").trim()) {
       notify("Thiếu tên tổ chức", "Vui lòng nhập hoặc sửa tên tổ chức trước khi gửi hồ sơ.", "warn");
-      setCharityStep(3);
+      setCharityStep(CHARITY_STEP_ORGANIZATION);
       renderCharityAuth();
       return;
     }
@@ -2818,7 +2906,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
         }, "charity");
       }
 
-      setCharityStep(5);
+      setCharityStep(CHARITY_REGISTER_LAST_STEP);
       notify("Đăng ký thành công", portalConfig.charity.pendingMessage, "info");
     } catch (error) {
       notify("Gửi hồ sơ thất bại", error.message || "Không thể lưu hồ sơ tổ chức.", "error");
@@ -2971,7 +3059,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       stopFoodSaveFaceStream();
       return;
     }
-    if (charityStep() === 2) initPartnerFaceScan({ role: "charity" });
+    if (charityStep() === CHARITY_STEP_REPRESENTATIVE) initPartnerFaceScan({ role: "charity" });
     else stopFoodSaveFaceStream();
   }
 
@@ -2979,15 +3067,24 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     setCharityAuthState("register");
     syncCharityRegisterValues();
     const step = charityStep();
-    if (step === 0) {
+    if (step === CHARITY_STEP_VERIFY) {
+      const state = charityState();
+      const email = normalizeCharityEmail(state.contact);
+      const sameEmail = Boolean(email) && email === normalizeCharityEmail(state.otpEmail);
+      // Đã xác minh email này rồi (quay lại bước 1) thì đi tiếp, không gửi lại OTP
+      if (state.otpVerified && sameEmail) {
+        setCharityStep(CHARITY_STEP_REPRESENTATIVE);
+        renderCharityAuth();
+        return;
+      }
+      if (state.otpSentAt && sameEmail && !state.otpExpired) {
+        await verifyCharityEmailOtp();
+        return;
+      }
       await sendCharityEmailOtp();
       return;
     }
-    if (step === 1) {
-      await verifyCharityEmailOtp();
-      return;
-    }
-    if (step === 2) {
+    if (step === CHARITY_STEP_REPRESENTATIVE) {
       const passwordError = charityRegistrationPasswordError();
       if (passwordError) {
         notify("Máº­t kháº©u chÆ°a há»£p lá»‡", passwordError, "warn");
@@ -3018,7 +3115,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       setCharityStep(0);
       stopFoodSaveFaceStream();
     } else {
-      if (step === 2) stopFoodSaveFaceStream();
+      if (step === CHARITY_STEP_REPRESENTATIVE) stopFoodSaveFaceStream();
       setCharityStep(step - 1);
     }
     renderCharityAuth();
@@ -3151,13 +3248,13 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   function partnerStepper() {
     const step = partnerStep();
-    const progress = Math.round(((step + 1) / PARTNER_REGISTER_STEPS.length) * 100);
+    const progress = Math.round((Math.min(step + 1, PARTNER_INPUT_STEPS) / PARTNER_INPUT_STEPS) * 100);
     return `<div class="partner-wizard-nav">
   <div class="partner-nav-stack">
     <button type="button" class="partner-nav-link" onclick="goView('landing')"><i class="ti ti-arrow-left"></i> Về trang chủ</button>
     <button type="button" class="partner-nav-link" onclick="FoodSaveAuth.cancelPartnerRegistration()"><i class="ti ti-arrow-left"></i> Đăng nhập</button>
   </div>
-  <div class="partner-progress-caption">Bước ${step + 1}/${PARTNER_REGISTER_STEPS.length} · ${PARTNER_REGISTER_STEPS[step]}</div>
+  <div class="partner-progress-caption">${step < PARTNER_INPUT_STEPS ? `Bước ${step + 1}/${PARTNER_INPUT_STEPS} · ${PARTNER_REGISTER_STEPS[step]}` : PARTNER_REGISTER_STEPS[step]}</div>
 </div>
 <div class="partner-progress-track"><span style="width:${progress}%"></span></div>`;
   }
@@ -3168,11 +3265,12 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     if (step === last) return "";
     const isSubmitStep = step === last - 1;
     // PARTNER SECTION START
+    const busy = isSubmitStep && Boolean(partnerState().submitting);
     const submitAttrs = isSubmitStep ? 'id="partner-step-6-submit" data-partner-step-action="submit"' : "";
     // PARTNER SECTION END
     return `<div class="partner-wizard-actions ${step === 0 ? "single" : ""}">
-  <button type="button" class="btn btn-o btn-lg" onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button>
-  <button type="button" class="btn btn-primary btn-lg" ${submitAttrs} onclick="FoodSaveAuth.nextPartnerRegisterStep()">${isSubmitStep ? "Gửi hồ sơ" : "Tiếp tục"} <i class="ti ${isSubmitStep ? "ti-send" : "ti-arrow-right"}"></i></button>
+  <button type="button" class="btn btn-o btn-lg" ${busy ? "disabled" : ""} onclick="FoodSaveAuth.backPartnerRegisterStep()"><i class="ti ti-arrow-left"></i> Quay lại</button>
+  <button type="button" class="btn btn-primary btn-lg" ${submitAttrs} ${busy ? 'disabled aria-busy="true"' : ""} onclick="FoodSaveAuth.nextPartnerRegisterStep()">${busy ? "Đang gửi hồ sơ…" : isSubmitStep ? "Gửi hồ sơ" : partnerVerifyButtonLabel(step)} <i class="ti ${busy ? "ti-loader-2" : isSubmitStep ? "ti-send" : "ti-arrow-right"}"></i></button>
 </div>`;
   }
 
@@ -3278,14 +3376,61 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   installPartnerStep6ClickListener();
   // PARTNER SECTION END
 
+  function partnerOtpTargetEmail() {
+    const state = ensurePartnerRegistrationDefaults();
+    return normalizePartnerEmail(state.otp?.email || state.otpEmail || "");
+  }
+
+  function partnerContactEmail() {
+    const state = ensurePartnerRegistrationDefaults();
+    const contact = splitPartnerContact(state.account?.contact || "");
+    return normalizePartnerEmail(contact.email || state.account?.email || "");
+  }
+
+  // Đã gửi mã tới đúng email đang nhập và chưa xác minh: hiện ô nhập OTP ngay dưới ô email
+  function partnerOtpPhase() {
+    const state = ensurePartnerRegistrationDefaults();
+    const target = partnerOtpTargetEmail();
+    return Boolean(state.otp?.sentAt) && !state.otp?.verified && Boolean(target) && target === partnerContactEmail();
+  }
+
+  function partnerOtpVerifiedForContact() {
+    const state = ensurePartnerRegistrationDefaults();
+    const target = partnerOtpTargetEmail();
+    return Boolean(state.otp?.verified) && Boolean(target) && target === partnerContactEmail();
+  }
+
+  function partnerVerifyButtonLabel(step) {
+    if (step !== PARTNER_STEP_VERIFY) return "Tiếp tục";
+    const otp = ensurePartnerRegistrationDefaults().otp || {};
+    if (partnerOtpVerifiedForContact()) return "Tiếp tục";
+    if (partnerOtpPhase()) return otp.verifying ? "Đang xác minh" : "Xác nhận OTP";
+    return otp.sending ? "Đang gửi OTP" : "Gửi mã OTP";
+  }
+
+  function changePartnerOtpEmail() {
+    const state = ensurePartnerRegistrationDefaults();
+    stopPartnerOtpTimer();
+    state.otp = { value: "", error: "", verified: false };
+    state.otpEmail = "";
+    window.rAuth();
+  }
+
   function partnerStepContact() {
     const value = partnerContactValue();
+    const verified = partnerOtpVerifiedForContact();
+    const otpPhase = partnerOtpPhase();
+    const locked = verified || otpPhase;
     return `
 <section class="partner-section">
-  <h2>Xác thực thông tin liên hệ</h2>
-  <p>FoodSave dùng thông tin này để gửi OTP và điền trước các bước xác thực sau.</p>
-  <div class="field"><label>Số điện thoại hoặc Email</label><input class="inp" id="partner-contact" autocomplete="email tel" placeholder="Nhập số điện thoại hoặc email" value="${escapeHtml(value)}" style="height:58px;font-size:16px"></div>
-  <div class="partner-help">Bằng việc tiếp tục, bạn đồng ý với <a href="chinh-sach.html" style="color:var(--green-700);font-weight:900">Chính sách và điều khoản sử dụng</a> của FoodSave.</div>
+  <h2>Xác thực email</h2>
+  <p>Nhập email để FoodSave gửi mã OTP 6 số, sau đó nhập mã ngay tại đây.</p>
+  <div class="field"><label>Email đăng ký</label><input class="inp" id="partner-contact" type="email" autocomplete="email" placeholder="email@cuahang.vn" value="${escapeHtml(value)}" style="height:58px;font-size:16px" ${locked ? "disabled" : ""}></div>
+  ${locked
+    ? '<button type="button" class="btn btn-o btn-sm" onclick="FoodSaveAuth.changePartnerOtpEmail()"><i class="ti ti-pencil"></i> Đổi email</button>'
+    : '<div class="partner-help">Bằng việc tiếp tục, bạn đồng ý với <a href="chinh-sach.html" style="color:var(--green-700);font-weight:900">Chính sách và điều khoản sử dụng</a> của FoodSave.</div>'}
+  ${verified ? '<div class="partner-help" style="margin-top:14px;color:var(--green-800);font-weight:900"><i class="ti ti-circle-check"></i> Email đã được xác thực. Bấm Tiếp tục để khai thông tin người đại diện.</div>' : ""}
+  ${otpPhase ? partnerStepOtp() : ""}
 </section>`;
   }
 
@@ -3294,14 +3439,13 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const value = String(otp.value || "").padEnd(6, " ").slice(0, 6).split("");
     const expired = partnerOtpRemainingSeconds() <= 0;
     return `
-<section class="partner-section">
-  <h2>Xác thực mã OTP</h2>
-  <p>Mã xác thực đã được gửi đến ${escapeHtml(partnerContactValue() || "thông tin liên hệ của bạn")}.</p>
+<div style="margin-top:18px">
+  <p>Nhập mã 6 số đã được gửi đến <strong>${escapeHtml(partnerOtpTargetEmail() || partnerContactValue() || "email của bạn")}</strong>.</p>
   <div style="display:flex;gap:10px;margin:16px 0 12px">${value.map((digit, index) => `<input class="inp partner-otp-box" inputmode="numeric" maxlength="1" value="${escapeHtml(digit.trim())}" oninput="FoodSaveAuth.partnerOtpInput(this,${index})" onkeydown="FoodSaveAuth.partnerOtpKey(this,${index},event)" style="width:52px;height:56px;text-align:center;font-size:22px;font-weight:900;font-family:'Plus Jakarta Sans'">`).join("")}</div>
   <div class="partner-help" style="display:flex;align-items:center;gap:10px"><i class="ti ti-clock"></i> Mã OTP có hiệu lực trong <strong id="partner-otp-timer">${formatPartnerOtpTime(partnerOtpRemainingSeconds())}</strong>.</div>
   <button id="partner-otp-resend" class="btn btn-o" style="margin-top:12px;display:${expired ? "inline-flex" : "none"}" onclick="FoodSaveAuth.resendPartnerOtp()"><i class="ti ti-refresh"></i> Gửi lại mã OTP</button>
   <div class="partner-error" style="margin-top:12px">${escapeHtml(otp.error || "")}</div>
-</section>`;
+</div>`;
   }
 
   function partnerStepEkyc() {
@@ -3383,8 +3527,16 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   <div class="field"><label>Loại hình kinh doanh</label><select class="inp" id="seller-business-type" onchange="FoodSaveAuth.selectPartnerBusinessType(this.value)"><option value="">Chọn loại hình</option>${PARTNER_BUSINESS_TYPES.map((type) => `<option value="${type.id}" ${profile.businessType === type.id ? "selected" : ""}>${type.label}</option>`).join("")}</select></div>
   <div class="field"><label>Mô tả cửa hàng</label><textarea class="inp" id="seller-store-description" rows="3" placeholder="Giới thiệu ngắn về cửa hàng">${escapeHtml(profile.description || "")}</textarea></div>
   <div class="field"><label>Hashtag</label><input class="inp" id="seller-hashtag-input" placeholder="Gõ từ khóa và bấm Enter" onkeydown="FoodSaveAuth.handlePartnerHashtagKey(this,event)">${partnerHashtagList()}<div class="partner-help">Tối đa 5 tag.</div></div>
-  <div class="field"><label>Địa chỉ chi tiết</label><input class="inp" id="seller-address-search" placeholder="Nhập địa chỉ hoặc dùng Google Places Autocomplete" value="${escapeHtml(location.formattedAddress || "")}" onblur="FoodSaveAuth.parseSellerTypedAddress()"></div>
-  <div id="seller-map" style="height:220px;border:1.5px solid var(--line);border-radius:8px;background:var(--soft);margin-bottom:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:800;text-align:center;padding:16px"><i class="ti ti-map-pin" style="font-size:22px;color:var(--green-700);margin-right:6px"></i> Google Maps sẽ hiển thị khi API đã được nạp</div>
+  <div class="field"><label>Địa chỉ chi tiết</label>
+    <div class="seller-address-row">
+      <input class="inp" id="seller-address-search" placeholder="Số nhà, đường, phường, quận, tỉnh/thành" value="${escapeHtml(location.formattedAddress || "")}" onblur="FoodSaveAuth.parseSellerTypedAddress()" onkeydown="FoodSaveAuth.handleSellerAddressKey(event)">
+      <button type="button" class="btn btn-o" onclick="FoodSaveAuth.searchSellerAddress()"><i class="ti ti-search"></i> Tìm</button>
+      <button type="button" class="btn btn-o" id="seller-locate-btn" onclick="FoodSaveAuth.locateSellerCurrentPosition()"><i class="ti ti-current-location"></i> Vị trí hiện tại</button>
+    </div>
+    <div id="seller-address-results" class="seller-address-results"></div>
+  </div>
+  <div id="seller-map" style="height:260px;border:1.5px solid var(--line);border-radius:8px;background:var(--soft);margin-bottom:8px;overflow:hidden"></div>
+  <div id="seller-map-status" class="partner-help" style="margin-bottom:14px;font-weight:700"></div>
 
   <h3>Nhóm 3: Thông tin quản trị viên</h3>
   <div class="partner-admin-stack">
@@ -3410,7 +3562,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   }
 
   function selectPartnerBank(value) {
-    savePartnerStep(4);
+    savePartnerStep(PARTNER_STEP_OPERATIONS);
     partnerState().finance = { ...(partnerState().finance || {}), bankName: value };
     window.rAuth();
   }
@@ -3419,9 +3571,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const finance = ensurePartnerRegistrationDefaults().finance || {};
     const bank = finance.bankName || "FoodSave Bank";
     return `
-<section class="partner-section">
-  <h2>Thiết lập Tài chính</h2>
-  <p>Thông tin nhận thanh toán cho đơn hàng của đối tác.</p>
+<div>
+  <h3>Tài khoản nhận thanh toán</h3>
   <div class="partner-bank-card" style="background:${partnerBankStyle(finance.bankName)}">
     <div class="partner-bank-logo">${escapeHtml(String(bank).split(/\s+/).map((word) => word[0]).join("").slice(0, 3).toUpperCase())}</div>
     <div>
@@ -3433,11 +3584,11 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   <div class="field"><label>Lựa chọn Ngân hàng</label><select class="inp" id="seller-bank-name" onchange="FoodSaveAuth.selectPartnerBank(this.value)"><option value="">Chọn ngân hàng</option>${PARTNER_BANKS.map((item) => `<option value="${item}" ${finance.bankName === item ? "selected" : ""}>${item}</option>`).join("")}</select></div>
   <div class="field"><label>Số tài khoản ngân hàng</label><input class="inp" id="seller-bank-account" inputmode="numeric" value="${escapeHtml(finance.accountNumber || "")}" placeholder="0123456789"></div>
   <div class="field"><label>Tên chủ tài khoản</label><input class="inp" id="seller-bank-holder" value="${escapeHtml(finance.accountHolder || "")}" placeholder="NGUYEN MINH ANH" style="text-transform:uppercase" oninput="FoodSaveAuth.formatBankAccountName(this)"><div class="partner-help">Phải trùng khớp với tên trên CCCD/Giấy ĐKKD.</div></div>
-</section>`;
+</div>`;
   }
 
   function togglePartnerAutomation(key) {
-    savePartnerStep(5);
+    savePartnerStep(PARTNER_STEP_OPERATIONS);
     const state = ensurePartnerRegistrationDefaults();
     state.automation = { ...(state.automation || {}), [key]: !state.automation?.[key] };
     window.rAuth();
@@ -3457,8 +3608,9 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const scheduleByDay = Object.fromEntries((state.operations?.schedule || []).map((item) => [item.day, item]));
     return `
 <section id="partner-step-6" class="partner-section partner-step-panel" data-partner-step="6">
-  <h2>Vận hành & Chính sách</h2>
-  <p>Cấu hình giờ hoạt động, nhãn hạn sử dụng và tự động hóa bán hàng.</p>
+  <h2>Vận hành & Thanh toán</h2>
+  <p>Tài khoản nhận thanh toán, giờ hoạt động và quy tắc nhãn hạn sử dụng.</p>
+  ${partnerStepFinance()}
   <h3>Cấu hình giờ hoạt động</h3>
   <div style="border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:18px">${partnerWeekDays().map((day) => {
     const item = scheduleByDay[day] || { day, open: true, from: "08:00", to: "22:00" };
@@ -3466,13 +3618,13 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   }).join("")}</div>
   <h3>Cấu hình Quy tắc Nhãn HSD</h3>
   <div class="partner-grid-3">
-    <div class="partner-policy-card"><span class="partner-policy-dot green"></span><strong>Nhãn Xanh</strong><small>Thời hạn 3-5 ngày.</small></div>
-    <div class="partner-policy-card"><span class="partner-policy-dot yellow"></span><strong>Nhãn Vàng</strong><small>Còn 48h.</small></div>
-    <div class="partner-policy-card"><span class="partner-policy-dot red"></span><strong>Nhãn Đỏ</strong><small>Cận khẩn cấp 24h.</small></div>
+    <div class="partner-policy-card"><span class="partner-policy-dot green"></span><strong>Nhãn Xanh · giảm 20%</strong><small>Đồ nấu chín trên 12h · tươi sống trên 72h · đóng gói trên 7 ngày.</small></div>
+    <div class="partner-policy-card"><span class="partner-policy-dot yellow"></span><strong>Nhãn Vàng · giảm 50%</strong><small>Đồ nấu chín 4-12h · tươi sống 24-72h · đóng gói 3-7 ngày.</small></div>
+    <div class="partner-policy-card"><span class="partner-policy-dot red"></span><strong>Nhãn Đỏ · giảm 80%</strong><small>Đồ nấu chín dưới 4h · tươi sống dưới 24h · đóng gói dưới 3 ngày.</small></div>
   </div>
   <h3>Thiết lập tự động</h3>
-  ${partnerSwitch("dynamicPricing", "Kích hoạt điều chỉnh giá linh hoạt khi sản phẩm gần hết hạn.", "Ưu tiên đẩy deal phù hợp nhãn HSD.")}
-  ${partnerSwitch("charityTransfer", "Tự động chuyển trạng thái Tặng từ thiện khi không bán được.", "Giúp sản phẩm còn dùng được đến đúng tổ chức nhận hỗ trợ.")}
+  <p style="margin:0 0 10px;color:var(--muted);font-size:12.5px;font-weight:700">Thời gian còn lại tính theo mốc đến trước: hạn sử dụng hoặc giờ đóng cửa. Giá bán tự động theo nhãn.</p>
+  ${partnerSwitch("charityTransfer", "Tự động chuyển 50% hàng nhãn đỏ cho tổ chức từ thiện (khi còn từ 5 phần).", "Tổ chức không nhận lời trong 45 phút thì phần đó mở bán lại cho người mua.")}
   ${state.submitted ? `<div style="margin-top:18px;padding:16px;border-radius:8px;background:var(--green-50);border:1px solid var(--green-100);color:var(--green-800);font-weight:800"><i class="ti ti-circle-check"></i> Hồ sơ đã được gửi. FoodSave sẽ phản hồi trong 24-48 giờ.</div>` : ""}
 </section>`;
   }
@@ -3500,7 +3652,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   function partnerRegisterWizardPage() {
     ensurePartnerRegistrationDefaults();
-    const pages = [partnerStepContact, partnerStepOtp, partnerStepEkyc, partnerStepStoreLegal, partnerStepFinance, partnerStepOperations, partnerStepPending];
+    const pages = [partnerStepContact, partnerStepEkyc, partnerStepStoreLegal, partnerStepOperations, partnerStepPending];
     const step = partnerStep();
     return `<div class="partner-wizard">
   <div class="partner-wizard-head">
@@ -3514,17 +3666,17 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
 
   function savePartnerStep(step) {
     const state = ensurePartnerRegistrationDefaults();
-    if (step === 0) {
+    if (step === PARTNER_STEP_VERIFY && select("#partner-contact") && !select("#partner-contact").disabled) {
       const parsed = splitPartnerContact(readValue("#partner-contact"));
       state.account = { ...(state.account || {}), ...parsed };
       if (parsed.email) state.profile = { ...(state.profile || {}), adminEmail: state.profile?.adminEmail || parsed.email };
       if (parsed.phone) state.profile = { ...(state.profile || {}), adminPhone: state.profile?.adminPhone || parsed.phone };
     }
-    if (step === 1) {
+    if (step === PARTNER_STEP_VERIFY && document.querySelector(".partner-otp-box")) {
       const boxes = Array.from(document.querySelectorAll(".partner-otp-box"));
       state.otp = { ...(state.otp || {}), value: boxes.map((box) => box.value || "").join("") };
     }
-    if (step === 2) {
+    if (step === PARTNER_STEP_REPRESENTATIVE) {
       state.account = {
         ...(state.account || {}),
         representative: readValue("#auth-register-representative") || state.account?.representative || "",
@@ -3535,7 +3687,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
         passwordConfirm: readValue("#auth-register-password-confirm") || state.account?.passwordConfirm || ""
       };
     }
-    if (step === 3) {
+    if (step === PARTNER_STEP_STORE) {
       state.profile = {
         ...(state.profile || {}),
         legalName: readValue("#seller-legal-name"),
@@ -3551,7 +3703,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       const address = readValue("#seller-address-search");
       if (address) state.location = { ...(state.location || {}), formattedAddress: address };
     }
-    if (step === 4) {
+    if (step === PARTNER_STEP_OPERATIONS && select("#seller-bank-name")) {
       state.finance = {
         ...(state.finance || {}),
         bankName: readValue("#seller-bank-name"),
@@ -3559,7 +3711,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
         accountHolder: stripVietnameseTone(readValue("#seller-bank-holder")).toUpperCase().replace(/\s+/g, " ").trim()
       };
     }
-    if (step === 5) {
+    if (step === PARTNER_STEP_OPERATIONS && document.querySelector(".seller-day-row")) {
       state.operations = {
         ...(state.operations || {}),
         schedule: Array.from(document.querySelectorAll(".seller-day-row")).map((row) => {
@@ -3578,12 +3730,12 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   function validatePartnerStep(step) {
     savePartnerStep(step);
     const state = ensurePartnerRegistrationDefaults();
-    if (step === 0) {
+    if (step === PARTNER_STEP_VERIFY) {
       const contact = normalizePartnerEmail(state.account?.contact || state.account?.email || "");
       if (!contact) return "Vui lòng nhập email để nhận OTP.";
       if (!PORTAL_EMAIL_RE.test(contact)) return "Vui lòng nhập email hợp lệ để nhận OTP.";
     }
-    if (step === 1) {
+    if (step === PARTNER_STEP_VERIFY && partnerOtpPhase()) {
       const otp = ensurePartnerOtp(false);
       if (partnerOtpRemainingSeconds() <= 0) {
         state.otp = { ...(state.otp || {}), error: "Mã OTP đã hết hạn, vui lòng gửi lại mã OTP." };
@@ -3597,7 +3749,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       }
       state.otp = { ...(state.otp || {}), error: "" };
     }
-    if (step === 2) {
+    if (step === PARTNER_STEP_REPRESENTATIVE) {
       const account = state.account || {};
       if (!state.docs?.cccdFront) return "Vui lòng tải CCCD mặt trước.";
       if (!state.docs?.cccdBack) return "Vui lòng tải CCCD mặt sau.";
@@ -3608,7 +3760,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       const passwordError = passwordErrorText(account.password, account.passwordConfirm);
       if (passwordError) return passwordError;
     }
-    if (step === 3) {
+    if (step === PARTNER_STEP_STORE) {
       const profile = state.profile || {};
       const location = state.location || {};
       if (!state.docs?.businessLicense) return "Vui lòng tải Giấy ĐKKD.";
@@ -3622,10 +3774,11 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       if (!profile.businessType) return "Vui lòng chọn loại hình kinh doanh.";
       if (!profile.description || profile.description.length < 12) return "Mô tả cửa hàng cần ít nhất 12 ký tự.";
       if (!location.formattedAddress) return "Vui lòng nhập địa chỉ chi tiết cửa hàng.";
+      if (!(Number(location.lat) && Number(location.lng))) return "Vui lòng ghim vị trí cửa hàng trên bản đồ (bấm Vị trí hiện tại, Tìm, hoặc bấm lên bản đồ).";
       if (!PORTAL_EMAIL_RE.test(profile.adminEmail || "")) return "Email quản trị không hợp lệ.";
       if (!profile.adminPhone || profile.adminPhone.length < 8) return "Số điện thoại cá nhân không hợp lệ.";
     }
-    if (step === 4) {
+    if (step === PARTNER_STEP_OPERATIONS) {
       const finance = state.finance || {};
       if (!finance.bankName) return "Vui lòng chọn ngân hàng.";
       if (!/^\d{6,24}$/.test(String(finance.accountNumber || ""))) return "Số tài khoản phải gồm 6-24 chữ số.";
@@ -3635,7 +3788,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   }
 
   function selectPartnerBusinessType(type) {
-    if (partnerStep() === 3) savePartnerStep(3);
+    if (partnerStep() === PARTNER_STEP_STORE) savePartnerStep(PARTNER_STEP_STORE);
     partnerState().profile = { ...(partnerState().profile || {}), businessType: type };
     window.rAuth();
   }
@@ -3643,7 +3796,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
   function handlePartnerHashtagKey(input, event) {
     if (event?.key !== "Enter") return;
     event.preventDefault();
-    savePartnerStep(3);
+    savePartnerStep(PARTNER_STEP_STORE);
     const state = ensurePartnerRegistrationDefaults();
     const tags = state.profile?.hashtags || [];
     const raw = String(input?.value || "").trim();
@@ -3668,7 +3821,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     row.querySelectorAll("input[type='time']").forEach((input) => {
       input.disabled = !open;
     });
-    savePartnerStep(5);
+    savePartnerStep(PARTNER_STEP_OPERATIONS);
   }
 
   function afterPartnerRegisterRender() {
@@ -3678,14 +3831,14 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       stopPartnerFaceStream();
       return;
     }
-    if (partnerStep() === 1) startPartnerOtpTimer();
+    if (partnerStep() === PARTNER_STEP_VERIFY && partnerOtpPhase()) startPartnerOtpTimer();
     else stopPartnerOtpTimer();
-    if (partnerStep() === 2) {
+    if (partnerStep() === PARTNER_STEP_REPRESENTATIVE) {
       validatePartnerPasswords();
     } else {
       stopPartnerFaceStream();
     }
-    if (partnerStep() === 3) window.setTimeout(initSellerGoogleMaps, 80);
+    if (partnerStep() === PARTNER_STEP_STORE) window.setTimeout(initSellerGoogleMaps, 80);
   }
 
   function compactPartnerPayload(payload) {
@@ -3952,6 +4105,9 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       is_verified: false,
       is_open: true,
       opening_hours: partnerOpeningHoursText(schedule),
+      // Giờ mở cửa dạng máy đọc được: backend dùng để tính mốc đến trước (hết hạn hoặc đóng cửa)
+      opening_schedule: schedule,
+      charity_transfer_enabled: automation.charityTransfer,
       status: "pending",
       onboarding_status: "pending"
     });
@@ -4114,6 +4270,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       "is_verified",
       "is_open",
       "opening_hours",
+      "opening_schedule",
+      "charity_transfer_enabled",
       "status"
     ];
     return Object.fromEntries(allowed.filter((key) => Object.prototype.hasOwnProperty.call(payload, key)).map((key) => [key, payload[key]]));
@@ -4235,7 +4393,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       logPartnerSupabaseError("stores save skipped after partner_profiles success", error, payloads.storePayload);
     }
 
-    const partnersRow = await insertPartnerRow(supabaseClient, payloads);
+    // Bảng "partners" không có trong database hiện tại (luôn 404). Dữ liệu đã nằm ở partner_profiles và stores.
+    const partnersRow = null;
     const { data: sessionData } = await supabaseClient.auth.getSession();
 
     if (sessionData?.session) {
@@ -4301,7 +4460,17 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const pendingStep = PARTNER_REGISTER_STEPS.length - 1;
     if (step === pendingStep) return finishPartnerPending();
 
-    if (step === 0) {
+    if (step === PARTNER_STEP_VERIFY) {
+      // Email này đã xác minh (quay lại bước 1) thì đi tiếp, không gửi lại OTP
+      if (partnerOtpVerifiedForContact()) {
+        setPartnerStep(PARTNER_STEP_REPRESENTATIVE);
+        window.rAuth();
+        return;
+      }
+      if (partnerOtpPhase() && partnerOtpRemainingSeconds() > 0) {
+        await verifyPartnerEmailOtp();
+        return;
+      }
       const error = validatePartnerStep(step);
       if (error) {
         notify("Thiếu thông tin", error, "warn");
@@ -4311,15 +4480,10 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       return;
     }
 
-    if (step === 1) {
-      await verifyPartnerEmailOtp();
-      return;
-    }
-
     const error = validatePartnerStep(step);
     if (error) {
-      if (step === 2) validatePartnerPasswords();
-      notify(step === 1 ? "OTP không hợp lệ" : "Thiếu thông tin", error, "warn");
+      if (step === PARTNER_STEP_REPRESENTATIVE) validatePartnerPasswords();
+      notify("Thiếu thông tin", error, "warn");
       return;
     }
     if (step === pendingStep - 1) {
@@ -4481,6 +4645,14 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const user = data?.user || data?.session?.user;
     const session = data?.session;
     if (!user || !session) throw new Error("Supabase không trả về phiên đăng nhập hợp lệ.");
+
+    // Đưa phiên cửa hàng vào kết nối Supabase dùng chung của trang (tự làm mới token),
+    // để các lệnh gọi API sau đó (đăng sản phẩm, upload ảnh) gửi đúng token của cửa hàng.
+    const { error: sessionError } = await getFoodSaveSupabase().auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    });
+    if (sessionError) console.warn("[FoodSave Partner Login] setSession failed", partnerSupabaseErrorInfo(sessionError));
 
     const { partnerProfile } = await loadSupabasePartnerAuthContext(supabaseClient, user);
     const storeContext = await loadSupabasePartnerStoreContext(supabaseClient, partnerProfile, user, email);
@@ -4788,6 +4960,11 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     validatePartnerPasswords,
     formatBankAccountName,
     initSellerGoogleMaps,
+    initSellerMap,
+    searchSellerAddress,
+    chooseSellerAddressResult,
+    handleSellerAddressKey,
+    locateSellerCurrentPosition,
     parseVietnamAddressFromPlace,
     normalizeVietnamAdminName,
     nextPartnerRegisterStep,
@@ -4804,6 +4981,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     sendPartnerEmailOtp,
     verifyPartnerEmailOtp,
     resendPartnerOtp,
+    changePartnerOtpEmail,
     partnerOtpInput,
     partnerOtpKey,
     submitPartnerRegistration,
@@ -4939,31 +5117,3 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     };
   }
 })();
-function initMap() {
-    // 1. Kiểm tra thư viện Google Maps đã nạp chưa
-    if (typeof google === 'undefined' || !google.maps) {
-        setTimeout(initMap, 500); // Đợi 0.5s rồi thử lại
-        return;
-    }
-
-    // 2. Vẽ bản đồ
-    const mapDiv = document.getElementById("map");
-    if (mapDiv) {
-        new google.maps.Map(mapDiv, {
-            center: { lat: 10.738, lng: 106.697 },
-            zoom: 15
-        });
-    }
-
-    // 3. Khởi tạo luôn cả Autocomplete ở đây cho nó "đồng bộ"
-    const input = document.getElementById('store-address');
-    if (input) {
-        const autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.addListener('place_changed', function() {
-            // Logic xử lý khi chọn địa chỉ của bạn...
-        });
-    }
-}
-
-// Chạy khi trang đã load xong
-window.onload = initMap;

@@ -1,0 +1,263 @@
+/* FoodSave - giao diện tối giản cho 3 cổng (Partner, Charity, User).
+   Nạp SAU style của từng trang.
+   Phần 1: bố cục chung (phẳng, viền mảnh, bo góc nhỏ) - KHÔNG đổi màu.
+   Phần 2: bảng màu riêng của từng bên, chọn theo class trên <body>. */
+
+/* ================= 1. CHUNG ================= */
+:root {
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --shadow-sm: none;
+  --shadow: 0 2px 10px rgba(17, 21, 18, .06);
+  --shadow-lg: 0 8px 28px rgba(17, 21, 18, .10);
+}
+
+body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3, h4, h5, h6 { font-family: "Manrope", "Inter", system-ui, sans-serif; letter-spacing: 0; text-align: inherit; }
+section { padding: 72px 0; }
+@media (max-width: 768px) { section { padding: 48px 0; } }
+
+/* Logo: chữ + chấm vàng, không hiệu ứng */
+.brand-word, .foot-brand {
+  position: relative; display: inline-flex; align-items: baseline; width: fit-content;
+  font-family: "Manrope", "Inter", sans-serif; font-weight: 800; letter-spacing: 0; line-height: 1;
+  color: #111512;
+}
+.brand-word > span, .foot-brand > span { color: #16a34a; }
+.brand-word::before, .foot-brand::before {
+  content: ""; position: absolute; right: -.4em; top: -.35em; width: .42em; height: .42em;
+  border-radius: 50%; background: #facc15; animation: none;
+}
+.brand-word::after, .foot-brand::after { content: none; }
+.brand-tagline { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: #667067; }
+
+/* Thanh trên: bỏ nhãn LIVE, thanh nav phẳng */
+.live-pulse, .top-info-live { display: none; }
+.topbar-main { background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; height: 68px; }
+.topbar.scrolled .topbar-main { height: 60px; background: #fff; box-shadow: none; }
+.nav button { border-radius: 8px; font-weight: 600; }
+
+/* Nút */
+.btn, button.btn { font-family: "Inter", system-ui, sans-serif; font-weight: 600; border-radius: 8px; box-shadow: none; transition: background .15s, border-color .15s, color .15s; }
+.btn:hover, button.btn:hover { transform: none; box-shadow: none; }
+
+/* Tiêu đề */
+.section-title { font-size: clamp(1.6rem, 3.4vw, 2.4rem) !important; font-weight: 800; letter-spacing: 0; }
+.hero-title, .hero-bowl .hero-title { font-size: clamp(2rem, 4.4vw, 3.4rem) !important; font-weight: 800; letter-spacing: 0; line-height: 1.15; }
+.section-title em::after, .hero-title em::after { content: none; }
+.section-head h2, .hero h1 { font-weight: 800; letter-spacing: 0; }
+
+/* Hero: bỏ chấm bay, thẻ số liệu không xoay/không nổi */
+.hero-particles { display: none; }
+.hero-bowl { padding: 64px 0 48px; }
+.hero-visual { max-width: 480px; }
+.hero-card { border-radius: 12px; box-shadow: none; transform: none !important; min-height: 0; padding: 18px; }
+.hero-card:hover { transform: none !important; box-shadow: none; }
+.hc-ic { border-radius: 8px; width: 36px; height: 36px; font-size: 18px; }
+
+/* Thẻ nội dung: viền mảnh, không nổi lên khi rê chuột */
+.pillar, .step-card, .type-card, .faq-item, .tier, .card {
+  border-width: 1px; border-radius: 12px; box-shadow: none; transition: border-color .15s;
+}
+.pillar:hover, .step-card:hover, .type-card:hover, .faq-item:hover, .card:hover { transform: none; box-shadow: none; }
+.pillar::before { content: none; }
+.pillar { padding: 22px 20px; cursor: default; }
+.pillar strong, .step-card h4, .type-card h3, .faq-item h4, .tier h3 { font-family: "Manrope", sans-serif; font-weight: 700; letter-spacing: 0; }
+.pillar strong { font-size: 18px; }
+.pillar-ic, .type-card .ic, .step-ic, .card-icon { border-radius: 8px; box-shadow: none; }
+.step-num { display: none; }
+.faq-item { cursor: default; padding: 20px 22px; }
+
+/* Dải kêu gọi và footer: bỏ lớp sáng trang trí */
+.cta-strip { padding: 64px 0; }
+.cta-strip::before { content: none; }
+.foot-bottom, .footer-bottom { background: transparent; border-top: 1px solid rgba(255, 255, 255, .12); }
+footer a, .site-footer a { color: rgba(255, 255, 255, .78); }
+footer a:hover, .site-footer a:hover { color: #fff; }
+footer .brand-word, footer .foot-brand, .foot-brand { color: #fff; }
+footer .brand-word > span, footer .foot-brand > span, .foot-brand > span { color: #4ade80; }
+footer { background: #063f26; color: rgba(255, 255, 255, .85); }
+
+img { max-width: 100%; height: auto; }
+
+/* ================= 2. MÀU RIÊNG TỪNG BÊN ================= */
+
+/* ---- CHARITY: hồng (rose) + xanh lá + trắng ---- */
+body.role-charity .hero-bowl {
+  background: radial-gradient(ellipse at 15% 0%, var(--green-50) 0%, transparent 50%),
+              radial-gradient(ellipse at 85% 60%, var(--rose-100) 0%, transparent 50%), #fff;
+}
+body.role-charity .hero-eyebrow { display: inline-flex; padding: 7px 14px; background: var(--rose-100); color: var(--rose); border: 1px solid #fecdd3; border-radius: 999px; letter-spacing: .02em; margin-bottom: 20px; }
+body.role-charity .hero-title em { color: var(--green-700); }
+body.role-charity .hero-title .accent { color: var(--rose); }
+body.role-charity .hero-card.c1 { background: #fff; border: 1px solid var(--line); }
+body.role-charity .hero-card.c2 { background: var(--rose); color: #fff; border: 0; }
+body.role-charity .hero-card.c3 { background: #fff; border: 1px solid var(--line); }
+body.role-charity .hero-card.c4 { background: var(--yellow); color: #111512; border: 0; }
+body.role-charity .hc-ic { background: var(--rose-100); color: var(--rose); }
+body.role-charity .hero-card.c2 .hc-ic { background: rgba(255,255,255,.22); color: #fff; }
+body.role-charity .hero-card.c3 .hc-ic { background: var(--green-50); color: var(--green-700); }
+body.role-charity .hero-card.c4 .hc-ic { background: rgba(0,0,0,.1); color: #111512; }
+body.role-charity .section-eye { display: inline-flex; padding: 6px 14px; background: #111512; color: var(--yellow); border-radius: 999px; font-size: 11px; letter-spacing: .08em; margin-bottom: 18px; }
+body.role-charity .section-eye i { color: var(--yellow); }
+body.role-charity .section-title em { color: var(--rose); }
+body.role-charity .pillar-ic { background: var(--green-50); color: var(--green-700); }
+body.role-charity .step-ic { background: #111512; color: var(--yellow); }
+body.role-charity .type-card .ic { background: var(--rose-100); color: var(--rose); }
+body.role-charity .type-card:hover { border-color: var(--rose); }
+body.role-charity .pillar:hover, body.role-charity .step-card:hover, body.role-charity .faq-item:hover { border-color: var(--green-700); }
+body.role-charity .cta-strip { background: linear-gradient(135deg, var(--rose) 0%, #e11d48 100%); }
+body.role-charity .cta-strip h2 em { color: var(--yellow); }
+
+/* ---- PARTNER: xanh lá + vàng + trắng ---- */
+body.role-partner .hero-bowl {
+  background: radial-gradient(ellipse at 15% 0%, var(--green-50) 0%, transparent 50%),
+              radial-gradient(ellipse at 85% 60%, var(--yellow-50) 0%, transparent 50%), #fff;
+}
+body.role-partner .hero-eyebrow { display: inline-flex; padding: 7px 14px; background: var(--green-50); color: var(--green-800); border: 1px solid var(--green-200); border-radius: 999px; letter-spacing: .02em; margin-bottom: 20px; }
+body.role-partner .hero-title em, body.role-partner .hero-title .accent { color: var(--green-700); }
+body.role-partner .hero-card { background: #fff; border: 1px solid var(--line); }
+body.role-partner .hero-card.c2 { background: var(--green-700); color: #fff; border: 0; }
+body.role-partner .hero-card.c4 { background: var(--yellow); color: #111512; border: 0; }
+body.role-partner .hc-ic { background: var(--green-50); color: var(--green-700); }
+body.role-partner .hero-card.c2 .hc-ic { background: rgba(255,255,255,.22); color: #fff; }
+body.role-partner .hero-card.c4 .hc-ic { background: rgba(0,0,0,.1); color: #111512; }
+body.role-partner .section-eye { display: inline-flex; padding: 6px 14px; background: #111512; color: var(--yellow); border-radius: 999px; font-size: 11px; letter-spacing: .08em; margin-bottom: 18px; }
+body.role-partner .section-eye i { color: var(--yellow); }
+body.role-partner .section-title em { color: var(--green-700); }
+body.role-partner .pillar-ic { background: var(--green-50); color: var(--green-700); }
+body.role-partner .step-ic { background: #111512; color: var(--yellow); }
+body.role-partner .tier.featured { background: #111512; color: #fff; border-color: #111512; box-shadow: none; }
+body.role-partner .pillar:hover, body.role-partner .step-card:hover, body.role-partner .faq-item:hover { border-color: var(--green-700); }
+body.role-partner .cta-strip { background: linear-gradient(135deg, var(--green-700), var(--green-800)); }
+body.role-partner .cta-strip h2 em { color: var(--yellow); }
+
+/* ---- USER: xanh lá + vàng cam + trắng (giữ nền, nhãn, nút gốc của trang) ---- */
+body.role-user .card:hover { border-color: var(--green-700); }
+
+/* Nút chính màu xanh lá thương hiệu */
+.btn-primary { background: #16a34a; color: #fff; border-color: #16a34a; }
+.btn-primary:hover { background: #15803d; border-color: #15803d; color: #fff; }
+
+/* Logo hạ thấp một chút để chấm vàng không bị cắt sát mép trên */
+.topbar-main .brand { padding-top: 8px; }
+
+/* ================= CHARITY: màn đăng nhập / đăng ký ================= */
+/* Nửa trái đứng yên, nửa phải cuộn riêng, vừa khít màn hình */
+@media (min-width: 901px) {
+  body.role-charity .auth-wrap { height: calc(100vh - var(--topbar-h, 102px)); min-height: 0; overflow: hidden; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr); }
+  body.role-charity .auth-left { position: sticky; top: 0; height: 100%; min-height: 0 !important; max-height: 100%; padding: 40px 48px; }
+  body.role-charity .auth-right,
+  body.role-charity .auth-right.register-mode { height: 100%; min-height: 0; max-height: 100%; max-width: none; width: 100%; margin: 0; overflow-y: auto; overflow-x: hidden; padding: 28px clamp(28px, 4vw, 64px); }
+}
+body.role-charity .auth-h-title { font-size: clamp(1.9rem, 3vw, 2.7rem) !important; line-height: 1.18; }
+body.role-charity .auth-h-sub { font-size: 14.5px; line-height: 1.6; }
+body.role-charity .auth-stat-v { font-size: 26px; }
+
+/* Biểu mẫu đăng ký: thu nhỏ, bỏ bớt thông tin thừa */
+body.role-charity .charity-partner-wizard { width: 100%; max-width: none; min-height: 0; padding-bottom: 24px; }
+body.role-charity .charity-register-form { min-height: 0; }
+body.role-charity .charity-form-header { margin-bottom: 14px; }
+body.role-charity .charity-form-header h2 { font-size: 24px; margin: 6px 0 0; }
+body.role-charity .charity-form-header p,
+body.role-charity .charity-partner-wizard .partner-section-kicker,
+body.role-charity .charity-partner-wizard .partner-section > p,
+body.role-charity #btnMockOCRProcess { display: none; }
+body.role-charity .charity-partner-wizard .partner-section { padding: 18px; border-width: 1px; border-radius: 12px; box-shadow: none; margin-bottom: 14px; }
+body.role-charity .charity-partner-wizard .partner-section h2 { font-size: 19px; margin: 0 0 4px; }
+body.role-charity .charity-partner-wizard .field { margin-bottom: 12px; }
+body.role-charity .charity-partner-wizard .field label { font-size: 12px; margin-bottom: 5px; }
+body.role-charity .charity-partner-wizard .inp,
+body.role-charity .charity-partner-wizard .reg-input-lg,
+body.role-charity .charity-partner-wizard .reg-select { padding: 10px 13px; font-size: 14px; border-width: 1px; border-radius: 10px; }
+body.role-charity .charity-partner-wizard .partner-progress { font-size: 11px; padding: 5px 10px; }
+
+/* Tiêu đề trong biểu mẫu đăng ký (thắng luật !important của responsive.css) */
+body.role-charity .charity-form-header h2 { font-size: 22px !important; line-height: 1.2; white-space: nowrap; }
+body.role-charity .charity-partner-wizard .partner-section h2 { font-size: 18px !important; line-height: 1.25; }
+body.role-charity .charity-partner-wizard .partner-face-card h2 { font-size: 17px !important; }
+body.role-charity .charity-form-header { align-items: flex-end; flex-wrap: wrap; }
+
+/* Màn đăng nhập/đăng ký chiếm đúng 1 màn hình, không cuộn cả trang */
+@media (min-width: 901px) {
+  html:has(#auth.show), body:has(#auth.show) { overflow: hidden; }
+}
+
+/* Nút Quay lại / Tiếp tục luôn dính ở đáy khung đăng ký, không bị cuộn khuất */
+body.role-charity .charity-form-footer {
+  position: sticky !important; bottom: 0; z-index: 20; margin-top: 0;
+  padding: 12px 0 14px !important; background: #fff !important;
+  border-top: 1px solid var(--line) !important;
+}
+body.role-charity .charity-partner-wizard { padding-bottom: 0; }
+body.role-charity .charity-partner-wizard .partner-wizard-body { padding-bottom: 14px; }
+body.role-charity .auth-right.register-mode { padding-bottom: 0; }
+
+/* ================= PARTNER: màn đăng nhập / đăng ký ================= */
+@media (min-width: 901px) {
+  body.role-partner .auth-wrap { height: calc(100vh - var(--topbar-h, 102px)); min-height: 0; overflow: hidden; }
+  body.role-partner .auth-left { flex: 0 0 50%; width: 50%; height: 100%; min-height: 0; padding: 40px 48px; }
+  body.role-partner .auth-right { height: 100%; min-height: 0; max-height: 100%; padding: 28px clamp(28px, 4vw, 64px) 0; }
+  html:has(#auth.show), body:has(#auth.show) { overflow: hidden; }
+}
+body.role-partner .auth-h-title { font-size: clamp(1.9rem, 3vw, 2.7rem) !important; line-height: 1.18; margin-bottom: 14px; }
+body.role-partner .auth-h-sub { font-size: 14.5px; line-height: 1.6; margin-bottom: 24px; }
+
+/* Biểu mẫu: chiếm trọn nửa phải, gọn, bỏ chữ thừa */
+body.role-partner .partner-wizard { max-width: none; width: 100%; min-height: 0; }
+body.role-partner .partner-wizard-top { margin-bottom: 12px; }
+body.role-partner .partner-wizard .auth-h { font-size: 22px !important; margin: 0 0 12px; }
+body.role-partner .partner-wizard-body > .auth-sub,
+body.role-partner .partner-section h3 + p { display: none; }
+body.role-partner .partner-section { padding: 16px; border-radius: 12px; box-shadow: none; margin-bottom: 12px; }
+body.role-partner .partner-section h3 { font-size: 15px; }
+body.role-partner .partner-wizard .field { margin-bottom: 12px; }
+body.role-partner .partner-wizard .field label { font-size: 12px; margin-bottom: 5px; }
+body.role-partner .partner-wizard .inp,
+body.role-partner .partner-wizard select.inp { padding: 10px 13px; font-size: 14px; border-radius: 10px; }
+
+/* Nút Quay lại / Tiếp tục dính ở đáy khung */
+body.role-partner .partner-wizard-actions {
+  position: sticky; bottom: 0; z-index: 20; margin-top: auto; padding: 12px 0 14px;
+  background: #fff; border-top: 1px solid var(--line);
+}
+body.role-partner .partner-wizard-body { margin-bottom: 14px; }
+
+/* ---- PARTNER: đầu biểu mẫu đăng ký (liên kết quay lại + bước) ---- */
+body.role-partner .partner-wizard-head { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; row-gap: 12px; align-items: center; margin-bottom: 14px; }
+body.role-partner .partner-wizard-nav { display: contents; }
+body.role-partner .partner-nav-stack { grid-column: 1 / -1; grid-row: 1; display: flex; gap: 18px; flex-wrap: wrap; }
+body.role-partner .partner-wizard-title { grid-column: 1; grid-row: 2; font-size: 22px !important; line-height: 1.2; margin: 0; }
+body.role-partner .partner-progress-caption { grid-column: 2; grid-row: 2; }
+body.role-partner .partner-progress-track { grid-column: 1 / -1; grid-row: 3; }
+body.role-partner .partner-nav-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; }
+body.role-partner .partner-nav-link:hover { color: var(--green-800); }
+body.role-partner .partner-progress-caption { flex: 0 0 auto; padding: 5px 12px; border-radius: 999px; background: var(--green-50); border: 1px solid var(--green-200); color: var(--green-800); font-size: 12px; font-weight: 800; }
+body.role-partner .partner-progress-track { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
+body.role-partner .partner-progress-track span { display: block; height: 100%; background: var(--green-700); border-radius: 4px; transition: width .25s; }
+
+/* Thẻ bước: tiêu đề vừa phải, bỏ đoạn mô tả lặp ý */
+body.role-partner .partner-section > h2 { font-size: 20px !important; margin: 0 0 10px; }
+body.role-partner .partner-section > p { display: none; }
+body.role-partner .partner-section .partner-help { display: block; font-size: 12px; }
+/* Bước đầu: đã có liên kết quay lại ở trên, bỏ nút Quay lại thừa */
+body.role-partner .partner-wizard-actions.single { justify-content: flex-end; }
+body.role-partner .partner-wizard-actions.single .btn-o { display: none; }
+
+/* ---- USER: form đăng ký / đăng nhập ---- */
+.signup-head h2 { font-size: 26px !important; line-height: 1.2; }
+.signup-card { border-radius: 14px; box-shadow: 0 8px 30px rgba(17, 21, 18, .06); }
+
+/* ---- PARTNER: nút chính trong biểu mẫu (thắng style gốc của form) ---- */
+body.role-partner #auth .partner-wizard-actions .btn-primary {
+  background: #16a34a !important; border-color: #16a34a !important; box-shadow: none !important; border-radius: 10px !important;
+}
+body.role-partner #auth .partner-wizard-actions .btn-primary:hover { background: #15803d !important; transform: none !important; }
+body.role-partner #auth .partner-wizard-actions .btn-o { border-radius: 10px !important; }
+
+/* Nút đang gửi hồ sơ */
+@keyframes fsSpin { to { transform: rotate(360deg); } }
+.partner-wizard-actions .ti-loader-2 { display: inline-block; animation: fsSpin 1s linear infinite; }
+.partner-wizard-actions .btn[disabled] { opacity: .7; cursor: wait; pointer-events: none; }

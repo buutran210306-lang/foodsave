@@ -18,7 +18,6 @@ import { sellerReputationService } from "./sellerReputationService";
 import { momoPaymentService } from "./momoPaymentService";
 import { ecoImpactService } from "./ecoImpactService";
 import { logger } from "../utils/logger";
-import { deriveProductLabel } from "../utils/productExpiryLabel";
 
 interface ProductForCheckout {
   id: string;
@@ -198,6 +197,32 @@ const calculateDiscount = async (voucherCode: string | undefined, storeId: strin
   };
 };
 
+// Đơn bị huỷ: trả số lượng đã giữ về kho bán và giảm số đã bán
+const restoreOrderStock = async (orderId: string): Promise<void> => {
+  const { data, error } = await supabaseAdmin.from("order_items").select("product_id,quantity").eq("order_id", orderId);
+  if (error) {
+    logger.warn("Không đọc được chi tiết đơn để trả hàng về kho", { orderId, error });
+    return;
+  }
+
+  for (const item of (data ?? []) as Array<{ product_id: string; quantity: number }>) {
+    const { data: product } = await supabaseAdmin
+      .from("products")
+      .select("id,stock_quantity,sold_count")
+      .eq("id", item.product_id)
+      .maybeSingle();
+    const loaded = product as { id: string; stock_quantity: number; sold_count: number } | null;
+    if (!loaded) continue;
+    await supabaseAdmin
+      .from("products")
+      .update({
+        stock_quantity: loaded.stock_quantity + item.quantity,
+        sold_count: Math.max(0, loaded.sold_count - item.quantity)
+      })
+      .eq("id", loaded.id);
+  }
+};
+
 export const orderService = {
   async createOrder(customerId: string, body: CreateOrderBody): Promise<{ order: Order; items: OrderItem[] }> {
     const products = await loadCheckoutProducts(body);
@@ -213,9 +238,7 @@ export const orderService = {
     const orderNumber = generateCode("FS");
     const qrCode = generateCode(orderNumber.replace("FS-", "QR-"));
 
-    const { data: orderData, error: orderError } = await supabaseAdmin
-      .from("orders")
-      .insert({
+    const baseOrderRow = {
         order_number: orderNumber,
         customer_id: customerId,
         store_id: storeId,
@@ -232,9 +255,22 @@ export const orderService = {
         voucher_code: voucher?.code ?? null,
         qr_code: qrCode,
         customer_note: body.customer_note ?? null
-      })
+    };
+    const receiverFields: Record<string, string> = {};
+    if (body.receiver_name) receiverFields.receiver_name = body.receiver_name;
+    if (body.receiver_phone) receiverFields.receiver_phone = body.receiver_phone;
+    if (body.receiver_email) receiverFields.receiver_email = body.receiver_email;
+
+    let { data: orderData, error: orderError } = await supabaseAdmin
+      .from("orders")
+      .insert({ ...baseOrderRow, ...receiverFields })
       .select("*")
       .single();
+
+    // Cột người nhận chưa có (chưa chạy SQL 020): vẫn tạo đơn như cũ
+    if (orderError && Object.keys(receiverFields).length > 0 && (orderError.code === "42703" || orderError.code === "PGRST204")) {
+      ({ data: orderData, error: orderError } = await supabaseAdmin.from("orders").insert(baseOrderRow).select("*").single());
+    }
 
     if (orderError) handleSupabaseError(orderError, "Failed to create order");
     const order = orderData as Order;
@@ -256,7 +292,7 @@ export const orderService = {
             quantity: item.quantity,
             product_metadata: {
                 category: product.category,
-                label: deriveProductLabel(product.expires_at),
+                label: product.label,
                 expires_at: product.expires_at,
                 emoji: product.emoji,
                 estimated_weight_kg: product.estimated_weight_kg,
@@ -354,7 +390,7 @@ export const orderService = {
     const { from, to } = getRange(query);
     let request = supabaseAdmin
       .from("orders")
-      .select("*, order_items(*), stores(id,name,slug,owner_id,emoji)", { count: "exact" })
+      .select("*, order_items(*), stores(id,name,slug,owner_id,emoji), customer:profiles!customer_id(full_name,phone)", { count: "exact" })
       .range(from, to)
       .order("created_at", { ascending: false });
 
@@ -417,13 +453,30 @@ export const orderService = {
 
     if (error) handleSupabaseError(error, "Failed to update order status");
 
+    // Chỉ trả hàng khi đơn chưa hoàn thành (hàng đã giao thì không trả về kho)
+    if (body.status === "cancelled" && order.status !== "cancelled" && order.status !== "completed") {
+      await restoreOrderStock(order.id);
+    }
+
     if (shouldPenalizeSellerCancellation) {
-      await sellerReputationService.handleSellerCancellation(order.store_id, order.id);
+      try {
+        await sellerReputationService.handleSellerCancellation(order.store_id, order.id);
+      } catch (error) {
+        logger.warn("Không trừ được điểm uy tín khi hủy đơn", { orderId: order.id, error });
+      }
     }
 
     if (shouldRewardSeller) {
-      await sellerReputationService.handleOrderSuccess(order.store_id, body.is_charity_order);
-      await applyCustomerReputationDelta(order.customer_id, CUSTOMER_REPUTATION_RULES.pickupSuccessDelta, "pickup_completed");
+      try {
+        await sellerReputationService.handleOrderSuccess(order.store_id, body.is_charity_order);
+      } catch (error) {
+        logger.warn("Không cộng được điểm uy tín cửa hàng", { orderId: order.id, error });
+      }
+      try {
+        await applyCustomerReputationDelta(order.customer_id, CUSTOMER_REPUTATION_RULES.pickupSuccessDelta, "pickup_completed");
+      } catch (error) {
+        logger.warn("Không cộng được điểm uy tín người mua", { orderId: order.id, error });
+      }
       try {
         await ecoImpactService.recordOrderImpact(order.id);
       } catch (error) {
@@ -431,15 +484,60 @@ export const orderService = {
       }
     }
 
+    const customerMessages: Record<string, { title: string; body: string }> = {
+      confirmed: { title: "Cửa hàng đã nhận đơn " + order.order_number, body: "Cửa hàng đang chuẩn bị hàng cho bạn." },
+      ready: { title: "Đơn " + order.order_number + " đã sẵn sàng", body: "Hãy mang mã QR đến cửa hàng để nhận hàng." },
+      completed: { title: "Nhận hàng thành công", body: "Đơn " + order.order_number + " đã hoàn tất. Cảm ơn bạn đã cứu thực phẩm cùng FoodSave!" },
+      cancelled: { title: "Đơn " + order.order_number + " đã bị hủy", body: "Đơn hàng đã được hủy và số lượng được hoàn về kho." }
+    };
+    const customerMessage = customerMessages[body.status] ?? { title: "Đơn " + order.order_number + " đã cập nhật", body: "Trạng thái: " + body.status };
+
     await supabaseAdmin.from("notifications").insert({
       recipient_id: order.customer_id,
       role_target: "customer",
       type: "order-update",
-      title: `Đơn ${order.order_number} đã cập nhật`,
-      body: `Trạng thái: ${body.status}`,
+      title: customerMessage.title,
+      body: customerMessage.body,
       related_type: "order",
       related_id: order.id
     });
+
+    return data as Order;
+  },
+
+  // Người mua xác nhận đã thanh toán (demo). Chỉ đổi trạng thái thanh toán: cửa hàng vẫn phải tự nhận đơn.
+  async confirmPayment(actorId: string, actorRole: UserRole, orderId: string, paymentMethod?: Order["payment_method"]): Promise<Order> {
+    const order = await assertOrderAccess(orderId, actorId, actorRole);
+    if (actorRole === "customer" && order.customer_id !== actorId) {
+      throw new AppError("You can only confirm payment for your own order", HTTP_STATUS.FORBIDDEN, ERROR_CODES.AUTH_FORBIDDEN);
+    }
+    if (order.status === "cancelled") {
+      throw new AppError("Đơn hàng đã bị hủy", HTTP_STATUS.CONFLICT, ERROR_CODES.RESOURCE_CONFLICT);
+    }
+    if (order.payment_status === "paid") return order;
+
+    const { data, error } = await supabaseAdmin
+      .from("orders")
+      .update({ payment_status: "paid", ...(paymentMethod ? { payment_method: paymentMethod } : {}) })
+      .eq("id", orderId)
+      .select("*")
+      .single();
+
+    if (error) handleSupabaseError(error, "Failed to confirm order payment");
+
+    const { data: store } = await supabaseAdmin.from("stores").select("owner_id").eq("id", order.store_id).maybeSingle();
+    const ownerId = (store as { owner_id: string } | null)?.owner_id;
+    if (ownerId) {
+      await supabaseAdmin.from("notifications").insert({
+        recipient_id: ownerId,
+        role_target: "partner",
+        type: "order-paid",
+        title: "Đơn " + order.order_number + " đã thanh toán",
+        body: "Khách đã thanh toán, hãy nhận đơn và chuẩn bị hàng.",
+        related_type: "order",
+        related_id: order.id
+      });
+    }
 
     return data as Order;
   },
