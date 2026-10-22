@@ -146,7 +146,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Dựng yêu cầu gửi Gemini (caption + ảnh) và mã hóa ảnh gốc\nconst ctx = $('Chuẩn bị').first().json;\nconst item = $input.first();\nlet origB64 = '';\nlet mime = 'image/jpeg';\nif (item.binary && item.binary.orig) {\n  const buf = await this.helpers.getBinaryDataBuffer(0, 'orig');\n  origB64 = buf.toString('base64');\n  mime = item.binary.orig.mimeType || mime;\n}\nconst captionRequest = {\n  contents: [{ parts: [{ text: ctx.captionPrompt }] }],\n  generationConfig: { temperature: 0.6, maxOutputTokens: 600 }\n};\nconst imageParts = [{ text: ctx.imagePrompt }];\nif (origB64) imageParts.unshift({ inline_data: { mime_type: mime, data: origB64 } });\nconst imageRequest = {\n  contents: [{ parts: imageParts }],\n  generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }\n};\nreturn [{ json: { ...ctx, origB64, origMime: mime, captionRequest, imageRequest } }];\n"
+        "jsCode": "// Dựng yêu cầu gửi Gemini (caption + ảnh) và mã hóa ảnh gốc\n// ===== TÊN MODEL GEMINI: chỉ sửa ở đây khi Google đổi tên (node Gemini đọc từ đây) =====\nconst CONFIG = {\n  MODEL_TEXT: 'gemini-2.5-flash',        // viết caption\n  MODEL_IMAGE: 'gemini-2.5-flash-image'  // tạo ảnh nền\n};\n// ==========================================================================================\nconst ctx = $('Chuẩn bị').first().json;\nconst item = $input.first();\nlet origB64 = '';\nlet mime = 'image/jpeg';\nif (item.binary && item.binary.orig) {\n  const buf = await this.helpers.getBinaryDataBuffer(0, 'orig');\n  origB64 = buf.toString('base64');\n  mime = item.binary.orig.mimeType || mime;\n}\nconst captionRequest = {\n  contents: [{ parts: [{ text: ctx.captionPrompt }] }],\n  generationConfig: { temperature: 0.6, maxOutputTokens: 600, thinkingConfig: { thinkingBudget: 0 } } // tắt \"suy nghĩ\" để caption không bị cắt\n};\nconst imageParts = [{ text: ctx.imagePrompt }];\nif (origB64) imageParts.unshift({ inline_data: { mime_type: mime, data: origB64 } });\nconst imageRequest = {\n  contents: [{ parts: imageParts }],\n  generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }\n};\nreturn [{ json: { ...ctx, origB64, origMime: mime, captionRequest, imageRequest, modelText: CONFIG.MODEL_TEXT, modelImage: CONFIG.MODEL_IMAGE } }];\n"
       },
       "id": "a1f0c0de-0000-4000-8000-000000000009",
       "name": "Dựng yêu cầu AI",
@@ -193,7 +193,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.modelText }}:generateContent",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -222,7 +222,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $('Dựng yêu cầu AI').first().json.modelImage }}:generateContent",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,

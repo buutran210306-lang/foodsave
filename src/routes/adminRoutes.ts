@@ -17,6 +17,7 @@ export const adminRoutes = Router();
 
 adminRoutes.use(requireRoles("admin"));
 
+adminRoutes.get("/users", asyncHandler(adminController.systemUsers));
 adminRoutes.get("/pending-partners", asyncHandler(adminController.getPendingPartners));
 
 adminRoutes.post(

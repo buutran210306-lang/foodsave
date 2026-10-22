@@ -698,6 +698,13 @@ export const marketingService = {
     });
     const storeCount = new Map<string, number>();
     for (const row of rows.filter((item) => item.status !== "failed")) for (const item of row.meta?.items ?? []) storeCount.set(item.store_name, (storeCount.get(item.store_name) ?? 0) + 1);
+    // Bài đã đăng/gửi 7 ngày qua theo nền tảng (gồm cả bài của từng cửa hàng và bài tổng hợp)
+    const platforms: Record<string, number> = { facebook: 0, instagram: 0, tiktok: 0, zalo: 0, buyers: 0 };
+    const { data: platformRows } = await supabaseAdmin.from("marketing_posts").select("channel").in("status", ["sent", "posted"]).gte("created_at", new Date(Date.now() - 7 * 24 * 3600_000).toISOString()).limit(5000);
+    for (const row of platformRows ?? []) {
+      const channel = String((row as { channel?: string }).channel ?? "");
+      if (channel in platforms) platforms[channel] = (platforms[channel] ?? 0) + 1;
+    }
     const tokens = pageTokens();
     const n8nOn = Boolean(env.N8N_WEBHOOK_URL);
     const mode = !ai ? (n8nOn ? "template" : page.id && tokens[page.id] ? "direct" : "none") : n8nOn ? "ai" : page.id && tokens[page.id] ? "direct" : "none";
@@ -716,7 +723,8 @@ export const marketingService = {
         ai_7d: okRows.filter((row) => row.tier === "ai").length,
         template_7d: okRows.filter((row) => row.tier === "template").length,
         direct_7d: okRows.filter((row) => row.tier === "direct").length,
-        fallback_7d: okRows.filter((row) => row.tier === "template" || row.tier === "direct").length
+        fallback_7d: okRows.filter((row) => row.tier === "template" || row.tier === "direct").length,
+        platforms_7d: platforms
       },
       days,
       top_stores: Array.from(storeCount.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count })),

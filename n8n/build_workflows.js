@@ -52,13 +52,13 @@ const pipeline = (prepareName, x0, y0) => {
   const useAi = ifTrue('Dùng AI?', '={{ $json.useAi }}', [x0 + 480, y0]);
   // Tầng 1: AI
   const cap = add('Gemini · viết caption', 'n8n-nodes-base.httpRequest', 4.2, {
-    method: 'POST', url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    method: 'POST', url: '=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.modelText }}:generateContent',
     authentication: 'genericCredentialType', genericAuthType: 'httpHeaderAuth',
     sendBody: true, specifyBody: 'json', jsonBody: '={{ JSON.stringify($json.captionRequest) }}',
     options: { timeout: 20000 }
   }, [x0 + 720, y0 - 120], { credentials: geminiCred, ...soft });
   const img = add('Gemini · tạo ảnh nền', 'n8n-nodes-base.httpRequest', 4.2, {
-    method: 'POST', url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
+    method: 'POST', url: "=https://generativelanguage.googleapis.com/v1beta/models/{{ $('Dựng yêu cầu AI').first().json.modelImage }}:generateContent",
     authentication: 'genericCredentialType', genericAuthType: 'httpHeaderAuth',
     sendBody: true, specifyBody: 'json', jsonBody: "={{ JSON.stringify($('Dựng yêu cầu AI').first().json.imageRequest) }}",
     options: { timeout: 20000 }

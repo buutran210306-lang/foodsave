@@ -63,6 +63,29 @@ h1,h2,h3,.P-t{font-family:'Manrope',var(--f);letter-spacing:0}
 .T h2{font-size:1.1rem;font-weight:800}
 .T-r{display:flex;gap:8px;align-items:center}
 .T-s{background:var(--card);border:1px solid var(--bd);border-radius:var(--rs);padding:7px 12px;display:flex;align-items:center;gap:5px;min-width:240px;box-shadow:var(--shadow)}
+/* Chuông hoạt động hệ thống */
+.NB{position:relative}
+.NB-b{position:relative;width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--card);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow)}
+.NB-b:hover{background:var(--bg2)}
+.NB-b i{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--err);border:2px solid #fff;display:none}
+.NB-b.has i{display:block}
+.NB-p{display:none;position:absolute;right:0;top:44px;width:360px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:0 12px 32px rgba(17,21,18,.16);z-index:90;overflow:hidden}
+.NB-p.open{display:block}
+.NB-h{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--bd);font-weight:800;font-size:.84rem}
+.NB-h small{font-weight:600;color:var(--t3);font-size:.68rem}
+.NB-l{max-height:380px;overflow-y:auto}
+.NB-it{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bg3);cursor:pointer}
+.NB-it:hover{background:var(--bg2)}
+.NB-it.new{background:#F2FBF6}
+.NB-it .ic{flex:0 0 28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.NB-it b{display:block;font-size:.78rem;line-height:1.35}
+.NB-it span{display:block;font-size:.7rem;color:var(--t3);line-height:1.4;margin-top:1px}
+.NB-it em{font-style:normal;font-size:.64rem;color:var(--t3);white-space:nowrap;margin-left:auto;padding-left:6px}
+.NB-e{padding:26px 14px;text-align:center;color:var(--t3);font-size:.78rem}
+.NB-f{padding:9px 14px;text-align:center;border-top:1px solid var(--bd);font-size:.76rem;font-weight:700;color:var(--ok);cursor:pointer}
+.NB-f:hover{background:var(--bg2)}
+@media(max-width:700px){.T-s{min-width:0;flex:1}.NB-p{position:fixed;left:12px;right:12px;top:58px;width:auto}}
+
 .T-s input{background:none;border:none;font-family:var(--f);font-size:.8rem;color:var(--text);outline:none;width:100%}
 
 .C{padding:20px 24px}
@@ -308,6 +331,30 @@ body.admin-locked .AL{display:flex}
 .ag-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#152B22;color:#fff;padding:10px 16px;border-radius:10px;font-size:.78rem;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:400;max-width:90vw}
 .ag-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .ag-empty{text-align:center;padding:26px;color:var(--t3);font-size:.8rem;font-weight:600}
+/* ─── ag-v2: AI Agent Admin gọn, hiện ngay ─── */
+.ag-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:1px solid var(--bd);margin-bottom:16px;flex-wrap:wrap}
+.ag-top .ag-tabs{border-bottom:none;margin-bottom:0}
+.ag-top-r{display:flex;align-items:center;gap:8px;padding-bottom:8px;flex-wrap:wrap}
+.ag-sync{font-size:.68rem;color:var(--t3);min-width:84px;text-align:right}
+.ag-sub{display:block;color:var(--t3);font-size:.68rem;margin-top:1px;font-weight:500}
+tr.ag-on{background:var(--ac-l)}
+.ag-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.ag-chip{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--bg3);color:var(--t2);display:inline-flex;align-items:center;gap:5px}
+.ag-chip i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.ag-chip.ok{background:var(--ok-bg);color:#1B6E49}.ag-chip.w{background:var(--warn-bg);color:#8A5E08}.ag-chip.e{background:var(--err-bg);color:#A63A32}
+.ag-stats{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+.ag-stats .P{margin-bottom:0}
+.ag-don{display:flex;align-items:center;gap:22px;min-height:150px}
+.ag-donut{width:122px;height:122px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.ag-donut i{width:80px;height:80px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-style:normal}
+.ag-donut b{font-size:1.2rem;font-family:'Manrope',var(--f);line-height:1}.ag-donut small{font-size:.62rem;color:var(--t3);margin-top:2px}
+.ag-dl{flex:1;display:grid;gap:9px;font-size:.76rem}
+.ag-dl div{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ag-dl i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px}
+.ag-dim{opacity:.5;transition:opacity .15s}
+.ag-sk{background:linear-gradient(90deg,var(--bg3) 25%,#E6ECE6 37%,var(--bg3) 63%);background-size:400% 100%;animation:agsk 1.3s ease infinite;border-radius:8px}
+@keyframes agsk{0%{background-position:100% 50%}100%{background-position:0 50%}}
+@media(max-width:1100px){.ag-stats{grid-template-columns:1fr}}
 @media(max-width:1100px){.ag-split{grid-template-columns:1fr}.ag-prev{position:static}.ag-plats{grid-template-columns:1fr 1fr}}
 @media(max-width:820px){.ag-flow{grid-template-columns:1fr}.ag-arrow{transform:rotate(90deg);padding:4px}}
 </style>
@@ -332,6 +379,7 @@ body.admin-locked .AL{display:flex}
 <nav class="S-n">
 <div class="S-s">Tổng quan</div>
 <div class="S-i on" data-p="dashboard">Bảng điều khiển</div>
+<div class="S-i" data-p="sysusers">Người dùng hệ thống</div>
 <div class="S-s">Người dùng</div>
 <div class="S-i" data-p="admins">Quản trị viên <em>40</em></div>
 <div class="S-i" data-p="users">Người dùng <em>40</em></div>
@@ -359,7 +407,7 @@ body.admin-locked .AL{display:flex}
 </aside>
 
 <div class="M">
-<div class="T"><h2 id="pt">Bảng điều khiển</h2><div class="T-r"><div class="T-s"><input placeholder="Tìm kiếm..."></div></div></div>
+<div class="T"><h2 id="pt">Bảng điều khiển</h2><div class="T-r"><div class="T-s"><input placeholder="Tìm kiếm..."></div><div class="NB"><button type="button" class="NB-b" id="nbBtn" onclick="nbToggle(event)" aria-label="Hoạt động hệ thống" title="Hoạt động hệ thống"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><i id="nbDot"></i></button><div class="NB-p" id="nbPanel"></div></div></div></div>
 <div class="C" id="ct"></div>
 </div>
 
@@ -414,7 +462,7 @@ const U=[
 // ===== DETAIL OPENERS =====
 function oA(i){const a=A[i];oD(a[1],Sec('Thông tin cơ bản',R([['Mã',mn(a[0])],['Họ tên','<strong>'+a[1]+'</strong>'],['Biệt danh',mn(a[2])],['Vai trò',rB(a[3])],['Quyền hạn',a[4]],['Loại',a[5]?B('b-b','Hệ thống'):B('b-m','Tùy chỉnh')],['Trạng thái',a[6]?sB('active'):sB('suspended')],['Ngày tạo',mn(a[7])]]))+Sec('Ghi chú',R([['Mô tả',a[8]]]))+ Sec('Lịch sử hành động','<div style="padding:10px 18px;color:var(--t3);font-size:.75rem">Lọc theo quản trị viên này trong mục Nhật ký hoạt động để xem chi tiết đầy đủ.</div>',false))}
 
-function oU(i){const u=U[i];oD(u[0],Sec('Thông tin tài khoản',R([['Họ tên','<strong>'+u[0]+'</strong>'],['Email',u[1]],['Số điện thoại',mn(u[2])],['Trạng thái',sB(u[3])],['Đăng nhập qua',B('b-m',u[4])],['Ngày đăng ký',mn(u[5])]]))+Sec('Điểm uy tín',R([['Điểm',scH(u[6])],['Hạng',tB(u[7])],['Lần nhận hàng thành công','<strong style="color:var(--ok)">'+u[8]+'</strong>'],['Lần vắng mặt','<strong style="color:'+(u[9]>0?'var(--err)':'var(--t3)')+'">'+u[9]+'</strong>']]))+Sec('Nhận xét vận hành',R([['Ghi chú',u[10]]]),false))}
+function oU(i){const u=U[i];oD(u[0],Sec('Thông tin tài khoản',R([['Họ tên','<strong>'+u[0]+'</strong>'],['Email',u[1]],['Số điện thoại',mn(u[2])],['Trạng thái',sB(u[3])],['Đăng nhập qua',B('b-m',u[4])],['Ngày đăng ký',mn(u[5])]]))+Sec('Điểm uy tín',R([['Điểm',scH(u[6])],['Hạng',tB(u[7])],['Đơn hoàn tất','<strong style="color:var(--ok)">'+u[8]+'</strong>'],['Đơn đã hủy','<strong style="color:'+(u[9]>0?'var(--err)':'var(--t3)')+'">'+u[9]+'</strong>']]))+Sec('Nhận xét vận hành',R([['Ghi chú',u[10]]]),false))}
 
 const MR=[];
 const DN=[]; /* Lô tặng từ thiện (thật, lấy từ bảng donations) */
@@ -853,6 +901,7 @@ return html+'</tbody></table></div></div>';
 };
 pg.dashboard=()=>`
 ${realActivityBanner()}
+${sysCountsHtml(true)}
 <div class="al al-w"><strong>4 tranh chấp</strong> đang mở cần xử lý - thời hạn gần nhất còn 4 giờ</div>
 <div class="hero">
   <div class="hero-main">
@@ -936,14 +985,14 @@ ${A.map((a,i)=>`<tr onclick="oA(${i})"><td style="color:var(--t3)">${i+1}</td><t
 
 pg.users=()=>{
 const s={active:0,suspended:0,banned:0};U.forEach(u=>s[u[3]]=(s[u[3]]||0)+1);
-return`<div class="G G4">
-<div class="K"><div class="K-l">Tổng người dùng</div><div class="K-v">${U.length}</div></div>
+return`${usersNotice()}<div class="G G4">
+<div class="K"><div class="K-l">Tổng người mua</div><div class="K-v">${U.length}</div></div>
 <div class="K"><div class="K-l">Hoạt động</div><div class="K-v" style="color:var(--ok)">${s.active||0}</div></div>
 <div class="K"><div class="K-l">Tạm ngưng</div><div class="K-v" style="color:var(--ora)">${s.suspended||0}</div></div>
 <div class="K"><div class="K-l">Cấm vĩnh viễn</div><div class="K-v" style="color:var(--err)">${s.banned||0}</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Danh sách người dùng</div></div>
-<div class="W" style="max-height:550px;overflow-y:auto"><table><thead><tr><th>STT</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Trạng thái</th><th>Điểm</th><th>Hạng</th><th>Đã nhận</th><th>Vắng mặt</th></tr></thead><tbody>
+<div class="W" style="max-height:550px;overflow-y:auto"><table><thead><tr><th>STT</th><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Trạng thái</th><th>Điểm</th><th>Hạng</th><th>Đơn hoàn tất</th><th>Đơn đã hủy</th></tr></thead><tbody>
 ${U.map((u,i)=>`<tr onclick="oU(${i})"><td style="color:var(--t3)">${i+1}</td><td><strong class="lk">${u[0]}</strong></td><td style="font-size:.73rem">${u[1]}</td><td>${mn(u[2])}</td><td>${sB(u[3])}</td><td>${scH(u[6])}</td><td>${tB(u[7])}</td><td class="mn" style="color:var(--ok)">${u[8]}</td><td class="mn" style="color:${u[9]>0?'var(--err)':'var(--t3)'}">${u[9]}</td></tr>`).join('')}
 </tbody></table></div></div>`};
 
@@ -956,7 +1005,7 @@ return`<div class="G G4">
 <div class="K"><div class="K-l">Bị chặn (<40)</div><div class="K-v" style="color:var(--err)">${U.filter(u=>u[6]<40).length}</div></div>
 </div>
 <div class="P"><div class="P-h"><div class="P-t">Bảng xếp hạng uy tín người dùng</div></div>
-<div class="W" style="max-height:550px;overflow-y:auto"><table><thead><tr><th>Hạng</th><th>Họ tên</th><th>Điểm</th><th>Cấp bậc</th><th>Đã nhận</th><th>Vắng mặt</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead><tbody>
+<div class="W" style="max-height:550px;overflow-y:auto"><table><thead><tr><th>Hạng</th><th>Họ tên</th><th>Điểm</th><th>Cấp bậc</th><th>Đơn hoàn tất</th><th>Đơn đã hủy</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead><tbody>
 ${sorted.map((u,i)=>{const oi=U.indexOf(u);return`<tr onclick="oU(${oi})"><td style="color:var(--t3)">${i+1}</td><td><strong class="lk">${u[0]}</strong></td><td>${scH(u[6])}</td><td>${tB(u[7])}</td><td class="mn" style="color:var(--ok)">${u[8]}</td><td class="mn" style="color:${u[9]>0?'var(--err)':'var(--t3)'}">${u[9]}</td><td>${sB(u[3])}</td><td style="font-size:.7rem;color:var(--t3);max-width:180px;white-space:normal">${u[10]}</td></tr>`}).join('')}
 </tbody></table></div></div>`};
 
@@ -1368,7 +1417,7 @@ function rejectCharity(charityId) {
 }
 
 // ===== NAV =====
-const titles={agent:'AI Agent đăng bài',dashboard:'Bảng điều khiển',admins:'Quản trị viên',users:'Người dùng',reputation:'Uy tín',merchants:'Cửa hàng',charities:'Tổ chức từ thiện',inventory:'Lô hàng tồn kho',donations:'Lô tặng từ thiện',orders:'Đơn hàng',payments:'Thanh toán',payouts:'Chi trả đối tác',disputes:'Tranh chấp',risks:'Cảnh báo gian lận',audits:'Nhật ký hoạt động',config:'Cấu hình'};
+const titles={sysusers:'Người dùng hệ thống',agent:'AI Agent đăng bài',dashboard:'Bảng điều khiển',admins:'Quản trị viên',users:'Người dùng',reputation:'Uy tín',merchants:'Cửa hàng',charities:'Tổ chức từ thiện',inventory:'Lô hàng tồn kho',donations:'Lô tặng từ thiện',orders:'Đơn hàng',payments:'Thanh toán',payouts:'Chi trả đối tác',disputes:'Tranh chấp',risks:'Cảnh báo gian lận',audits:'Nhật ký hoạt động',config:'Cấu hình'};
 let currentPage='dashboard';
 function go(p){
 currentPage=p;
@@ -1380,7 +1429,181 @@ document.querySelectorAll('.S-i').forEach(el=>el.addEventListener('click',()=>go
 // ═══════════ AI AGENT ĐĂNG BÀI (Admin) ═══════════
 // Chỉ đăng bài TỔNG HỢP của FoodSave (Fanpage trung tâm). Không đăng thay từng cửa hàng:
 // mỗi cửa hàng tự quản lý Fanpage / Auto-bot ở trang Đối tác. Dữ liệu lấy từ API /marketing/admin/*.
-const AG={tab:'ov',data:null,loading:false,err:'',pick:[],pickInit:false,prev:null,prevBusy:false,plat:'fb',hf:{q:'',lb:'',tier:'',st:''},runBusy:false,timer:null};
+// ═══════════ AI AGENT ĐĂNG BÀI (Admin) · v2: gọn, mở là hiện ngay ═══════════
+// Chỉ đăng bài TỔNG HỢP của FoodSave (Fanpage trung tâm). Không đăng thay từng cửa hàng:
+// mỗi cửa hàng tự quản lý Fanpage / Auto-bot ở trang Đối tác. Dữ liệu lấy từ API /marketing/admin/*.
+// Cách chạy nhanh: tải dữ liệu sẵn ngay khi đăng nhập, nhớ bản lần trước (localStorage) để hiện liền,
+// cập nhật ngầm rồi vẽ lại tại chỗ (không nhấp nháy, không chặn người dùng).
+const AG_CK='fs_ag_ov_v2';
+const AG={tab:'ov',data:null,at:0,loading:false,err:'',pick:[],pickInit:false,prev:null,prevBusy:false,prevSeq:0,plat:'fb',hf:{q:'',lb:'',st:''},csvP:'week',runBusy:false,timer:null};
+function agCacheLoad(){try{const s=JSON.parse(localStorage.getItem(AG_CK)||'null');if(s&&s.d&&Array.isArray(s.d.queue)&&s.d.kpi)return s;}catch(e){}return null;}
+function agCacheSave(d){try{localStorage.setItem(AG_CK,JSON.stringify({t:Date.now(),d:d}));}catch(e){}}
+function agBadgeSet(){const b=document.getElementById('agBadge');if(b&&AG.data)b.textContent=AG.data.queue.filter(q=>!q.recently_posted).length||'';}
+(function(){const s=agCacheLoad();if(s){AG.data=s.d;AG.at=s.t;agBadgeSet();}})();
+
+// ───── Vẽ lại tại chỗ (không dựng lại cả trang)
+function agTyping(){const a=document.activeElement,r=document.getElementById('agRoot');return !!(a&&r&&r.contains(a)&&((a.tagName==='INPUT'&&/^(text|search|number)$/.test(a.type))||a.tagName==='SELECT'||a.tagName==='TEXTAREA'));}
+function agPaint(force){const r=document.getElementById('agRoot');if(!r||currentPage!=='agent')return;if(!force&&agTyping())return;r.innerHTML=agView();}
+function agPaintPrev(){const el=document.getElementById('agPrev');if(el&&AG.data)el.innerHTML=agPreviewHtml(AG.data);}
+const agClock=t=>new Date(t).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+
+async function agLoad(silent){
+  if(AG.loading)return;
+  AG.loading=true;if(!silent){AG.err='';agPaint(true);}
+  try{
+    const d=await agApi('/admin/overview');
+    AG.data=d;AG.err='';AG.at=Date.now();agCacheSave(d);
+    if(!AG.pickInit){AG.pick=d.queue.filter(q=>!q.recently_posted).slice(0,3).map(q=>q.product_id);AG.pickInit=true;}
+    AG.pick=AG.pick.filter(id=>d.queue.some(q=>q.product_id===id));
+    agBadgeSet();
+  }catch(e){AG.err=e.message||String(e);}
+  AG.loading=false;
+  agPaint();
+  // chuẩn bị sẵn bản xem trước để mở tab "Hàng chờ đăng" là có ngay
+  if(AG.data&&AG.pick.length&&!AG.prev&&!AG.prevBusy)agPreview();
+}
+function agStartTimer(){if(AG.timer)return;AG.timer=setInterval(()=>{if(currentPage==='agent'&&!document.hidden)agLoad(true);},60000);}
+
+// ───── Trang: có dữ liệu nhớ sẵn thì hiện ngay, cập nhật ngầm phía sau
+pg.agent=()=>{
+  agStartTimer();
+  if(!AG.loading&&(!AG.data||Date.now()-AG.at>20000))agLoad(true);
+  return '<div id="agRoot">'+agView()+'</div>';
+};
+function agTab(t){AG.tab=t;agPaint(true);window.scrollTo(0,0);}
+function agSelPl(id){AG.plat=id;agPaint(true);}
+
+function agView(){
+  const d=AG.data;
+  const tabs=[['ov','Tổng quan'],['q','Hàng chờ đăng'+(d?' <em>'+d.queue.filter(q=>!q.recently_posted).length+'</em>':'')],['h','Lịch sử'],['c','Thiết lập đăng bài']];
+  const top='<div class="ag-top"><div class="ag-tabs">'+tabs.map(t=>'<div class="ag-tab'+(AG.tab===t[0]?' on':'')+'" onclick="agTab(\''+t[0]+'\')">'+t[1]+'</div>').join('')+'</div>'+
+    '</div>';
+  let body;
+  if(!d)body=AG.err?'<div class="al al-w">'+agE(AG.err)+'<br><button class="bt bt-s" style="margin-top:8px" onclick="agLoad()">Thử lại</button></div>':agSkeleton();
+  else body=(AG.err?'<div class="al al-w">'+agE(AG.err)+'</div>':'')+(AG.tab==='q'?agQueue(d):AG.tab==='h'?agHistory(d):AG.tab==='c'?agSettings(d):agOverview(d));
+  return top+body;
+}
+function agSkeleton(){
+  const k='<div class="K"><div class="ag-sk" style="height:10px;width:60%"></div><div class="ag-sk" style="height:26px;width:40%;margin-top:12px"></div><div class="ag-sk" style="height:8px;width:75%;margin-top:12px"></div></div>';
+  const blk=h=>'<div class="P"><div class="P-b"><div class="ag-sk" style="height:'+h+'px"></div></div></div>';
+  return '<div class="G G4">'+k+k+k+k+'</div>'+blk(64)+'<div class="ag-stats">'+blk(180)+blk(180)+'</div>';
+}
+
+// ───── Tab 1: Tổng quan (gọn: 4 số chính, Auto-bot, thống kê, hoạt động)
+function agOverview(d){
+  const k=d.kpi,i=d.integrations,wait=d.queue.filter(q=>!q.recently_posted),red=wait.filter(q=>q.label==='red').length;
+  const rate=k.success_rate==null?'—':k.success_rate+'%';
+  const chip=(c,t)=>'<span class="ag-chip '+c+'"><i></i>'+t+'</span>';
+  const chips=chip(d.central.id?'ok':'w',d.central.id?'Fanpage '+agE(d.central.name):'Chưa có Fanpage')+chip(i.n8n_configured?'ok':'e',i.n8n_configured?'n8n kết nối':'Chưa cấu hình n8n')+chip(i.ai_enabled?'ok':'',i.ai_enabled?'Gemini AI bật':'AI tắt, dùng caption mẫu');
+  const mx=Math.max(1,...d.days.map(x=>x.red+x.yellow));
+  const bars=d.days.map(x=>{const tot=x.red+x.yellow,h=Math.round(tot/mx*118);return '<div class="ag-bar"><b style="font-size:.7rem">'+tot+'</b><div class="ag-stack" style="height:'+h+'px"><s style="flex:'+x.red+';background:#D94E45"></s><s style="flex:'+x.yellow+';background:#E3A82B"></s></div><small>'+agE(x.label)+'</small></div>';}).join('');
+  const pf=k.platforms_7d||{facebook:k.ok_7d||0};
+  const tiers=[['Facebook',pf.facebook||0,'#1877F2'],['Instagram',pf.instagram||0,'#DD2A7B'],['TikTok',pf.tiktok||0,'#111512'],['Zalo OA',pf.zalo||0,'#06B6D4'],['Thông báo trong app',pf.buyers||0,'#1C7C45']];
+  const tt=tiers.reduce((s,x)=>s+x[1],0);let acc=0;
+  const stops=tt?tiers.map(x=>{const a=acc/tt*100;acc+=x[1];return x[2]+' '+a+'% '+(acc/tt*100)+'%';}).join(','):'#E6ECE6 0% 100%';
+  const events=d.posts.slice(0,6).map(p=>{const cls=p.status==='failed'?'e':(p.tier==='template'||p.tier==='direct')?'w':'';const how=p.tier==='ai'?'AI viết':p.tier==='template'?'Caption mẫu':p.tier==='direct'?'Đăng trực tiếp':'';
+    return '<div class="ag-ev '+cls+'">'+(p.status==='failed'?'Đăng bài '+agDesc(p)+' bị lỗi'+(p.error?': '+agE(p.error):''):'Đã đăng bài '+agDesc(p)+' lên '+agE(d.central.name))+'<small>'+agE(agWhen(p.created_at))+(how?' · '+how:'')+'</small></div>';}).join('');
+  return '<div class="G G4">'+
+    '<div class="K"><div class="K-l">Hàng chờ đăng</div><div class="K-v">'+wait.length+'</div><div class="K-n">'+red+' nhãn đỏ · '+(wait.length-red)+' nhãn vàng</div></div>'+
+    '<div class="K"><div class="K-l">Bài đăng 7 ngày qua</div><div class="K-v">'+(k.tried_7d||0)+'</div><div class="K-n">'+(k.failed_7d?k.failed_7d+' bài lỗi':'không có bài lỗi')+'</div></div>'+
+    '<div class="K"><div class="K-l">Bài đăng hôm nay</div><div class="K-v">'+(k.today||0)+'</div><div class="K-n">tối đa '+d.limits.per_day+' bài mỗi ngày</div></div>'+
+    '<div class="K"><div class="K-l">Đăng thành công 7 ngày</div><div class="K-v">'+rate+'</div><div class="K-n">'+(k.ok_7d||0)+' / '+(k.tried_7d||0)+' bài lên Fanpage</div></div></div>'+
+  '<div class="P"><div class="ag-master"><div><h3>Auto-bot tự đăng bài</h3><p>Hàng nhãn vàng/đỏ của mọi cửa hàng được gom thành bài tổng hợp và đăng lên Fanpage '+agE(d.central.name||'FoodSave')+'.</p><div class="ag-chips">'+chips+'</div></div>'+
+    '<label class="ag-sw"><input type="checkbox" '+(d.auto_enabled?'checked':'')+' onchange="agSetting(\'auto_enabled\',this.checked)"><i></i></label></div></div>'+
+  '<div class="ag-stats"><div class="P"><div class="P-h"><div class="P-t">Món đưa vào bài<small>7 ngày qua, theo nhãn</small></div></div><div class="P-b"><div class="ag-bars">'+bars+'</div><div class="ag-leg"><span><i style="background:#D94E45"></i>Nhãn đỏ</span><span><i style="background:#E3A82B"></i>Nhãn vàng</span></div></div></div>'+
+    '<div class="P"><div class="P-h"><div class="P-t">Nền tảng đăng<small>7 ngày qua</small></div></div><div class="P-b"><div class="ag-don"><div class="ag-donut" style="background:conic-gradient('+stops+')"><i><b>'+tt+'</b><small>bài</small></i></div><div class="ag-dl">'+
+      tiers.map(x=>'<div><span><i style="background:'+x[2]+'"></i>'+x[0]+'</span><b>'+x[1]+'</b></div>').join('')+'</div></div></div></div></div>'+
+  '<div class="P"><div class="P-h"><div class="P-t">Lịch sử hoạt động</div><div class="P-a"><button class="bt bt-s" onclick="agTab(\'h\')">Xem tất cả</button></div></div><div class="P-b">'+(events?'<div class="ag-tl">'+events+'</div>':'<div class="ag-empty">Chưa có bài tổng hợp nào được đăng.</div>')+'</div></div>';
+}
+
+// ───── Tab 2: Hàng chờ đăng + xem trước (chọn tối đa 3 món)
+function agQueue(d){
+  const rows=d.queue.map(q=>{const on=AG.pick.includes(q.product_id);
+    return '<tr class="'+(on?'ag-on':'')+'" onclick="agToggle(\''+q.product_id+'\')"><td style="width:34px"><input type="checkbox" '+(on?'checked':'')+' onclick="event.stopPropagation();agToggle(\''+q.product_id+'\')"></td><td><b>'+agE(q.emoji||'')+' '+agE(q.name)+'</b>'+(q.recently_posted?' <span class="b b-m">Vừa đăng</span>':'')+'<small class="ag-sub">'+agE(q.store_name)+'</small></td><td>'+agLb(q.label)+'</td><td>'+agE(agLeft(q.hours_left))+'</td><td>'+agMoney(q.price_vnd)+'</td></tr>';}).join('');
+  return '<div class="ag-split"><div class="P"><div class="P-h"><div class="P-t">Hàng chờ đăng<small>chọn tối đa 3 món cho một bài</small></div><div class="P-a"><button class="bt bt-s" onclick="agPickTop()">Chọn theo ưu tiên</button></div></div>'+
+    (d.queue.length?'<div class="W"><table><thead><tr><th></th><th>Sản phẩm</th><th>Nhãn</th><th>Còn lại</th><th>Giá</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="ag-empty">Chưa có hàng nhãn đỏ/vàng nào còn bán.</div>')+'</div>'+
+    '<div class="ag-prev"><div class="P"><div class="P-h"><div class="P-t">Xem trước bài<small>'+agE(d.central.name)+'</small></div></div><div class="P-b" id="agPrev">'+agPreviewHtml(d)+'</div></div></div></div>';
+}
+function agToggle(id){const i=AG.pick.indexOf(id);if(i>=0)AG.pick.splice(i,1);else{if(AG.pick.length>=3){agToast('Mỗi bài tổng hợp gom tối đa 3 món');return;}AG.pick.push(id);}agPaint(true);agPreview();}
+function agPickTop(){AG.pick=AG.data.queue.filter(q=>!q.recently_posted).slice(0,3).map(q=>q.product_id);agPaint(true);agPreview();}
+async function agPreview(){
+  const d=AG.data;if(!d)return;
+  if(!AG.pick.length){AG.prevSeq++;AG.prev={empty:true};AG.prevBusy=false;agPaintPrev();return;}
+  const my=++AG.prevSeq;AG.prevBusy=true;agPaintPrev();
+  let r;try{r=await agApi('/admin/preview',{method:'POST',body:{product_ids:AG.pick}});}catch(e){r={error:e.message};}
+  if(my!==AG.prevSeq)return;
+  AG.prev=r;AG.prevBusy=false;agPaintPrev();
+}
+function agPrevSk(){return '<div class="ag-sk" style="height:12px;width:55%"></div><div class="ag-sk" style="height:10px;width:92%;margin-top:12px"></div><div class="ag-sk" style="height:10px;width:80%;margin-top:8px"></div><div class="ag-sk" style="aspect-ratio:1/1;margin-top:14px;border-radius:12px"></div>';}
+function agPreviewHtml(d){
+  const p=AG.prev;
+  if(!AG.pick.length||(p&&p.empty))return '<div class="ag-empty">Chọn ít nhất 1 món ở bảng bên trái để xem bài.</div>';
+  if(p&&p.error&&!AG.prevBusy)return '<div class="al al-w">'+agE(p.error)+'</div>';
+  if(!p||p.error)return agPrevSk();
+  return '<div class="'+(AG.prevBusy?'ag-dim':'')+'"><div class="ag-fb"><div class="ag-fb-h"><div class="ag-av">FS</div><div><b>'+agE(d.central.name)+'</b><small>Vừa xong · 🌐</small></div></div><div class="ag-cap">'+agE(p.message)+'</div>'+agPosterHtml(p)+'<div class="ag-acts"><span>👍 Thích</span><span>💬 Bình luận</span><span>↗ Chia sẻ</span></div></div></div>'+
+    '<div class="ag-note">Bản mẫu của hệ thống. Khi AI bật, Gemini viết lại caption nhưng giữ nguyên giá, giờ và tên cửa hàng.</div>'+
+    '<div style="display:flex;gap:8px;margin-top:12px"><button class="bt bt-p" onclick="agRunSelected()" '+(AG.runBusy||AG.prevBusy?'disabled':'')+'>Đăng bài này</button></div>';
+}
+
+// ───── Tab 3: Lịch sử
+function agHistRows(d){
+  const f=AG.hf,q=(f.q||'').toLowerCase();
+  return d.posts.filter(p=>(!q||((p.items||[]).map(i=>i.name+' '+i.store_name).join(' ')+' '+(p.content||'')).toLowerCase().includes(q))&&(!f.lb||(f.lb==='red'?p.labels&&p.labels.red:p.labels&&p.labels.yellow))&&(!f.st||(f.st==='ok'?(p.status==='sent'||p.status==='posted'):p.status===f.st)));
+}
+function agHistBody(d){
+  const rows=agHistRows(d);
+  if(!rows.length)return '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px">'+(d.posts.length?'Không có bài nào phù hợp bộ lọc':'Chưa có bài tổng hợp nào')+'</td></tr>';
+  return rows.map(p=>'<tr onclick="agOpenPost(\''+p.id+'\')"><td>'+agE(agWhen(p.created_at))+'</td><td><b>'+agE(agDesc(p))+'</b><small class="ag-sub">'+agStores(p).length+' cửa hàng</small></td><td>'+agMixLabel(p)+'</td><td>'+agTier(p.tier)+'</td><td>'+agSt(p.status)+'</td></tr>').join('');
+}
+function agHF(k,v){AG.hf[k]=v;const b=document.getElementById('agHBody');if(b)b.innerHTML=agHistBody(AG.data);const c=document.getElementById('agHCount');if(c)c.textContent=agHistRows(AG.data).length+' bài';}
+function agHistory(d){
+  const f=AG.hf,o=(v,t,c)=>'<option value="'+v+'"'+(c===v?' selected':'')+'>'+t+'</option>';
+  const per=[['today','Hôm nay'],['week','Tuần này'],['month','Tháng này'],['quarter','Quý này'],['year','Năm nay'],['all','Tất cả']];
+  return '<div class="P"><div class="P-h"><div class="ag-f"><input placeholder="Tìm món, cửa hàng…" value="'+agE(f.q)+'" oninput="agHF(\'q\',this.value)" style="min-width:200px">'+
+    '<select onchange="agHF(\'lb\',this.value)">'+o('','Mọi nhãn',f.lb)+o('red','Có hàng đỏ',f.lb)+o('yellow','Có hàng vàng',f.lb)+'</select>'+
+    '<select onchange="agHF(\'st\',this.value)">'+o('','Mọi trạng thái',f.st)+o('ok','Đã đăng',f.st)+o('failed','Lỗi',f.st)+o('queued','Đang xử lý',f.st)+'</select></div>'+
+    '<div class="P-a"><span style="font-size:.72rem;color:var(--t3)" id="agHCount">'+agHistRows(d).length+' bài</span><select class="ag-sel" onchange="AG.csvP=this.value">'+per.map(x=>o(x[0],x[1],AG.csvP)).join('')+'</select><button class="bt" onclick="agExportCsv()">⬇ Xuất CSV</button></div></div>'+
+    '<div class="W"><table><thead><tr><th>Thời gian</th><th>Nội dung bài</th><th>Nhãn</th><th>Cách đăng</th><th>Trạng thái</th></tr></thead><tbody id="agHBody">'+agHistBody(d)+'</tbody></table></div></div>';
+}
+function agInPeriod(iso,p){
+  if(p==='all')return true;const d=new Date(iso);if(isNaN(d))return false;const n=new Date();
+  if(p==='today')return d.toDateString()===n.toDateString();
+  if(p==='week'){const s=new Date(n.getFullYear(),n.getMonth(),n.getDate()-((n.getDay()+6)%7));return d>=s;}
+  if(p==='month')return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();
+  if(p==='quarter')return d.getFullYear()===n.getFullYear()&&Math.floor(d.getMonth()/3)===Math.floor(n.getMonth()/3);
+  if(p==='year')return d.getFullYear()===n.getFullYear();
+  return true;
+}
+function agExportCsv(){
+  const list=agHistRows(AG.data).filter(p=>agInPeriod(p.created_at,AG.csvP));
+  const tier=t=>t==='ai'?'AI viết':t==='template'?'Caption mẫu':t==='direct'?'Đăng trực tiếp':'';
+  const lab=p=>(p.labels&&p.labels.red?'Đỏ':'')+(p.labels&&p.labels.red&&p.labels.yellow?' + ':'')+(p.labels&&p.labels.yellow?'Vàng':'');
+  const rows=[['Thời gian','Nội dung','Cửa hàng có hàng','Nhãn','Cách đăng','Trạng thái','Link bài']].concat(list.map(p=>[new Date(p.created_at).toLocaleString('vi-VN'),agDesc(p),agStores(p).join('; '),lab(p),tier(p.tier),p.status==='failed'?'Lỗi':(p.status==='sent'||p.status==='posted')?'Đã đăng':'Đang xử lý',p.external_url||'']));
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='lich-su-ai-agent.csv';a.click();agToast('Đã xuất '+list.length+' bài ra file CSV');
+}
+
+// ───── Tab 4: Thiết lập đăng bài
+function agSettings(d){
+  const i=d.integrations,cur=AG_PLATS.find(p=>p.id===AG.plat)||AG_PLATS[0];
+  const cards=AG_PLATS.map(p=>'<div class="ag-pl'+(p.id===cur.id?' sel':'')+'" onclick="agSelPl(\''+p.id+'\')"><div class="ag-pl-h"><div class="ag-lg" style="background:'+p.c+'">'+p.l+'</div><div><b>'+p.n+'</b><small><span class="b '+(p.real&&d.auto_enabled?'b-ok':'b-m')+'" style="margin-top:3px">'+(p.real?(d.auto_enabled?'Đăng tự động':'Đã tạm dừng'):'Nội dung sẵn sàng')+'</span></small></div></div></div>').join('');
+  const row=(t,sub,ok,txt)=>'<div class="ag-row"><div class="grow"><b>'+t+'</b><small>'+sub+'</small></div><span class="b '+(ok===true?'b-ok':ok===false?'b-e':'b-m')+'">'+(ok===true?'<span class="ag-dot"></span>':'')+txt+'</span></div>';
+  let pane;
+  if(cur.id==='fb'){
+    pane='<div class="G G2" style="align-items:start"><div class="P"><div class="P-h"><div class="P-t">Kết nối Facebook</div></div><div class="P-b">'+
+        row('Fanpage trung tâm',agE(d.central.name)+(d.central.id?' · Page ID '+agE(d.central.id):''),Boolean(d.central.id),d.central.id?'Đã cấu hình':'Thiếu')+
+        row('n8n','Webhook nhận lệnh đăng bài',i.n8n_configured,i.n8n_configured?'Đã cấu hình':'Chưa cấu hình')+
+        row('Token đăng trực tiếp','Dự phòng khi n8n không gọi được (chỉ hiện có/không)',i.direct_fallback,i.direct_fallback?'Có':'Chưa có')+
+        '<div class="ag-opt"><div><b>Gemini AI viết caption và tạo ảnh</b><small>Key nằm trong n8n, không hiển thị ở đây</small></div><label class="ag-sw"><input type="checkbox" '+(i.ai_enabled?'checked':'')+' onchange="agSetting(\'ai_enabled\',this.checked)"><i></i></label></div></div></div>'+
+      '<div class="P"><div class="P-h"><div class="P-t">Cách hoạt động</div></div><div class="P-b">'+
+        ['Gom tối đa 3 món nhãn đỏ/vàng từ nhiều cửa hàng vào một bài; nhãn đỏ và món sắp hết hạn được ưu tiên.','Poster liệt kê món, cửa hàng bán, % giảm, giờ còn lại. AI chỉ tạo hình nền; giá và giờ nhận luôn do hệ thống chèn.','AI lỗi hoặc quá 20 giây thì tự chuyển sang caption mẫu, rồi đăng trực tiếp nếu n8n không gọi được.'].map(x=>'<div class="ag-bh">'+x+'</div>').join('')+
+        '<div class="ag-note">Giới hạn: tối đa '+d.limits.per_run+' bài mỗi lượt, '+d.limits.per_day+' bài mỗi ngày (cố định để tránh spam).</div></div></div></div>';
+  }else{
+    const t={ig:['Instagram','Tạo sẵn nội dung và poster để đăng thủ công trên Instagram của FoodSave.'],tt:['TikTok','Tạo sẵn kịch bản video ngắn để quay và đăng thủ công.'],zl:['Zalo OA','Tạo sẵn nội dung tin broadcast để gửi thủ công qua Zalo OA.']}[cur.id]||[cur.n,'Tạo sẵn nội dung để đăng thủ công.'];
+    pane='<div class="P"><div class="P-h"><div class="P-t">'+t[0]+'</div></div><div class="P-b"><div class="ag-bh">'+t[1]+'</div><div class="ag-note">Hiện chỉ Facebook đăng tự động. Tự đăng cho nền tảng này: sắp ra mắt.</div></div></div>';
+  }
+  return '<div class="ag-plats">'+cards+'</div>'+pane;
+}
 const agE=v=>String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const agMoney=n=>Math.round(Number(n)||0).toLocaleString('vi-VN')+'đ';
 function agToast(m){let t=document.getElementById('agToast');if(!t){t=document.createElement('div');t.id='agToast';t.className='ag-toast';document.body.appendChild(t);}t.textContent=m;t.classList.add('on');clearTimeout(agToast.x);agToast.x=setTimeout(()=>t.classList.remove('on'),2600);}
@@ -1393,21 +1616,6 @@ async function agApi(path,opt){
   if(!res.ok||!payload||!payload.success)throw new Error((payload&&payload.error&&payload.error.message)||'Máy chủ báo lỗi.');
   return payload.data;
 }
-function agRefreshPage(){const ae=document.activeElement;if(ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)&&AG.tab==='h')return;if(currentPage==='agent'){const sy=window.scrollY;go('agent');window.scrollTo(0,sy);}}
-async function agLoad(silent){
-  if(AG.loading)return;
-  AG.loading=true;if(!silent)AG.err='';
-  try{
-    AG.data=await agApi('/admin/overview');AG.err='';
-    if(!AG.pickInit){AG.pick=AG.data.queue.filter(q=>!q.recently_posted).slice(0,3).map(q=>q.product_id);AG.pickInit=true;}
-    AG.pick=AG.pick.filter(id=>AG.data.queue.some(q=>q.product_id===id));
-    const b=document.getElementById('agBadge');if(b)b.textContent=AG.data.queue.filter(q=>!q.recently_posted).length||'';
-  }catch(e){AG.err=e.message||String(e);}
-  AG.loading=false;
-  agRefreshPage();
-  if(AG.tab==='q'&&!AG.prev)agPreview();
-}
-function agStartTimer(){clearInterval(AG.timer);AG.timer=setInterval(()=>{if(currentPage==='agent'&&!document.hidden)agLoad(true);},60000);}
 
 // ───── tiện ích hiển thị
 const agLb=l=>l==='red'?B('b-e','Đỏ'):l==='yellow'?B('b-w','Vàng'):'<span class="b b-m">—</span>';
@@ -1421,69 +1629,10 @@ const agMixLabel=p=>{const l=p.labels||{red:0,yellow:0};return l.red&&l.yellow?a
 const agModeText={ai:'AI (Gemini qua n8n)',template:'Caption mẫu qua n8n',direct:'Đăng trực tiếp từ backend',none:'Chưa cấu hình đăng bài'};
 
 // ───── Trang
-pg.agent=()=>{
-  if(!AG.data&&!AG.loading&&!AG.err)agLoad();
-  agStartTimer();
-  const d=AG.data;
-  const state=!d?B('b-m','Đang tải…'):!d.auto_enabled?B('b-m','Đã tạm dừng'):d.mode==='none'?B('b-w','Chưa cấu hình'):B('b-ok','<span class="ag-dot"></span>Đang chạy');
-  const tabs=[['ov','Tổng quan'],['q','Hàng chờ &amp; xem trước'+(d?' <em>'+d.queue.filter(q=>!q.recently_posted).length+'</em>':'')],['h','Lịch sử đăng bài'],['c','Thiết lập đăng bài']];
-  const head='<div class="ag-head"><p>Tự động quảng bá hàng nhãn vàng/đỏ trên toàn sàn lên Fanpage FoodSave bằng bài tổng hợp. Mỗi cửa hàng tự quản lý Fanpage riêng ở trang Đối tác.</p><div class="P-a">'+state+'<button class="bt" onclick="agLoad()">Làm mới</button><button class="bt bt-p" onclick="agOpenRun()">▶ Chạy thử ngay</button></div></div>';
-  const nav='<div class="ag-tabs">'+tabs.map(t=>'<div class="ag-tab'+(AG.tab===t[0]?' on':'')+'" onclick="agTab(\''+t[0]+'\')">'+t[1]+'</div>').join('')+'</div>';
-  let body;
-  if(AG.err&&!d)body='<div class="al al-w">'+agE(AG.err)+'<br><button class="bt bt-s" style="margin-top:8px" onclick="agLoad()">Thử lại</button></div>';
-  else if(!d)body='<div class="ag-empty">Đang tải dữ liệu…</div>';
-  else body=(AG.err?'<div class="al al-w">'+agE(AG.err)+'</div>':'')+(AG.tab==='q'?agQueue(d):AG.tab==='h'?agHistory(d):AG.tab==='c'?agSettings(d):agOverview(d));
-  return head+nav+body;
-};
-function agTab(t){AG.tab=t;AG.prev=null;go('agent');window.scrollTo(0,0);if(t==='q')agPreview();}
 
 // ───── Tab 1: Tổng quan
-function agOverview(d){
-  const k=d.kpi,i=d.integrations,wait=d.queue.filter(q=>!q.recently_posted),red=wait.filter(q=>q.label==='red').length;
-  const rate=k.success_rate==null?'—':k.success_rate+'%';
-  const status=(ic,t,sub,badge)=>'<div class="K"><div class="ag-st"><div class="ag-ic">'+ic+'</div><div style="flex:1;min-width:0"><b>'+t+'</b><small>'+sub+'</small></div>'+badge+'</div></div>';
-  const mx=Math.max(1,...d.days.map(x=>x.red+x.yellow));
-  const bars=d.days.map(x=>{const tot=x.red+x.yellow,h=Math.round(tot/mx*118);return '<div class="ag-bar"><b style="font-size:.7rem">'+tot+'</b><div class="ag-stack" style="height:'+h+'px"><s style="flex:'+x.red+';background:#D94E45"></s><s style="flex:'+x.yellow+';background:#E3A82B"></s></div><small>'+agE(x.label)+'</small></div>';}).join('');
-  const events=d.posts.slice(0,8).map(p=>{const cls=p.status==='failed'?'e':(p.tier==='template'||p.tier==='direct')?'w':'';const how=p.tier==='ai'?'Tầng AI':p.tier==='template'?'Tầng Mẫu':p.tier==='direct'?'Tầng Trực tiếp':'';
-    return '<div class="ag-ev '+cls+'">'+(p.status==='failed'?'Đăng bài tổng hợp '+agDesc(p)+' bị lỗi'+(p.error?': '+agE(p.error):''):'Đã đăng bài tổng hợp '+agDesc(p)+' lên '+agE(d.central.name))+'<small>'+agE(agWhen(p.created_at))+(how?' · '+how:'')+'</small></div>';}).join('');
-  return '<div class="G G4">'+
-    '<div class="K"><div class="K-l">Bài đăng hôm nay</div><div class="K-v">'+k.today+'</div><div class="K-n">trên tối đa '+d.limits.per_day+' bài mỗi ngày</div></div>'+
-    '<div class="K"><div class="K-l">Đăng thành công (7 ngày)</div><div class="K-v">'+rate+'</div><div class="K-n">'+k.ok_7d+' bài lên được / '+k.tried_7d+' bài đã thử'+(k.failed_7d?'. '+k.failed_7d+' bài lỗi':'')+'</div></div>'+
-    '<div class="K"><div class="K-l">Hàng chờ đăng</div><div class="K-v">'+wait.length+'</div><div class="K-n">'+red+' nhãn đỏ · '+(wait.length-red)+' nhãn vàng</div></div>'+
-    '<div class="K"><div class="K-l">Bài dùng AI / dự phòng (7 ngày)</div><div class="K-v">'+k.ai_7d+' <span style="font-size:.8rem;color:var(--t3);font-weight:600">/ '+k.fallback_7d+'</span></div><div class="K-n">AI viết · mẫu hoặc trực tiếp</div></div></div>'+
-  '<div class="G G4">'+
-    status('📘','Fanpage trung tâm',agE(d.central.name)+(d.central.id?' · Page ID '+agE(d.central.id):' · chưa có Page ID'),d.central.id?B('b-ok','Đã cấu hình'):B('b-w','Thiếu')) +
-    status('🔌','n8n',i.n8n_configured?'Đã cấu hình webhook':'Chưa cấu hình N8N_WEBHOOK_URL',i.n8n_configured?B('b-ok','Kết nối'):B('b-e','Chưa')) +
-    status('✨','Gemini AI',i.ai_enabled?'AI viết caption và tạo ảnh (key nằm trong n8n)':'Đang tắt, dùng caption mẫu',i.ai_enabled?B('b-ok','Bật'):B('b-m','Tắt')) +
-    status('⚙️','Chế độ hiện tại',agE(agModeText[d.mode]||d.mode),d.mode==='ai'?B('b-ok','AI'):d.mode==='template'?B('b-w','Mẫu'):d.mode==='direct'?B('b-m','Trực tiếp'):B('b-e','—'))+'</div>'+
-  '<div class="P"><div class="ag-master"><div><h3>Bật AI Agent tự đăng bài</h3><p>Khi bật, n8n tự kéo hàng nhãn vàng/đỏ của mọi cửa hàng thành bài tổng hợp (tối đa '+d.limits.per_run+' bài mỗi lượt, '+d.limits.per_day+' bài mỗi ngày) và đăng lên Fanpage FoodSave. Tắt thì chỉ đăng khi bấm Chạy thử ngay.</p></div><label class="ag-sw"><input type="checkbox" '+(d.auto_enabled?'checked':'')+' onchange="agSetting(\'auto_enabled\',this.checked)"><i></i></label></div></div>'+
-  '<div class="P"><div class="P-h"><div class="P-t">Chuỗi 3 tầng đăng bài<small>7 ngày qua</small></div></div><div class="ag-flow">'+
-    '<div class="ag-tier t1"><div class="n">TẦNG 1</div><b>AI viết &amp; tạo ảnh</b><small>Gemini viết caption, tạo ảnh nền; hệ thống chèn chữ, giá, giờ</small><div class="v">'+k.ai_7d+' bài</div></div><div class="ag-arrow">▶</div>'+
-    '<div class="ag-tier"><div class="n">TẦNG 2</div><b>Caption mẫu qua n8n</b><small>AI lỗi hoặc quá 20 giây: caption mẫu + ảnh gốc</small><div class="v">'+k.template_7d+' bài</div></div><div class="ag-arrow">▶</div>'+
-    '<div class="ag-tier"><div class="n">TẦNG 3</div><b>Đăng trực tiếp</b><small>n8n không gọi được: backend đăng bằng token Fanpage</small><div class="v">'+k.direct_7d+' bài</div></div></div></div>'+
-  '<div class="G G2" style="grid-template-columns:1.4fr 1fr"><div class="P" style="margin-bottom:0"><div class="P-h"><div class="P-t">Số món đã đưa vào bài (7 ngày)<small>theo nhãn sản phẩm</small></div></div><div class="P-b"><div class="ag-bars">'+bars+'</div><div class="ag-leg"><span><i style="background:#D94E45"></i>Nhãn đỏ</span><span><i style="background:#E3A82B"></i>Nhãn vàng</span></div></div></div>'+
-    '<div class="P" style="margin-bottom:0"><div class="P-h"><div class="P-t">Cửa hàng được quảng bá nhiều nhất<small>7 ngày qua</small></div></div><div class="P-b">'+(d.top_stores.length?d.top_stores.map((s,n)=>'<div class="ag-row"><span class="b b-m">'+(n+1)+'</span><div class="grow"><b>'+agE(s.name)+'</b></div><b>'+s.count+' món</b></div>').join(''):'<div class="ag-empty">Chưa có bài nào.</div>')+'</div></div></div>'+
-  '<div class="P" style="margin-top:16px"><div class="P-h"><div class="P-t">Hoạt động gần đây</div><div class="P-a"><button class="bt bt-s" onclick="agTab(\'h\')">Xem toàn bộ lịch sử</button></div></div><div class="P-b">'+(events?'<div class="ag-tl">'+events+'</div>':'<div class="ag-empty">Chưa có bài tổng hợp nào. Bấm "Chạy thử ngay" để thử.</div>')+'</div></div>';
-}
 
 // ───── Tab 2: Hàng chờ + xem trước (chọn tối đa 3 món)
-function agQueue(d){
-  const rows=d.queue.map(q=>{const on=AG.pick.includes(q.product_id);
-    return '<tr onclick="agToggle(\''+q.product_id+'\')" style="'+(on?'background:var(--ac-l)':'')+'"><td><input type="checkbox" '+(on?'checked':'')+' onclick="event.stopPropagation();agToggle(\''+q.product_id+'\')"></td><td><b>'+agE(q.emoji||'')+' '+agE(q.name)+'</b></td><td>'+agE(q.store_name)+'</td><td>'+agLb(q.label)+'</td><td>'+agE(agLeft(q.hours_left))+'</td><td>'+agMoney(q.price_vnd)+'</td><td>'+(q.recently_posted?'<span class="b b-m">Đã đăng gần đây</span>':'<span class="b b-b">Chờ đăng</span>')+'</td></tr>';}).join('');
-  return '<div class="ag-split"><div class="P"><div class="P-h"><div class="P-t">Hàng nhãn đỏ/vàng chờ đăng<small>chọn tối đa 3 món đưa vào bài tổng hợp</small></div><div class="P-a"><button class="bt" onclick="agPickTop()">Chọn theo thứ tự ưu tiên</button></div></div>'+
-    (d.queue.length?'<div class="W"><table><thead><tr><th></th><th>Sản phẩm</th><th>Cửa hàng bán</th><th>Nhãn</th><th>Còn lại</th><th>Giá</th><th>Trạng thái</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="ag-empty">Chưa có hàng nhãn đỏ/vàng nào còn bán.</div>')+'</div>'+
-    '<div class="ag-prev"><div class="P"><div class="P-h"><div class="P-t">Xem trước bài tổng hợp<small>'+agE(d.central.name)+'</small></div></div><div class="P-b" id="agPrev">'+agPreviewHtml(d)+'</div></div></div></div>';
-}
-function agToggle(id){const i=AG.pick.indexOf(id);if(i>=0)AG.pick.splice(i,1);else{if(AG.pick.length>=3){agToast('Mỗi bài tổng hợp gom tối đa 3 món');return;}AG.pick.push(id);}AG.prev=null;go('agent');agPreview();}
-function agPickTop(){AG.pick=AG.data.queue.filter(q=>!q.recently_posted).slice(0,3).map(q=>q.product_id);AG.prev=null;go('agent');agPreview();}
-async function agPreview(){
-  const d=AG.data;if(!d)return;
-  if(!AG.pick.length){AG.prev={empty:true};const el=document.getElementById('agPrev');if(el)el.innerHTML=agPreviewHtml(d);return;}
-  AG.prevBusy=true;
-  try{AG.prev=await agApi('/admin/preview',{method:'POST',body:{product_ids:AG.pick}});}catch(e){AG.prev={error:e.message};}
-  AG.prevBusy=false;
-  const el=document.getElementById('agPrev');if(el)el.innerHTML=agPreviewHtml(d);
-}
 function agPosterHtml(b){
   const red=b.labels.red>0;
   const earliest=(b.items.slice().sort((x,y)=>x.hours_left-y.hours_left)[0]||{}).deadline_text||'';
@@ -1491,15 +1640,6 @@ function agPosterHtml(b){
     '<div class="ag-pst-hd">'+b.items.length+' món sắp hết hạn<br>đang chờ bạn<em>Mua trước giờ hết hạn, tự đến cửa hàng nhận</em></div>'+
     '<div class="ag-pst-list">'+b.items.map(i=>'<div class="ag-pst-it"><i>'+agE(i.emoji||'🍱')+'</i><div><b>'+agE(i.name)+'</b><small>'+agE(i.store_name)+' · '+agMoney(i.price_vnd)+'</small></div><span class="'+(i.label==='red'?'ag-lr':'ag-ly')+'">-'+i.discount_percent+'%</span></div>').join('')+'</div>'+
     '<div class="ag-pst-bot">Lấy trước '+agE(earliest)+'</div></div>';
-}
-function agPreviewHtml(d){
-  const p=AG.prev;
-  if(!p||AG.prevBusy)return '<div class="ag-empty">'+(AG.pick.length?'Đang soạn bài…':'Chọn ít nhất 1 món ở bảng bên trái để xem bài.')+'</div>';
-  if(p.empty)return '<div class="ag-empty">Chọn ít nhất 1 món ở bảng bên trái để xem bài.</div>';
-  if(p.error)return '<div class="al al-w">'+agE(p.error)+'</div>';
-  return '<div class="ag-fb"><div class="ag-fb-h"><div class="ag-av">FS</div><div><b>'+agE(d.central.name)+'</b><small>Vừa xong · 🌐</small></div></div><div class="ag-cap">'+agE(p.message)+'</div>'+agPosterHtml(p)+'<div class="ag-acts"><span>👍 Thích</span><span>💬 Bình luận</span><span>↗ Chia sẻ</span></div></div>'+
-    '<div class="ag-note">Đây là bản mẫu của hệ thống. Khi AI bật, n8n để Gemini viết lại caption (giữ nguyên giá, giờ, tên cửa hàng) và tạo ảnh nền; chữ trên ảnh do hệ thống chèn.</div>'+
-    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="bt bt-p" onclick="agRunSelected()" '+(AG.runBusy?'disabled':'')+'>Đăng bài này</button></div>';
 }
 async function agRunSelected(){
   if(AG.runBusy||!AG.pick.length)return;
@@ -1510,25 +1650,6 @@ async function agRunSelected(){
 }
 
 // ───── Tab 3: Lịch sử
-function agHistRows(d){
-  const f=AG.hf,q=(f.q||'').toLowerCase();
-  return d.posts.filter(p=>(!q||((p.items||[]).map(i=>i.name+' '+i.store_name).join(' ')+' '+(p.content||'')).toLowerCase().includes(q))&&(!f.lb||(f.lb==='red'?p.labels&&p.labels.red:p.labels&&p.labels.yellow))&&(!f.tier||(f.tier==='none'?!p.tier:p.tier===f.tier))&&(!f.st||(f.st==='ok'?(p.status==='sent'||p.status==='posted'):p.status===f.st)));
-}
-function agHistBody(d){
-  const rows=agHistRows(d);
-  if(!rows.length)return '<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:24px">'+(d.posts.length?'Không có bài nào phù hợp bộ lọc':'Chưa có bài tổng hợp nào')+'</td></tr>';
-  return rows.map(p=>'<tr onclick="agOpenPost(\''+p.id+'\')"><td>'+agE(agWhen(p.created_at))+'</td><td><span class="b b-p">Facebook</span></td><td><b>'+agE(agDesc(p))+'</b></td><td>'+agStores(p).length+' cửa hàng</td><td>'+agMixLabel(p)+'</td><td>'+agTier(p.tier)+'</td><td>'+agSt(p.status)+'</td></tr>').join('');
-}
-function agHF(k,v){AG.hf[k]=v;const b=document.getElementById('agHBody');if(b)b.innerHTML=agHistBody(AG.data);const c=document.getElementById('agHCount');if(c)c.textContent=agHistRows(AG.data).length+' bài';}
-function agHistory(d){
-  const f=AG.hf,o=(v,t,c)=>'<option value="'+v+'"'+(c===v?' selected':'')+'>'+t+'</option>';
-  return '<div class="P"><div class="P-h"><div class="ag-f"><input placeholder="Tìm món, cửa hàng…" value="'+agE(f.q)+'" oninput="agHF(\'q\',this.value)" style="min-width:200px">'+
-    '<select onchange="agHF(\'lb\',this.value)">'+o('','Mọi nhãn',f.lb)+o('red','Có hàng đỏ',f.lb)+o('yellow','Có hàng vàng',f.lb)+'</select>'+
-    '<select onchange="agHF(\'tier\',this.value)">'+o('','Mọi tầng',f.tier)+o('ai','AI',f.tier)+o('template','Mẫu',f.tier)+o('direct','Trực tiếp',f.tier)+o('none','Chưa rõ',f.tier)+'</select>'+
-    '<select onchange="agHF(\'st\',this.value)">'+o('','Mọi trạng thái',f.st)+o('ok','Đã đăng',f.st)+o('failed','Lỗi',f.st)+o('queued','Đang xử lý',f.st)+'</select></div>'+
-    '<div class="P-a"><span style="font-size:.72rem;color:var(--t3)" id="agHCount">'+agHistRows(d).length+' bài</span><button class="bt" onclick="agExportCsv()">⬇ Xuất CSV</button></div></div>'+
-    '<div class="W"><table><thead><tr><th>Thời gian</th><th>Nền tảng</th><th>Nội dung bài</th><th>Cửa hàng có hàng</th><th>Nhãn</th><th>Tầng</th><th>Trạng thái</th></tr></thead><tbody id="agHBody">'+agHistBody(d)+'</tbody></table></div></div>';
-}
 function agOpenPost(id){
   const p=AG.data.posts.find(x=>x.id===id);if(!p)return;
   const R2=(a,b)=>'<div class="DR"><div class="DR-l">'+a+'</div><div class="DR-v">'+b+'</div></div>';
@@ -1541,11 +1662,6 @@ function agOpenPost(id){
     '<div style="padding:0 18px 18px;display:flex;gap:8px;flex-wrap:wrap">'+(p.external_url?'<a class="bt" href="'+agE(p.external_url)+'" target="_blank" rel="noopener">Mở trên Facebook</a>':'')+(p.content?'<button class="bt bt-p" onclick="agCopyPost(\''+p.id+'\')">Sao chép nội dung</button>':'')+'</div>');
 }
 function agCopyPost(id){const p=AG.data.posts.find(x=>x.id===id);if(!p||!p.content)return;(navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(p.content):Promise.reject()).then(()=>agToast('Đã sao chép nội dung')).catch(()=>agToast('Không sao chép được'));}
-function agExportCsv(){
-  const rows=[['Thời gian','Nội dung','Cửa hàng có hàng','Nhãn','Tầng','Trạng thái','Link bài']].concat(agHistRows(AG.data).map(p=>[new Date(p.created_at).toLocaleString('vi-VN'),agDesc(p),agStores(p).join('; '),(p.labels&&p.labels.red?'Đỏ':'')+(p.labels&&p.labels.red&&p.labels.yellow?' + ':'')+(p.labels&&p.labels.yellow?'Vàng':''),p.tier==='ai'?'AI':p.tier==='template'?'Mẫu':p.tier==='direct'?'Trực tiếp':'',p.status==='failed'?'Lỗi':p.status==='queued'?'Đang xử lý':'Đã đăng',p.external_url||'']));
-  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='lich-su-ai-agent.csv';a.click();agToast('Đã xuất lịch sử ra file CSV');
-}
 
 // ───── Tab 4: Thiết lập đăng bài
 const AG_PLATS=[
@@ -1554,42 +1670,10 @@ const AG_PLATS=[
   {id:'tt',n:'TikTok',c:'#111',l:'TT'},
   {id:'zl',n:'Zalo OA',c:'#0068FF',l:'Z'}
 ];
-function agSelPl(id){AG.plat=id;go('agent');}
 async function agSetting(key,val){
   try{await agApi('/admin/settings',{method:'PATCH',body:{[key]:val}});agToast(key==='auto_enabled'?(val?'Đã bật AI Agent tự đăng bài':'Đã tạm dừng AI Agent'):(val?'Đã bật AI (Gemini)':'Đã tắt AI, dùng caption mẫu'));}
   catch(e){agToast('Không lưu được: '+e.message);}
   await agLoad(true);
-}
-function agSettings(d){
-  const i=d.integrations,cur=AG_PLATS.find(p=>p.id===AG.plat)||AG_PLATS[0];
-  const cards=AG_PLATS.map(p=>'<div class="ag-pl'+(p.id===cur.id?' sel':'')+'" onclick="agSelPl(\''+p.id+'\')"><div class="ag-pl-h"><div class="ag-lg" style="background:'+p.c+'">'+p.l+'</div><div><b>'+p.n+'</b><small><span class="b '+(p.real?(d.auto_enabled?'b-ok':'b-m'):'b-m')+'" style="margin-top:3px">'+(p.real?(d.auto_enabled?'Đăng tự động':'Đã tạm dừng'):'Nội dung sẵn sàng')+'</span></small></div></div><div class="ag-pl-f"><span>'+(p.real?(d.auto_enabled?'Đang dùng':'Đang tắt'):'Đăng thủ công · tự đăng sắp ra mắt')+'</span></div></div>').join('');
-  const row=(t,sub,ok,txt)=>'<div class="ag-row"><div class="grow"><b>'+t+'</b><small>'+sub+'</small></div><span class="b '+(ok===true?'b-ok':ok===false?'b-e':'b-m')+'">'+(ok===true?'<span class="ag-dot"></span>':'')+txt+'</span></div>';
-  let pane;
-  if(cur.id==='fb'){
-    pane='<div class="G G2" style="align-items:start"><div>'+
-      '<div class="P"><div class="P-h"><div class="P-t">Facebook · Bài tổng hợp</div></div><div class="P-b">'+
-        ['Gom tối đa 3 món nhãn đỏ/vàng từ nhiều cửa hàng vào một bài; ưu tiên nhãn đỏ, món sắp hết hạn trước.','Ảnh poster tổng hợp: liệt kê món, tên cửa hàng bán, % giảm, giờ còn lại. Chữ do hệ thống chèn, AI chỉ tạo hình nền.','Caption tiếng Việt, giữ đúng giá và giờ nhận, không nhắc số lượng tồn kho, chỉ gắn link khi địa chỉ site là https.'].map(t=>'<div class="ag-bh">'+t+'</div>').join('')+
-        '<div class="ag-opt"><div><b>AI không được sửa giá, giờ nhận, nhãn<span class="ag-lock">CỐ ĐỊNH</span></b><small>Caption AI không giữ đúng số liệu sẽ bị loại và dùng caption mẫu</small></div><label class="ag-sw"><input type="checkbox" checked disabled><i></i></label></div></div></div>'+
-      '<div class="P"><div class="P-h"><div class="P-t">Giới hạn đang áp dụng</div></div><div class="P-b">'+
-        '<div class="ag-fld"><label>Số bài tối đa mỗi lượt</label><input class="ag-in" value="'+d.limits.per_run+'" disabled></div>'+
-        '<div class="ag-fld"><label>Số bài tối đa mỗi ngày</label><input class="ag-in" value="'+d.limits.per_day+'" disabled><small>Cố định trong hệ thống để tránh spam và giới hạn của Meta.</small></div>'+
-        '<div class="ag-fld"><label>Chu kỳ kiểm tra hàng chờ</label><input class="ag-in" value="Do lịch của workflow n8n (mặc định 10 phút)" disabled><small>Khi không demo, đổi lịch trong n8n lên 30–60 phút để tiết kiệm lượt chạy.</small></div></div></div></div>'+
-    '<div><div class="P"><div class="P-h"><div class="P-t">Kết nối Facebook</div></div><div class="P-b">'+
-        row('Fanpage trung tâm',agE(d.central.name)+(d.central.id?' · Page ID '+agE(d.central.id):''),Boolean(d.central.id),d.central.id?'Đã cấu hình':'Thiếu')+
-        row('n8n','Webhook nhận lệnh đăng bài',i.n8n_configured,i.n8n_configured?'Đã cấu hình':'Chưa cấu hình')+
-        row('Gemini AI','Viết caption + tạo ảnh. Key nằm trong n8n, không hiển thị ở đây',i.ai_enabled,i.ai_enabled?'Bật':'Tắt')+
-        row('Token đăng trực tiếp','Dùng khi n8n không gọi được (chỉ hiện có/không, không hiện giá trị)',i.direct_fallback,i.direct_fallback?'Có':'Chưa có')+'</div></div>'+
-      '<div class="P"><div class="P-h"><div class="P-t">Thứ tự tầng dự phòng</div></div><div class="P-b ag-order">'+
-        '<div class="ag-opt"><div><b>AI viết &amp; tạo ảnh (Gemini)</b><small>Quá 20 giây hoặc lỗi thì chuyển tầng sau</small></div><label class="ag-sw"><input type="checkbox" '+(i.ai_enabled?'checked':'')+' onchange="agSetting(\'ai_enabled\',this.checked)"><i></i></label></div>'+
-        '<div class="ag-opt"><div><b>Mẫu có sẵn qua n8n</b><small>Caption mẫu + ảnh gốc của sản phẩm</small></div><label class="ag-sw"><input type="checkbox" checked disabled><i></i></label></div>'+
-        '<div class="ag-opt"><div><b>Đăng trực tiếp từ backend</b><small>Dùng token Fanpage khi n8n không gọi được</small></div><label class="ag-sw"><input type="checkbox" checked disabled><i></i></label></div></div></div></div></div>';
-  }else{
-    const t={ig:['Instagram','Tạo sẵn nội dung và poster 1080×1350 để đăng thủ công trên tài khoản Instagram của FoodSave.','Tự đăng cần tài khoản Business liên kết Fanpage: sắp ra mắt.'],tt:['TikTok','Tạo sẵn kịch bản video ngắn theo cảnh cho hàng nhãn đỏ để quay và đăng thủ công.','Tự đăng cần TikTok duyệt ứng dụng: sắp ra mắt.'],zl:['Zalo OA','Tạo sẵn tin nhắn ngắn kèm link Mua ngay để gửi cho người theo dõi OA.','Tự gửi cần Zalo OA đã xác thực: sắp ra mắt.']}[cur.id];
-    pane='<div class="P"><div class="P-h"><div class="P-t">'+t[0]+' · Cách hoạt động</div></div><div class="P-b">'+[t[1],t[2]].map(x=>'<div class="ag-bh">'+x+'</div>').join('')+'<div class="ag-note">Hiện chỉ Facebook đăng tự động. Các nền tảng còn lại ở trạng thái "Nội dung sẵn sàng".</div></div></div>';
-  }
-  return '<div class="P"><div class="ag-master"><div><h3>Bật AI Agent tự đăng bài</h3><p>Khi sản phẩm của bất kỳ cửa hàng nào chuyển nhãn vàng hoặc đỏ, hệ thống gom thành bài tổng hợp và đăng lên Fanpage FoodSave. Mỗi cửa hàng tự quản lý Fanpage của mình ở trang cửa hàng.</p></div><label class="ag-sw"><input type="checkbox" '+(d.auto_enabled?'checked':'')+' onchange="agSetting(\'auto_enabled\',this.checked)"><i></i></label></div></div>'+
-    '<div class="ag-sec">Chọn nền tảng đăng bài</div><div class="ag-plats">'+cards+'</div>'+
-    '<div class="al al-i" style="margin:0 0 14px">ℹ️ Token và key AI được lưu ở biến môi trường của backend / Credentials của n8n, không nhập và không hiển thị tại đây.</div>'+pane;
 }
 
 // ───── Chạy thử ngay (gọi thật: gom bài, gửi n8n, dự phòng đăng trực tiếp)
@@ -1615,13 +1699,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')agCloseRun();});
 
 function initAdminSupabaseSync(){
 go('dashboard');
+agLoad(true); // tải sẵn AI Agent ngay khi đăng nhập để mở trang là có dữ liệu
 syncOrdersFromSupabase();
 syncPartnersFromSupabase();
 syncCharitiesFromSupabase();
 syncRealInventoryAndAudits();
+syncSystemUsers();
+nbStart();
 // Tự làm mới lô hàng và nhật ký thật mỗi 60 giây
 if(realSyncTimer)clearInterval(realSyncTimer);
-realSyncTimer=setInterval(()=>{if(!document.hidden)syncRealInventoryAndAudits();},60000);
+realSyncTimer=setInterval(()=>{if(!document.hidden){syncRealInventoryAndAudits();syncSystemUsers();}},60000);
 }
 
 // ===== ADMIN AUTH =====
@@ -1634,6 +1721,7 @@ document.getElementById('adminLoginError').textContent=message||'';
 }
 
 function lockAdmin(message){
+try{localStorage.removeItem('fs_ag_ov_v2');}catch(e){}
 currentAdmin=null;
 adminDataLoaded=false;
 document.body.classList.add('admin-locked');
@@ -1793,6 +1881,7 @@ const audRows=events
 replaceRealRows(AUD,audRows,5);
 
 if(['inventory','audits','dashboard','donations'].includes(currentPage))go(currentPage);
+nbRender();
 }catch(err){
 console.warn('Không đồng bộ được dữ liệu thật cho Admin:',err);
 }
@@ -1841,6 +1930,131 @@ labelRunBusy=false;
 await syncRealInventoryAndAudits();
 go(currentPage);
 }
+
+// ===== NGƯỜI DÙNG THẬT + TỔNG QUAN HỆ THỐNG + CHUÔNG HOẠT ĐỘNG =====
+// Người mua lấy từ Supabase qua GET /admin/users (service role phía backend). Chưa tải được thì giữ dữ liệu mẫu và báo rõ.
+const SYS_USERS={loaded:false,err:'',at:null,counts:null};
+const NB_KEY='fs_admin_notif_seen';
+const NB_ICON={'Đăng sản phẩm':'🛒','Chuyển nhãn':'🏷️','Tự chuyển từ thiện':'💚','Tạo lô tặng từ thiện':'💚','Nhận lô từ thiện':'🤝','Nhận hàng thành công':'✅','Gửi ảnh minh chứng':'📷','Duyệt cửa hàng':'🏪','Chạy cập nhật nhãn':'⚙️','Người mua mới đăng ký':'👤'};
+
+function sysCountsHtml(link){
+const c=SYS_USERS.counts;
+const v=k=>c?Number(c[k]||0).toLocaleString('vi-VN'):'…';
+const total=c?(c.customers+c.partners+c.charities+c.volunteers+c.admins).toLocaleString('vi-VN'):'…';
+const card=(l,val,sub,color)=>`<div class="K"><div class="K-l">${l}</div><div class="K-v"${color?` style="color:var(--${color})"`:''}>${val}</div><div style="font-size:.64rem;color:var(--t3);margin-top:2px">${sub}</div></div>`;
+const at=SYS_USERS.at?stamp(SYS_USERS.at).slice(11):'';
+const note=c?`Dữ liệu thật từ Supabase · cập nhật ${at}`:SYS_USERS.err?'Chưa tải được':'Đang tải…';
+return`<div class="P"><div class="P-h"><div class="P-t">Tổng quan người dùng hệ thống</div><span style="font-size:.7rem;color:var(--t3)">${note}${link?` · <a href="#" onclick="go('sysusers');return false" style="color:var(--ok);font-weight:700">Xem chi tiết</a>`:''}</span></div>
+<div class="G" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));padding:14px;margin:0">
+${card('Tổng tài khoản',total,'tất cả vai trò','')}
+${card('Người mua',v('customers'),'tài khoản khách hàng','ok')}
+${card('Cửa hàng',v('partners'),'tài khoản đối tác','blue')}
+${card('Tổ chức từ thiện',v('charities'),'tài khoản tổ chức','ora')}
+${card('Tình nguyện viên',v('volunteers'),'do tổ chức quản lý','')}
+${card('Quản trị viên',v('admins'),'tài khoản Admin','')}
+</div></div>`;
+}
+
+pg.sysusers=()=>{
+const c=SYS_USERS.counts;
+const rows=[['Người mua','customers','var(--ok)','Tài khoản khách hàng đặt món'],['Cửa hàng','partners','var(--blue)','Tài khoản đối tác bán hàng'],['Tổ chức từ thiện','charities','var(--ora)','Tài khoản tổ chức nhận hàng tặng'],['Tình nguyện viên','volunteers','var(--t2)','Do tổ chức quản lý, đăng nhập bằng mã riêng'],['Quản trị viên','admins','var(--err)','Tài khoản Admin']];
+const total=c?rows.reduce((n,r)=>n+Number(c[r[1]]||0),0):0;
+const breakdown=c?rows.map(r=>{const n=Number(c[r[1]]||0),pc=total?Math.round(n/total*100):0;return`<div style="padding:9px 0;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:5px"><span><strong>${r[0]}</strong> <span style="color:var(--t3)">· ${r[3]}</span></span><span class="mn">${n.toLocaleString('vi-VN')} (${pc}%)</span></div><div style="height:7px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pc}%;background:${r[2]};border-radius:4px"></div></div></div>`}).join(''):'<div class="al al-w">'+(SYS_USERS.err?'Chưa lấy được dữ liệu: '+esc(SYS_USERS.err):'Đang tải…')+'</div>';
+const recent=U.filter(u=>u[11]).slice(0,6);
+const recentRows=recent.length?recent.map(u=>`<tr><td><strong>${u[0]}</strong></td><td style="font-size:.73rem">${u[1]}</td><td>${B('b-m',u[4])}</td><td class="mn">${u[5]}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:18px">Chưa có dữ liệu</td></tr>';
+return`${sysCountsHtml()}
+<div class="P"><div class="P-h"><div class="P-t">Phân bổ theo vai trò</div></div><div class="P-b">${breakdown}</div></div>
+<div class="P"><div class="P-h"><div class="P-t">Người mua đăng ký gần đây</div><div class="P-a"><button class="bt bt-s" onclick="go('users')">Xem danh sách người mua</button></div></div><div class="W"><table><thead><tr><th>Họ tên</th><th>Email</th><th>Đăng nhập qua</th><th>Ngày đăng ký</th></tr></thead><tbody>${recentRows}</tbody></table></div></div>`};
+
+function usersNotice(){
+if(SYS_USERS.loaded)return`<div class="al al-w" style="background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok)"><strong>Dữ liệu thật</strong>: ${U.length} người mua lấy từ Supabase. Ô "Đơn hoàn tất / Đơn đã hủy" tính từ các đơn hàng thật của từng người.</div>`;
+if(SYS_USERS.err)return`<div class="al al-w"><strong>Chưa lấy được người mua thật</strong>: ${esc(SYS_USERS.err)}<br>Bảng bên dưới đang là dữ liệu mẫu. Hãy chạy lại backend rồi bấm tải lại trang.</div>`;
+return`<div class="al al-w">Đang tải người mua từ Supabase…</div>`;
+}
+
+async function syncSystemUsers(){
+if(!currentAdmin)return;
+try{
+const {data}=await foodsaveAdminSupabase.auth.getSession();
+const token=data?.session?.access_token;
+if(!token)throw new Error('Phiên đăng nhập đã hết hạn.');
+const res=await fetch(`${adminApiBaseUrl()}/admin/users`,{headers:{Authorization:`Bearer ${token}`}});
+const payload=await res.json().catch(()=>null);
+if(!res.ok||!payload?.success)throw new Error(payload?.error?.message||`Máy chủ báo lỗi (${res.status}).`);
+const d=payload.data;
+const rows=(d.buyers||[]).map(b=>{
+const score=Number(b.points)||0;
+const created=b.created_at?stamp(b.created_at):'—';
+return[
+safeText(b.full_name||'(chưa đặt tên)'),
+safeText(b.email||'—'),
+safeText(b.phone||'—'),
+b.status||'active',
+b.provider==='phone'?'sdt':safeText(b.provider||'email'),
+created.slice(0,10),
+score,
+score>=85?'trusted':score>=40?'restricted':'blocked',
+b.orders_completed||0,
+b.orders_cancelled||0,
+`${b.orders_total||0} đơn đã đặt${b.last_sign_in_at?' · đăng nhập gần nhất '+stamp(b.last_sign_in_at):''}`,
+true,
+b.created_at||''
+];
+});
+U.splice(0,U.length,...rows);
+SYS_USERS.counts=d.counts;SYS_USERS.loaded=true;SYS_USERS.err='';SYS_USERS.at=new Date();
+const badge=document.querySelector('.S-i[data-p="users"] em');
+if(badge)badge.textContent=rows.length;
+if(['users','reputation','dashboard','sysusers'].includes(currentPage))go(currentPage);
+}catch(err){
+SYS_USERS.err=err.message||String(err);
+if((currentPage==='users'||currentPage==='sysusers')&&!SYS_USERS.loaded)go(currentPage);
+}
+nbRender();
+}
+
+// ----- Chuông: hoạt động hệ thống (nhật ký thật + người mua mới đăng ký)
+function nbSeen(){try{return localStorage.getItem(NB_KEY)||'';}catch(e){return '';}}
+function nbItems(){
+const items=[];
+AUD.filter(a=>a[5]).forEach(a=>items.push({t:a[0],who:a[1],act:a[2],obj:a[3],note:a[4]}));
+U.filter(u=>u[11]&&u[12]).forEach(u=>items.push({t:stamp(u[12]),who:u[0],act:'Người mua mới đăng ký',obj:u[1],note:'Đăng nhập qua '+u[4]}));
+return items.sort((a,b)=>String(b.t).localeCompare(String(a.t))).slice(0,20);
+}
+function nbRender(){
+const btn=document.getElementById('nbBtn'),panel=document.getElementById('nbPanel');
+if(!btn||!panel)return;
+const items=nbItems(),seen=nbSeen();
+const unread=items.filter(i=>String(i.t)>seen).length;
+btn.classList.toggle('has',unread>0);
+btn.title=unread?`${unread} hoạt động mới`:'Hoạt động hệ thống';
+panel.innerHTML=`<div class="NB-h"><span>Hoạt động hệ thống</span><small>${unread?unread+' mới':'đã xem hết'}</small></div>`+
+(items.length?`<div class="NB-l">${items.map(i=>`<div class="NB-it${String(i.t)>seen?' new':''}" onclick="nbGo('${i.act==='Người mua mới đăng ký'?'users':'audits'}')"><div class="ic">${NB_ICON[i.act]||'🔔'}</div><div class="grow" style="min-width:0"><b>${esc(i.act)} · ${esc(i.obj)}</b><span>${esc(i.who)}${i.note?' — '+esc(i.note):''}</span></div><em>${esc(String(i.t).slice(5,16))}</em></div>`).join('')}</div>`:`<div class="NB-e">Chưa có hoạt động nào được ghi nhận.</div>`)+
+`<div class="NB-f" onclick="nbGo('audits')">Xem nhật ký hoạt động đầy đủ</div>`;
+}
+function nbToggle(ev){
+if(ev)ev.stopPropagation();
+const panel=document.getElementById('nbPanel');
+if(!panel)return;
+const open=!panel.classList.contains('open');
+if(open){
+nbRender();
+panel.classList.add('open');
+const latest=nbItems()[0];
+// Đánh dấu "đã xem" sau khi mở (giữ nền xanh nhạt cho tin mới ở lần mở này)
+if(latest)try{localStorage.setItem(NB_KEY,String(latest.t));}catch(e){}
+const btn=document.getElementById('nbBtn');if(btn)btn.classList.remove('has');
+}else panel.classList.remove('open');
+}
+function nbGo(p){document.getElementById('nbPanel')?.classList.remove('open');go(p);}
+let nbTimer=null;
+function nbStart(){
+document.addEventListener('click',e=>{if(!e.target.closest('.NB'))document.getElementById('nbPanel')?.classList.remove('open');});
+if(nbTimer)clearInterval(nbTimer);
+nbTimer=setInterval(()=>{const p=document.getElementById('nbPanel');if(!p||!p.classList.contains('open'))nbRender();},20000);
+nbRender();
+}
+
 
 async function initAdminAuth(){
 document.getElementById('adminLoginForm').addEventListener('submit',handleAdminLogin);
