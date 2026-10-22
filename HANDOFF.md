@@ -20,7 +20,7 @@ Nền tảng giải cứu thực phẩm cận hạn, có 4 bên:
 | Trang chủ | `index.html` | Giới thiệu, chọn cổng |
 
 ## 2. Kiến trúc và nơi triển khai
-- **Frontend** (các file HTML trong `frontend/` + thư mục gốc) → **Netlify** (`foodsave-vn.netlify.app`).
+- **Frontend** (các file HTML trong `frontend/` + thư mục gốc) → **Netlify** (`foodsavevn.netlify.app`).
 - **Backend API** (`src/`, Express + TypeScript) → chạy như **Netlify Function** (`netlify/functions/api.ts`). Đường dẫn `/api/v1/*`.
 - **Tác vụ định kỳ 5 phút** (đổi nhãn/giá, gửi thông báo, trả hàng quá hạn): `netlify/functions/label-automation.ts`. **Trên localhost không tự chạy**; dùng nút "Cập nhật nhãn ngay" ở Admin.
 - **Dữ liệu + đăng nhập + ảnh**: **Supabase** (project `uqyqayrwhcicuctfnwix`). Deploy lại không làm mất dữ liệu.

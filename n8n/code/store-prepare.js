@@ -1,6 +1,6 @@
 // ===== SỬA CÁC DÒNG NÀY RỒI LƯU (không dán token vào chat hay Git) =====
 const CONFIG = {
-  API: 'https://DAN_TEN_MIEN_NETLIFY.netlify.app/api/v1', // địa chỉ API của FoodSave (KHÔNG phải localhost khi dùng n8n Cloud)
+  API: 'https://foodsavevn.netlify.app/api/v1', // địa chỉ API của FoodSave (KHÔNG phải localhost khi dùng n8n Cloud)
   SECRET: 'DAN_N8N_SECRET_VAO_DAY',                        // trùng N8N_SECRET trong .env / biến môi trường Netlify
   DEFAULT_PAGE_ID: 'DAN_MA_FANPAGE_MAC_DINH',              // dùng khi cửa hàng chưa nhập mã Fanpage
   // Mỗi Fanpage một token. Khóa là mã Fanpage.

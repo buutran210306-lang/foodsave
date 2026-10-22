@@ -144,7 +144,7 @@ const wf2 = {
 reset();
 const sched = add('Mỗi 30 phút', 'n8n-nodes-base.scheduleTrigger', 1.2, { rule: { interval: [{ field: 'minutes', minutesInterval: 30 }] } }, [0, 0]);
 const feed = add('Lấy bài tổng hợp từ FoodSave', 'n8n-nodes-base.httpRequest', 4.2, {
-  method: 'GET', url: 'https://DAN_TEN_MIEN_NETLIFY.netlify.app/api/v1/marketing/feed',
+  method: 'GET', url: 'https://foodsavevn.netlify.app/api/v1/marketing/feed',
   authentication: 'genericCredentialType', genericAuthType: 'httpHeaderAuth', options: { timeout: 15000 }
 }, [240, 0], { credentials: secretCred });
 const whc = add('Nhận lệnh chạy thử', 'n8n-nodes-base.webhook', 2, { httpMethod: 'POST', path: 'foodsave-central', responseMode: 'responseNode', options: {} }, [0, 200], { webhookId: 'foodsave-central-webhook' });
