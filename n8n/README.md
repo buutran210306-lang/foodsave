@@ -27,7 +27,7 @@ Tầng nào đã dùng được ghi vào lịch sử (cột "Tầng" trên trang
    - `Chuẩn bị` của workflow 2: `API` (địa chỉ `https://<tên-site>.netlify.app/api/v1`), `SECRET`, `PAGE_TOKENS` (mã Fanpage → token).
    - `Chuẩn bị` của workflow 1: `API`, `SECRET`, `PAGE_ID`, `PAGE_TOKEN` của Fanpage FoodSave.
    - `Tách từng bài` của workflow 1: `SECRET`.
-   - Node HTTP *Lấy bài tổng hợp từ FoodSave*: sửa `https://DAN_TEN_MIEN_NETLIFY.netlify.app` thành địa chỉ site thật.
+   - Node HTTP *Lấy bài tổng hợp từ FoodSave*: kiểm tra địa chỉ đang là `https://foodsavevn.netlify.app`, đổi nếu site thật có tên khác.
 5. **Bật Active** cả hai workflow. Lấy địa chỉ **Production URL** của hai webhook (đường dẫn `/webhook/...`, không phải `/webhook-test/...`):
    - `.../webhook/foodsave-promote` → biến `N8N_WEBHOOK_URL`
    - `.../webhook/foodsave-central` → biến `N8N_CENTRAL_WEBHOOK_URL`

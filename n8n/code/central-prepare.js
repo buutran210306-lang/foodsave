@@ -1,6 +1,6 @@
 // ===== SỬA CÁC DÒNG NÀY RỒI LƯU (không dán token vào chat hay Git) =====
 const CONFIG = {
-  API: 'https://DAN_TEN_MIEN_NETLIFY.netlify.app/api/v1', // địa chỉ API của FoodSave (KHÔNG phải localhost khi dùng n8n Cloud)
+  API: 'https://foodsavevn.netlify.app/api/v1', // địa chỉ API của FoodSave (KHÔNG phải localhost khi dùng n8n Cloud)
   SECRET: 'DAN_N8N_SECRET_VAO_DAY',
   PAGE_ID: 'DAN_MA_FANPAGE_FOODSAVE',     // mã Fanpage trung tâm FoodSave (nếu FoodSave đã gửi page_id thì dùng giá trị đó)
   PAGE_TOKEN: 'DAN_TOKEN_VAO_DAY',        // token Fanpage trung tâm FoodSave
