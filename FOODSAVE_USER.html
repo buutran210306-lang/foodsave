@@ -3,6 +3,8 @@
 <head>
    <script>
   window.FOODSAVE_API_BASE = "https://foodsavevn.netlify.app/api/v1";
+  // Dán key Google Maps (Maps JavaScript API) vào đây để dùng bản đồ Google. Để trống thì dùng OpenStreetMap.
+  window.FOODSAVE_GOOGLE_MAPS_KEY = "";
 </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1617,6 +1619,20 @@
   <link rel="stylesheet" href="frontend/foodsave-responsive.css">
   <link rel="stylesheet" href="frontend/foodsave-minimal.css?v=20261009">
   <link rel="stylesheet" href="frontend/foodsave-cookie-consent.css?v=20261003">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<style id="fs-buyer-v2">
+.foodsave-map-shell.has-real-map::before,.foodsave-map-shell.has-real-map .map-roads{display:none}
+.foodsave-map-shell.has-real-map #pickup-map{z-index:1}
+#pickup-map,#addr-map{isolation:isolate}
+.fs-pin{background:transparent;border:0}
+.fs-pin span{display:block;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(11,52,36,.35);margin:3px}
+#addr-map{height:230px;border-radius:12px;border:1px solid var(--line);margin-top:10px;overflow:hidden}
+.addr-search-row{display:flex;gap:8px;flex-wrap:wrap}
+.addr-search-row input{flex:1;min-width:180px}
+.addr-status{font-size:12px;margin-top:6px;min-height:16px;font-weight:700}
+.seller-address-option{display:flex;gap:6px;align-items:flex-start;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:13px;cursor:pointer;font-family:inherit}
+.seller-address-option:hover{background:var(--soft)}
+</style>
 </head>
 <body class="role-user">
 
@@ -2410,7 +2426,6 @@
      PAGE: HOME DASHBOARD
 ============================================================ -->
 <div id="page-home" class="page">
-  <div id="hot-banner"></div>
   <div class="app-hero">
     <div class="wrap">
       <div class="app-hero-row">
@@ -2426,6 +2441,7 @@
 
   <section style="padding:36px 0">
     <div class="wrap">
+      <div id="hot-banner"></div>
       <!-- Active order alert -->
       <div id="active-alert" class="card" style="display:none;background:linear-gradient(135deg,var(--orange-100),#fff8ed);border-color:var(--orange-500);padding:20px;margin-bottom:24px">
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -3958,81 +3974,62 @@
      ADDRESS MODAL
 ============================================================ -->
 <div class="modal-bg" id="address-modal" onclick="if(event.target===this)closeAddressModal()">
-  <div class="modal" style="max-width:620px">
-    <div class="modal-header"><h3><i class="ti ti-map-pin-plus"></i> Thêm địa chỉ mới</h3><button class="modal-close" onclick="closeAddressModal()"><i class="ti ti-x"></i></button></div>
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header"><h3 id="addr-title"><i class="ti ti-map-pin-plus"></i> Thêm địa chỉ mới</h3><button class="modal-close" onclick="closeAddressModal()"><i class="ti ti-x"></i></button></div>
     <div class="modal-body">
       <div class="field-row">
-        <div class="field"><label>Tên gợi nhớ <span style="color:var(--red-500)">*</span></label><input id="addr-label" placeholder="VD: Nhà riêng, Văn phòng" required></div>
+        <div class="field"><label>Tên gợi nhớ <span style="color:var(--red-500)">*</span></label><input id="addr-label" placeholder="VD: Nhà riêng, Văn phòng" maxlength="40"></div>
         <div class="field">
           <label>Loại địa chỉ</label>
-          <div style="display:flex;gap:6px">
-            <button type="button" class="chip active" onclick="setAddrType('home',this)" style="flex:1;font-size:12px;padding:8px 10px"><i class="ti ti-home"></i> Nhà</button>
-            <button type="button" class="chip" onclick="setAddrType('office',this)" style="flex:1;font-size:12px;padding:8px 10px"><i class="ti ti-briefcase"></i> Văn phòng</button>
-            <button type="button" class="chip" onclick="setAddrType('other',this)" style="flex:1;font-size:12px;padding:8px 10px"><i class="ti ti-dots"></i> Khác</button>
+          <div style="display:flex;gap:6px" id="addr-types">
+            <button type="button" class="chip active" data-type="home" onclick="setAddrType('home')" style="flex:1;font-size:12px;padding:8px 10px"><i class="ti ti-home"></i> Nhà</button>
+            <button type="button" class="chip" data-type="office" onclick="setAddrType('office')" style="flex:1;font-size:12px;padding:8px 10px"><i class="ti ti-briefcase"></i> Văn phòng</button>
+            <button type="button" class="chip" data-type="other" onclick="setAddrType('other')" style="flex:1;font-size:12px;padding:8px 10px"><i class="ti ti-dots"></i> Khác</button>
           </div>
         </div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Họ tên người nhận <span style="color:var(--red-500)">*</span></label><input id="addr-receiver" placeholder="VD: Người đại diện" required></div>
-        <div class="field"><label>Số điện thoại <span style="color:var(--red-500)">*</span></label><input id="addr-phone" type="tel" placeholder="0901 234 567" required></div>
+        <div class="field"><label>Họ tên người nhận <span style="color:var(--red-500)">*</span></label><input id="addr-receiver" placeholder="VD: Nguyễn Văn A" maxlength="80"></div>
+        <div class="field"><label>Số điện thoại <span style="color:var(--red-500)">*</span></label><input id="addr-phone" type="tel" placeholder="0901 234 567" maxlength="20"></div>
+      </div>
+
+      <div class="field">
+        <label>Tìm địa chỉ trên bản đồ <span style="font-weight:500;color:var(--muted)">(tự điền các ô bên dưới)</span></label>
+        <div class="addr-search-row">
+          <input id="addr-search" placeholder="Gõ số nhà, đường, phường... rồi bấm Tìm" onkeydown="if(event.key==='Enter'){event.preventDefault();addrSearch();}">
+          <button type="button" class="btn btn-soft btn-sm" onclick="addrSearch()"><i class="ti ti-search"></i> Tìm</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="addr-locate" onclick="addrLocate()"><i class="ti ti-current-location"></i> Vị trí hiện tại</button>
+        </div>
+        <div id="addr-results"></div>
+        <div id="addr-map"></div>
+        <div id="addr-map-status" class="addr-status"></div>
       </div>
 
       <div class="field">
         <label>Tỉnh / Thành phố <span style="color:var(--red-500)">*</span></label>
-        <select id="addr-province" required>
+        <select id="addr-province">
           <option value="">— Chọn Tỉnh / Thành phố —</option>
-          <option>TP. Hồ Chí Minh</option>
-          <option>Hà Nội</option>
-          <option>Đà Nẵng</option>
-          <option>Hải Phòng</option>
-          <option>Cần Thơ</option>
-          <option>Bình Dương</option>
-          <option>Đồng Nai</option>
-          <option>Bà Rịa - Vũng Tàu</option>
-          <option>Khánh Hòa</option>
-          <option>Lâm Đồng</option>
-          <option>Quảng Ninh</option>
-          <option>Thừa Thiên Huế</option>
+          <option>TP. Hồ Chí Minh</option><option>Hà Nội</option><option>Đà Nẵng</option><option>Hải Phòng</option><option>Cần Thơ</option><option>Bình Dương</option><option>Đồng Nai</option><option>Bà Rịa - Vũng Tàu</option><option>Khánh Hòa</option><option>Lâm Đồng</option><option>Quảng Ninh</option><option>Thừa Thiên Huế</option>
         </select>
       </div>
       <div class="field-row">
-        <div class="field"><label>Quận / Huyện <span style="color:var(--red-500)">*</span></label>
-          <select id="addr-district" required>
-            <option value="">— Chọn Quận / Huyện —</option>
-            <option>Quận 1</option><option>Quận 2</option><option>Quận 3</option><option>Quận 4</option><option>Quận 5</option><option>Quận 7</option><option>Quận 10</option><option>Quận Bình Thạnh</option><option>Quận Phú Nhuận</option><option>Quận Tân Bình</option><option>Quận Gò Vấp</option><option>TP. Thủ Đức</option>
-          </select>
-        </div>
-        <div class="field"><label>Phường / Xã <span style="color:var(--red-500)">*</span></label>
-          <select id="addr-ward" required>
-            <option value="">— Chọn Phường / Xã —</option>
-            <option>Phường Bến Nghé</option><option>Phường Bến Thành</option><option>Phường Đa Kao</option><option>Phường Cô Giang</option><option>Phường Cầu Kho</option><option>Phường Nguyễn Cư Trinh</option>
-          </select>
-        </div>
+        <div class="field"><label>Quận / Huyện <span style="color:var(--red-500)">*</span></label><input id="addr-district" placeholder="VD: Quận 1" maxlength="60"></div>
+        <div class="field"><label>Phường / Xã</label><input id="addr-ward" placeholder="VD: Phường Bến Nghé" maxlength="60"></div>
       </div>
-
       <div class="field">
         <label>Số nhà, tên đường <span style="color:var(--red-500)">*</span></label>
-        <input id="addr-detail" placeholder="VD: 123 Lý Thường Kiệt" required>
+        <input id="addr-detail" placeholder="VD: 123 Lý Thường Kiệt" maxlength="160">
       </div>
-
       <div class="field">
         <label>Ghi chú thêm (tùy chọn)</label>
-        <textarea placeholder="VD: Tòa nhà ABC, tầng 5, gần ngã 3..." style="min-height:60px"></textarea>
+        <textarea id="addr-note" placeholder="VD: Tòa nhà ABC, tầng 5, gần ngã 3..." style="min-height:60px" maxlength="200"></textarea>
       </div>
 
-      <!-- Map placeholder -->
-      <div style="background:linear-gradient(135deg,#e3f0e9,#f4fbf7);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px">
-        <i class="ti ti-map-pin-pin" style="font-size:32px;color:var(--green-700)"></i>
-        <p style="font-size:13px;font-weight:700;margin:8px 0 4px">Ghim vị trí trên bản đồ</p>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:10px">Giúp shipper / cửa hàng tìm bạn nhanh hơn</p>
-        <button type="button" class="btn btn-ghost btn-sm"><i class="ti ti-current-location"></i> Dùng vị trí hiện tại</button>
-      </div>
-
-      <label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px;padding:10px;background:var(--soft);border-radius:10px"><input type="checkbox" id="addr-default" style="accent-color:var(--green-700)"> <span><strong>Đặt làm địa chỉ mặc định</strong> <span class="text-muted">— Tự động chọn khi đặt hàng</span></span></label>
+      <label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px;padding:10px;background:var(--soft);border-radius:10px"><input type="checkbox" id="addr-default" style="accent-color:var(--green-700)"> <span><strong>Đặt làm địa chỉ mặc định</strong></span></label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeAddressModal()">Hủy</button>
-      <button class="btn btn-primary" onclick="saveAddress()"><i class="ti ti-device-floppy"></i> Lưu địa chỉ</button>
+      <button class="btn btn-primary" id="addr-save" onclick="saveAddress()"><i class="ti ti-device-floppy"></i> Lưu địa chỉ</button>
     </div>
   </div>
 </div>
@@ -4766,11 +4763,6 @@ function saveCard() {
 }
 
 // ============ ADDRESS TYPE ============
-function setAddrType(t, btn) {
-  btn.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-}
-
 function logout() {
   cart = [];
   favorites = new Set();
@@ -6505,6 +6497,125 @@ function openStoreDirections(id) {
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank', 'noopener');
 }
 
+// ============ BẢN ĐỒ CỬA HÀNG THẬT (Google Maps nếu có key, ngược lại OpenStreetMap) ============
+function storeHex(store) {
+  const label = storeMapStatus(store).label;
+  return /đỏ/.test(label) ? '#ef4444' : /vàng/.test(label) ? '#f39a16' : '#10b981';
+}
+
+function storePopupHtml(store) {
+  const status = storeMapStatus(store);
+  return '<div style="min-width:170px;font-family:inherit">' +
+    '<div style="font-weight:800;font-size:13px;margin-bottom:2px">' + htmlSafe(store.name) + '</div>' +
+    '<div style="font-size:11px;color:#667067;margin-bottom:6px">' + htmlSafe(store.addr || 'Đang cập nhật địa chỉ') + '</div>' +
+    '<div style="font-size:11px;font-weight:800;color:' + storeHex(store) + ';margin-bottom:8px">● ' + status.label + '</div>' +
+    '<button type="button" onclick="openStore(' + htmlSafe(jsArg(store.id)) + ')" style="border:0;background:#14613d;color:#fff;border-radius:8px;padding:6px 10px;font-weight:800;font-size:12px;cursor:pointer">Xem cửa hàng</button>' +
+    '</div>';
+}
+
+function userLatLng(location) {
+  if (!location) return null;
+  const lat = Number(location.latitude), lng = Number(location.longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+}
+
+let GMAPS_PROMISE = null;
+function loadGoogleMaps(key) {
+  if (window.google && window.google.maps) return Promise.resolve();
+  if (GMAPS_PROMISE) return GMAPS_PROMISE;
+  GMAPS_PROMISE = new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error('Google Maps tải quá lâu')), 9000);
+    window.__fsGmapsReady = () => { window.clearTimeout(timer); resolve(); };
+    // Key sai / chưa bật thanh toán: Google gọi hàm này, ta chuyển sang bản đồ OpenStreetMap
+    window.gm_authFailure = () => { window.__fsGmapsBad = true; try { renderMap(); } catch (e) { /* bỏ qua */ } };
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&callback=__fsGmapsReady&language=vi&region=VN';
+    script.async = true;
+    script.onerror = () => reject(new Error('Không tải được Google Maps'));
+    document.head.appendChild(script);
+  });
+  GMAPS_PROMISE.catch(() => { GMAPS_PROMISE = null; });
+  return GMAPS_PROMISE;
+}
+
+async function drawGoogleMap(el, stores, location, key) {
+  await loadGoogleMaps(key);
+  if (window.__fsGmapsBad) throw new Error('Key Google Maps không dùng được');
+  if (el.__foodsaveMap) { el.__foodsaveMap.remove(); el.__foodsaveMap = null; }
+  el.innerHTML = '';
+  const gm = window.google.maps;
+  const map = new gm.Map(el, { center: { lat: 10.7769, lng: 106.7009 }, zoom: 13, mapTypeControl: false, streetViewControl: false, gestureHandling: 'greedy' });
+  const bounds = new gm.LatLngBounds();
+  const info = new gm.InfoWindow();
+  let count = 0;
+  stores.forEach(store => {
+    const c = storeCoordinates(store);
+    if (!c) return;
+    const position = { lat: c.latitude, lng: c.longitude };
+    const marker = new gm.Marker({ position, map, title: store.name, icon: { path: gm.SymbolPath.CIRCLE, scale: 10, fillColor: storeHex(store), fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 } });
+    marker.addListener('click', () => { info.setContent(storePopupHtml(store)); info.open(map, marker); });
+    bounds.extend(position);
+    count += 1;
+  });
+  const me = userLatLng(location);
+  if (me) {
+    new gm.Marker({ position: me, map, title: 'Vị trí của bạn', icon: { path: gm.SymbolPath.CIRCLE, scale: 9, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 } });
+    bounds.extend(me);
+    count += 1;
+  }
+  if (count > 1) map.fitBounds(bounds, 60);
+  else if (count === 1) { map.setCenter(bounds.getCenter()); map.setZoom(15); }
+  return count;
+}
+
+function drawLeafletMap(el, stores, location) {
+  if (!window.FoodSaveMap || !window.L) {
+    el.innerHTML = '<div style="position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--muted);font-size:13px;font-weight:700">Chưa tải được bản đồ. Danh sách cửa hàng bên phải vẫn dùng bình thường.</div>';
+    return 0;
+  }
+  const map = window.FoodSaveMap.createMap(el, { zoom: 13 });
+  if (!map) return 0;
+  map.scrollWheelZoom.enable();
+  if (map.zoomControl) map.zoomControl.setPosition('bottomleft');
+  const points = [];
+  stores.forEach(store => {
+    const c = storeCoordinates(store);
+    if (!c) return;
+    const latlng = [c.latitude, c.longitude];
+    const icon = window.L.divIcon({ className: 'fs-pin', html: '<span style="background:' + storeHex(store) + '"></span>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
+    window.L.marker(latlng, { icon, title: store.name }).addTo(map).bindPopup(storePopupHtml(store));
+    points.push(latlng);
+  });
+  const me = userLatLng(location);
+  if (me) {
+    window.L.circleMarker([me.lat, me.lng], { radius: 9, color: '#fff', weight: 3, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map).bindTooltip('Vị trí của bạn');
+    points.push([me.lat, me.lng]);
+  }
+  // Khung có thể vừa được hiện ra (kích thước lúc tạo chưa chuẩn): đo lại rồi căn khung nhìn lần nữa
+  const fit = () => {
+    map.invalidateSize();
+    if (points.length > 1) map.fitBounds(window.L.latLngBounds(points).pad(0.25), { maxZoom: 16 });
+    else if (points.length === 1) map.setView(points[0], 15);
+  };
+  fit();
+  window.setTimeout(fit, 200);
+  window.setTimeout(fit, 900);
+  return points.length;
+}
+
+async function drawRealMap(el, stores, location) {
+  const shell = el.closest('.foodsave-map-shell');
+  const key = String(window.FOODSAVE_GOOGLE_MAPS_KEY || '').trim();
+  let drawn = null;
+  if (key && !window.__fsGmapsBad) {
+    try { drawn = await drawGoogleMap(el, stores, location, key); } catch (error) { drawn = null; }
+  }
+  if (drawn === null) drawn = drawLeafletMap(el, stores, location);
+  if (shell) shell.classList.add('has-real-map');
+  const note = $('#map-summary-radius');
+  if (note && !drawn) note.textContent = 'Cửa hàng chưa có tọa độ để ghim lên bản đồ';
+}
+
 function renderMap() {
   const map = $('#pickup-map');
   const list = $('#map-store-list');
@@ -6526,33 +6637,13 @@ function renderMap() {
   if (radius) radius.textContent = location ? `trong bán kính ${location.radiusKm || 5}km` : 'Bật GPS để ưu tiên cửa hàng gần bạn';
 
   if (!stores.length) {
+    if (map.__foodsaveMap) { map.__foodsaveMap.remove(); map.__foodsaveMap = null; }
     map.innerHTML = `<div class="empty" style="position:absolute;inset:0;display:grid;place-items:center;background:transparent"><div style="text-align:center"><div class="empty-emo">📍</div><h3>Chưa có cửa hàng để hiển thị</h3><p>Dữ liệu cửa hàng sẽ xuất hiện sau khi catalog đồng bộ.</p></div></div>`;
     list.innerHTML = `<div class="empty"><div class="empty-emo">🏪</div><h3>Không có cửa hàng</h3><p>Hãy thử lại sau vài phút.</p></div>`;
     return;
   }
 
-  const bounds = mapBoundsFor(stores, location);
-  const storePins = stores.map((store, index) => {
-    const coordinates = storeCoordinates(store);
-    const point = mapPointFromCoordinates(coordinates, bounds) || MAP_FALLBACK_POINTS[index % MAP_FALLBACK_POINTS.length];
-    const status = storeMapStatus(store);
-    return `
-      <button class="map-pin" style="top:${point.top}%;left:${point.left}%" onclick="openStore(${htmlSafe(jsArg(store.id))})" title="${htmlSafe(store.name)}">
-        <span class="map-dot" style="background:${status.color};box-shadow:0 0 0 8px ${status.shadow},0 10px 24px rgba(11,52,36,.18)"></span>
-        <span class="map-pin-label">${htmlSafe(store.name)}</span>
-      </button>`;
-  }).join('');
-
-  const userPoint = location && bounds
-    ? mapPointFromCoordinates({ latitude: Number(location.latitude), longitude: Number(location.longitude) }, bounds)
-    : null;
-  const userPin = userPoint ? `
-    <button class="map-pin map-pin-user" style="top:${userPoint.top}%;left:${userPoint.left}%" title="Vị trí của bạn">
-      <span class="map-dot"></span>
-      <span class="map-pin-label">Vị trí của bạn</span>
-    </button>` : '';
-
-  map.innerHTML = storePins + userPin;
+  void drawRealMap(map, stores, location);
 
   list.innerHTML = stores.map(store => {
     const status = storeMapStatus(store);
@@ -6584,14 +6675,59 @@ function accTab(t, el) {
   $$('#page-account .side-link').forEach(s => s.classList.remove('active'));
   if (el) el.classList.add('active');
 
-  if (t === 'addresses') renderAddresses();
+  if (t === 'addresses') { renderAddresses(); if (!ADDR_LOADED) loadAddresses(); }
   if (t === 'payment') renderCards();
   if (t === 'help') renderHelpFaq();
 }
 
+// ============ SỔ ĐỊA CHỈ (lưu theo tài khoản trong Supabase: profiles.metadata.addresses) ============
+let ADDR_LOADED = false, ADDR_EDIT = null, ADDR_TYPE = 'home', ADDR_PICKER = null, ADDR_COORD = null, ADDR_SAVING = false;
+const ADDR_TYPE_ICON = { home: 'ti-home', office: 'ti-briefcase', other: 'ti-map-pin' };
+const ADDR_TYPE_NAME = { home: 'Nhà', office: 'Văn phòng', other: 'Khác' };
+
+function addrCacheKey() {
+  const s = readFoodSaveCustomerSession();
+  return 'fs_addresses_' + ((s && ((s.user && s.user.id) || (s.profile && s.profile.id))) || 'guest');
+}
+function addrCacheRead() {
+  try { const v = JSON.parse(localStorage.getItem(addrCacheKey()) || 'null'); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+}
+function addrCacheWrite() { try { localStorage.setItem(addrCacheKey(), JSON.stringify(ADDRESSES)); } catch (e) { /* bỏ qua */ } }
+
+// Lấy sổ địa chỉ từ máy chủ (có bản lưu trên máy để hiện ngay)
+async function loadAddresses() {
+  const cached = addrCacheRead();
+  if (cached) { ADDRESSES.splice(0, ADDRESSES.length, ...cached); renderAddresses(); }
+  try {
+    const me = await window.FS.sync.request('/profile/me');
+    const list = me && me.metadata && me.metadata.addresses;
+    if (Array.isArray(list)) { ADDRESSES.splice(0, ADDRESSES.length, ...list); addrCacheWrite(); }
+    ADDR_LOADED = true;
+  } catch (e) { /* chưa đăng nhập hoặc mất mạng: dùng bản lưu trên máy */ }
+  renderAddresses();
+}
+
+// Ghi sổ địa chỉ lên máy chủ (gộp vào metadata hiện có để không mất dữ liệu khác)
+async function persistAddresses() {
+  addrCacheWrite();
+  try {
+    const me = await window.FS.sync.request('/profile/me');
+    const metadata = Object.assign({}, (me && me.metadata) || {}, { addresses: ADDRESSES });
+    await window.FS.sync.request('/profile/me', { method: 'PATCH', body: { metadata } });
+    return true;
+  } catch (e) { return false; }
+}
+
+function addrMapLink(a) {
+  if (Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lng))) return 'https://www.google.com/maps/search/?api=1&query=' + a.lat + ',' + a.lng;
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a.detail || '');
+}
+
 function renderAddresses() {
+  const box = $('#addr-list');
+  if (!box) return;
   if (ADDRESSES.length === 0) {
-    $('#addr-list').innerHTML = `
+    box.innerHTML = `
       <div class="empty" style="padding:40px 20px">
         <div class="empty-emo">📍</div>
         <h3>Chưa có địa chỉ nào</h3>
@@ -6600,15 +6736,162 @@ function renderAddresses() {
       </div>`;
     return;
   }
-  $('#addr-list').innerHTML = ADDRESSES.map(a => `
-    <div class="card-tight" style="margin-bottom:10px;border:${a.default ? '2px solid var(--green-700)' : '1px solid var(--line)'}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div style="display:flex;gap:8px;align-items:center"><strong>${a.label}</strong>${a.default ? '<span class="tag tag-green">Mặc định</span>' : ''}</div>
-        <div style="display:flex;gap:8px"><button class="btn-link" style="font-size:13px">Sửa</button>${!a.default ? '<button class="btn-link" style="font-size:13px;color:var(--red-500)">Xóa</button>' : ''}</div>
+  box.innerHTML = ADDRESSES.map(a => `
+    <div class="card-tight addr-card" style="margin-bottom:10px;border:${a.default ? '2px solid var(--green-700)' : '1px solid var(--line)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;align-items:center"><i class="ti ${ADDR_TYPE_ICON[a.type] || 'ti-map-pin'}" style="color:var(--green-700)"></i><strong>${htmlSafe(a.label)}</strong>${a.default ? '<span class="tag tag-green">Mặc định</span>' : ''}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          ${!a.default ? `<button class="btn-link" style="font-size:13px" onclick="setDefaultAddress(${htmlSafe(jsArg(a.id))})">Đặt mặc định</button>` : ''}
+          <button class="btn-link" style="font-size:13px" onclick="editAddress(${htmlSafe(jsArg(a.id))})">Sửa</button>
+          <button class="btn-link" style="font-size:13px;color:var(--red-500)" onclick="deleteAddress(${htmlSafe(jsArg(a.id))})">Xóa</button>
+        </div>
       </div>
-      <div style="font-size:14px;margin-bottom:4px">${a.name} · ${a.phone}</div>
-      <div class="text-muted" style="font-size:13px">${a.detail}</div>
+      <div style="font-size:14px;margin-bottom:4px">${htmlSafe(a.name)} · ${htmlSafe(a.phone)}</div>
+      <div class="text-muted" style="font-size:13px">${htmlSafe(a.detail)}</div>
+      ${a.note ? `<div class="text-muted" style="font-size:12px;margin-top:4px">Ghi chú: ${htmlSafe(a.note)}</div>` : ''}
+      <a href="${htmlSafe(addrMapLink(a))}" target="_blank" rel="noopener" class="btn-link" style="font-size:12px;display:inline-block;margin-top:6px"><i class="ti ti-map-2"></i> Xem trên bản đồ</a>
     </div>`).join('');
+}
+
+function setAddrType(type) {
+  ADDR_TYPE = ADDR_TYPE_ICON[type] ? type : 'other';
+  document.querySelectorAll('#addr-types .chip').forEach(b => b.classList.toggle('active', b.dataset.type === ADDR_TYPE));
+}
+
+function addrSetProvince(city) {
+  const sel = $('#addr-province');
+  if (!sel || !city) return;
+  const norm = s => String(s || '').toLowerCase().replace(/^(thành phố|tp\.?|tỉnh)\s*/i, '').replace(/\s+/g, ' ').trim();
+  let match = Array.from(sel.options).find(o => o.value && norm(o.value) === norm(city));
+  if (!match && /h[oồ] ch[ií] minh|ho chi minh|sài gòn|saigon/i.test(city)) match = Array.from(sel.options).find(o => /Hồ Chí Minh/.test(o.value));
+  if (!match) { match = new Option(city, city); sel.appendChild(match); }
+  sel.value = match.value;
+}
+
+// Bản đồ trong hộp thoại: tìm địa chỉ / bấm lên bản đồ / vị trí hiện tại, tự điền các ô bên dưới
+function addrInitPicker(initial) {
+  if (!window.FoodSaveMap || !window.L) {
+    const st = $('#addr-map-status');
+    if (st) st.textContent = 'Chưa tải được bản đồ. Bạn vẫn có thể nhập địa chỉ ở các ô bên dưới.';
+    $('#addr-map').style.display = 'none';
+    return;
+  }
+  $('#addr-map').style.display = '';
+  if (ADDR_PICKER) { try { ADDR_PICKER.destroy(); } catch (e) { /* bỏ qua */ } ADDR_PICKER = null; }
+  ADDR_PICKER = window.FoodSaveMap.attachPicker({
+    mapEl: $('#addr-map'), input: $('#addr-search'), results: $('#addr-results'), status: $('#addr-map-status'),
+    locateButton: $('#addr-locate'), initial: initial || null,
+    onChange(place) {
+      if (Number.isFinite(place.lat) && Number.isFinite(place.lng)) ADDR_COORD = { lat: place.lat, lng: place.lng };
+      if (place.street) $('#addr-detail').value = place.street;
+      if (place.ward) $('#addr-ward').value = place.ward;
+      if (place.district) $('#addr-district').value = place.district;
+      if (place.city) addrSetProvince(place.city);
+    }
+  });
+}
+function addrSearch() { if (ADDR_PICKER) ADDR_PICKER.search(); }
+function addrLocate() { if (ADDR_PICKER) ADDR_PICKER.locate(); }
+
+function addrFill(a) {
+  $('#addr-label').value = a.label || '';
+  $('#addr-receiver').value = a.name || '';
+  $('#addr-phone').value = a.phone || '';
+  $('#addr-detail').value = a.street || '';
+  $('#addr-ward').value = a.ward || '';
+  $('#addr-district').value = a.district || '';
+  $('#addr-note').value = a.note || '';
+  $('#addr-search').value = '';
+  $('#addr-results').innerHTML = '';
+  $('#addr-default').checked = !!a.default;
+  if (a.province) addrSetProvince(a.province); else $('#addr-province').value = '';
+  setAddrType(a.type || 'home');
+}
+
+function addrOpen(title, initial) {
+  $('#addr-title').innerHTML = '<i class="ti ti-map-pin-plus"></i> ' + title;
+  $('#address-modal').classList.add('active');
+  window.setTimeout(() => addrInitPicker(initial), 60);
+}
+
+function addAddress() {
+  ADDR_EDIT = null;
+  ADDR_COORD = null;
+  const s = readFoodSaveCustomerSession() || {};
+  const profile = s.profile || {};
+  const meta = (s.user && s.user.user_metadata) || {};
+  addrFill({
+    name: profile.full_name || meta.full_name || meta.name || ($('#co-name') && $('#co-name').value) || '',
+    phone: profile.phone || (s.user && s.user.phone) || meta.phone || ($('#co-phone') && $('#co-phone').value) || '',
+    default: ADDRESSES.length === 0
+  });
+  addrOpen('Thêm địa chỉ mới', null);
+}
+
+function editAddress(id) {
+  const a = ADDRESSES.find(x => String(x.id) === String(id));
+  if (!a) return;
+  ADDR_EDIT = a.id;
+  ADDR_COORD = Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lng)) ? { lat: Number(a.lat), lng: Number(a.lng) } : null;
+  addrFill(a);
+  addrOpen('Sửa địa chỉ', ADDR_COORD);
+}
+
+function closeAddressModal() {
+  $('#address-modal').classList.remove('active');
+  if (ADDR_PICKER) { try { ADDR_PICKER.destroy(); } catch (e) { /* bỏ qua */ } ADDR_PICKER = null; }
+}
+
+async function saveAddress() {
+  if (ADDR_SAVING) return;
+  const val = id => String(($(id) && $(id).value) || '').trim();
+  const label = val('#addr-label'), name = val('#addr-receiver'), phone = val('#addr-phone');
+  const province = val('#addr-province'), district = val('#addr-district'), ward = val('#addr-ward'), street = val('#addr-detail');
+  if (!label) { toast('Hãy đặt tên gợi nhớ cho địa chỉ', 'info'); $('#addr-label').focus(); return; }
+  if (name.length < 2) { toast('Hãy nhập họ tên người nhận', 'info'); $('#addr-receiver').focus(); return; }
+  if (phone.replace(/\D/g, '').length < 8) { toast('Số điện thoại chưa đúng', 'info'); $('#addr-phone').focus(); return; }
+  if (!province) { toast('Hãy chọn Tỉnh / Thành phố', 'info'); $('#addr-province').focus(); return; }
+  if (!district) { toast('Hãy nhập Quận / Huyện', 'info'); $('#addr-district').focus(); return; }
+  if (!street) { toast('Hãy nhập số nhà, tên đường', 'info'); $('#addr-detail').focus(); return; }
+
+  const entry = {
+    id: ADDR_EDIT || ('a' + Date.now().toString(36)),
+    type: ADDR_TYPE, label, name, phone, province, district, ward, street, note: val('#addr-note'),
+    detail: [street, ward, district, province].filter(Boolean).join(', '),
+    lat: ADDR_COORD ? ADDR_COORD.lat : null, lng: ADDR_COORD ? ADDR_COORD.lng : null,
+    default: $('#addr-default').checked || (ADDRESSES.length === 0 && !ADDR_EDIT)
+  };
+  const index = ADDRESSES.findIndex(x => String(x.id) === String(entry.id));
+  if (index >= 0) ADDRESSES[index] = entry; else ADDRESSES.push(entry);
+  if (entry.default) ADDRESSES.forEach(a => { if (String(a.id) !== String(entry.id)) a.default = false; });
+  if (!ADDRESSES.some(a => a.default) && ADDRESSES[0]) ADDRESSES[0].default = true;
+
+  ADDR_SAVING = true;
+  const btn = $('#addr-save');
+  if (btn) btn.disabled = true;
+  closeAddressModal();
+  renderAddresses();
+  const ok = await persistAddresses();
+  ADDR_SAVING = false;
+  if (btn) btn.disabled = false;
+  toast(ok ? '✓ Đã lưu địa chỉ' : 'Đã lưu trên máy này, chưa đồng bộ được lên tài khoản', ok ? 'info' : 'warn');
+}
+
+async function setDefaultAddress(id) {
+  ADDRESSES.forEach(a => { a.default = String(a.id) === String(id); });
+  renderAddresses();
+  const ok = await persistAddresses();
+  toast(ok ? '✓ Đã đổi địa chỉ mặc định' : 'Đã đổi trên máy này, chưa đồng bộ được lên tài khoản', ok ? 'info' : 'warn');
+}
+
+async function deleteAddress(id) {
+  const a = ADDRESSES.find(x => String(x.id) === String(id));
+  if (!a || !window.confirm('Xóa địa chỉ "' + a.label + '"?')) return;
+  ADDRESSES.splice(ADDRESSES.indexOf(a), 1);
+  if (a.default && ADDRESSES[0]) ADDRESSES[0].default = true;
+  renderAddresses();
+  const ok = await persistAddresses();
+  toast(ok ? '✓ Đã xóa địa chỉ' : 'Đã xóa trên máy này, chưa đồng bộ được lên tài khoản', ok ? 'info' : 'warn');
 }
 
 function renderCards() {
@@ -6621,16 +6904,6 @@ function renderCards() {
   if ($('#cards-empty')) $('#cards-empty').style.display = 'none';
   $('#cards-list').innerHTML = SAVED_CARDS.map(c => `
     <div class="pay-method"><div class="pay-logo card"><i class="ti ti-credit-card" style="font-size:20px"></i></div><div style="flex:1"><div style="font-weight:800">${c.brand} •••• ${c.last4}</div><div style="font-size:12px;color:var(--muted)">Hết hạn ${c.exp}</div></div><button class="btn-link" style="color:var(--red-500)">Xóa</button></div>`).join('');
-}
-
-function addAddress() { $('#address-modal').classList.add('active'); }
-function closeAddressModal() { $('#address-modal').classList.remove('active'); }
-function saveAddress() {
-  const label = $('#addr-name').value || 'Mới';
-  ADDRESSES.push({ id: Date.now(), label, name: $('#addr-receiver').value, phone: $('#addr-phone').value, detail: $('#addr-detail').value + ', ' + $('#addr-ward').value + ', ' + $('#addr-district').value + ', ' + $('#addr-province').value, default: false });
-  closeAddressModal();
-  renderAddresses();
-  toast('✓ Đã thêm địa chỉ', 'info');
 }
 
 function renderHelpFaq() {
@@ -6935,7 +7208,7 @@ if (typeof updateTreeGameUI === 'function') updateTreeGameUI();
 
 
 <style id="hot-banner-style">
-#hot-banner{max-width:1280px;margin:0 auto;padding:16px 24px 0}
+#hot-banner{margin:0 0 24px}#hot-banner:empty{margin:0}
 .hb-wrap{position:relative;border-radius:24px;overflow:hidden;box-shadow:0 18px 40px rgba(220,38,38,.18)}
 .hb-slide{display:none;align-items:center;justify-content:space-between;gap:24px;padding:28px 36px;min-height:230px;color:#fff}
 .hb-slide.on{display:flex;animation:hbIn .5s ease}
@@ -6959,7 +7232,7 @@ if (typeof updateTreeGameUI === 'function') updateTreeGameUI();
 .hb-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer}
 .hb-dots i.on{background:#fff;width:22px;border-radius:6px}
 @keyframes hbIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
-@media(max-width:700px){#hot-banner{padding:12px 12px 0}.hb-slide{padding:20px 18px;flex-direction:column;align-items:flex-start;min-height:0}.hb-name{font-size:24px}.hb-r{width:100%;height:120px;font-size:64px}}
+@media(max-width:700px){.hb-slide{padding:20px 18px;flex-direction:column;align-items:flex-start;min-height:0}.hb-name{font-size:24px}.hb-r{width:100%;height:120px;font-size:64px}}
 #push-banner{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:3500;width:min(600px,94vw);display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#dc2626,#9a1b1b);color:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:pbIn .45s cubic-bezier(.2,1.2,.4,1)}
 #push-banner .pb-ic{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 #push-banner .pb-tx{flex:1;min-width:0}
@@ -7220,6 +7493,8 @@ function updateReputationRules(){
 </script>
 
 
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="frontend/foodsave-map.js?v=20261003e"></script>
 <script src="frontend/foodsave-live-data.js?v=20261019g"></script>
 
 

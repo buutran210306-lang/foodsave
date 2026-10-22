@@ -205,5 +205,83 @@ export const adminService = {
       profile: profile as ProfileRow,
       stores: (stores ?? []) as StoreRow[]
     };
+  },
+
+  // Tổng quan số người dùng theo vai trò + danh sách người mua thật (đọc bằng service role, chỉ Admin gọi được)
+  async systemUsers(): Promise<{
+    counts: { customers: number; partners: number; charities: number; volunteers: number; admins: number; stores: number };
+    buyers: Array<Record<string, unknown>>;
+  }> {
+    const countRole = async (role: string): Promise<number> => {
+      const { count, error } = await supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).eq("role", role);
+      if (error) handleSupabaseError(error, "Failed to count " + role);
+      return count ?? 0;
+    };
+    const countTable = async (table: string): Promise<number> => {
+      const { count, error } = await supabaseAdmin.from(table).select("id", { count: "exact", head: true });
+      if (error) handleSupabaseError(error, "Failed to count " + table);
+      return count ?? 0;
+    };
+    const [customers, partners, charities, admins, volunteers, stores] = await Promise.all([
+      countRole("customer"), countRole("partner"), countRole("charity"), countRole("admin"), countTable("volunteers"), countTable("stores")
+    ]);
+
+    const { data: profiles, error: profilesError } = await supabaseAdmin
+      .from("profiles")
+      .select("id,full_name,phone,status,points,rank,created_at")
+      .eq("role", "customer")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (profilesError) handleSupabaseError(profilesError, "Failed to list buyers");
+    const buyers = profiles ?? [];
+
+    // Email + cách đăng nhập nằm ở auth.users, đơn hàng nằm ở bảng orders
+    const authInfo = new Map<string, { email: string; provider: string; lastSignIn: string | null }>();
+    try {
+      const { data } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      for (const user of data?.users ?? []) {
+        const provider = String((user.app_metadata as Record<string, unknown> | undefined)?.provider ?? "email");
+        authInfo.set(user.id, { email: user.email ?? "", provider, lastSignIn: user.last_sign_in_at ?? null });
+      }
+    } catch {
+      // Không đọc được auth.users thì vẫn trả danh sách (thiếu email)
+    }
+
+    const orderStats = new Map<string, { total: number; completed: number; cancelled: number }>();
+    const ids = buyers.map((b) => b.id as string);
+    if (ids.length) {
+      const { data: orders } = await supabaseAdmin.from("orders").select("customer_id,status").in("customer_id", ids).limit(20000);
+      for (const order of orders ?? []) {
+        const key = order.customer_id as string;
+        const stat = orderStats.get(key) ?? { total: 0, completed: 0, cancelled: 0 };
+        stat.total += 1;
+        if (order.status === "completed") stat.completed += 1;
+        if (order.status === "cancelled") stat.cancelled += 1;
+        orderStats.set(key, stat);
+      }
+    }
+
+    return {
+      counts: { customers, partners, charities, volunteers, admins, stores },
+      buyers: buyers.map((b) => {
+        const auth = authInfo.get(b.id as string);
+        const stat = orderStats.get(b.id as string);
+        return {
+          id: b.id,
+          full_name: b.full_name ?? "",
+          email: auth?.email ?? "",
+          phone: b.phone ?? "",
+          status: b.status ?? "active",
+          provider: auth?.provider ?? "email",
+          points: b.points ?? 0,
+          rank: b.rank ?? "",
+          created_at: b.created_at,
+          last_sign_in_at: auth?.lastSignIn ?? null,
+          orders_total: stat?.total ?? 0,
+          orders_completed: stat?.completed ?? 0,
+          orders_cancelled: stat?.cancelled ?? 0
+        };
+      })
+    };
   }
 };

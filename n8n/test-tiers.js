@@ -44,6 +44,13 @@ const payload = (label, extra = {}) => ({
   ok(/KHÔNG vẽ chữ/.test(prep.imagePrompt), 'prompt ảnh dặn không vẽ chữ');
   const req = (await runNode('build-ai-request.js', { binary: { orig: { mimeType: 'image/jpeg' } }, nodes: { 'Chuẩn bị': { json: prep } } }))[0].json;
   ok(req.imageRequest.contents[0].parts[0].inline_data, 'gửi kèm ảnh gốc cho Gemini');
+  ok(req.modelText === 'gemini-2.5-flash' && req.modelImage === 'gemini-2.5-flash-image', 'tên model lấy từ CONFIG (gemini-2.5-flash / gemini-2.5-flash-image)');
+  ok(req.captionRequest.generationConfig.thinkingConfig.thinkingBudget === 0, 'tắt suy nghĩ để caption không bị cắt');
+  for (const f of ['workflow-1-kenh-foodsave-ai.json', 'workflow-2-cua-hang-ai.json']) {
+    const wf = fs.readFileSync(path.join(__dirname, f), 'utf8');
+    ok(!/gemini-2.0/.test(wf), f + ' không còn model cũ gemini-2.0');
+    ok(wf.includes('/v1beta/models/{{ $json.modelText }}:generateContent') && wf.includes('.modelImage }}:generateContent'), f + ' gọi v1beta/models/<model>:generateContent theo CONFIG');
+  }
   const aiCaption = '🔥 GIẢI CỨU GẤP: Bánh mì ngọt giảm 80%\nCửa hàng mẫu A · 12.000đ, lấy trước 21:30 hôm nay\n#FoodSave';
   const geminiOk = { candidates: [{ content: { parts: [{ text: aiCaption }] } }] };
   const imageOk = { candidates: [{ content: { parts: [{ inlineData: { mimeType: 'image/png', data: Buffer.from('ANH-AI').toString('base64') } }] } }] };

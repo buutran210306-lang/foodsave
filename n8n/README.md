@@ -36,6 +36,7 @@ Tầng nào đã dùng được ghi vào lịch sử (cột "Tầng" trên trang
 
 ## Giới hạn cần biết
 - **Chèn chữ lên ảnh** dùng node *Edit Image* của n8n. Font mặc định của n8n có thể **thiếu dấu tiếng Việt**. Nếu chữ trên ảnh bị lỗi dấu, đặt `OVERLAY: false` trong khối CONFIG (bài vẫn đăng bằng ảnh AI/ảnh gốc, giá và giờ nằm trong caption), hoặc cấu hình font hỗ trợ tiếng Việt cho node.
+- **Tên model Gemini** nằm ở một chỗ: node Code *Dựng yêu cầu AI*, khối `CONFIG` (`MODEL_TEXT = gemini-2.5-flash` viết caption, `MODEL_IMAGE = gemini-2.5-flash-image` tạo ảnh). Google đổi tên model thì chỉ sửa hai dòng này trong n8n rồi lưu, không cần sửa node HTTP. Node gọi `https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent`.
 - **Model tạo ảnh Gemini** (`gemini-2.5-flash-image`) phụ thuộc key/gói của bạn. Nếu không dùng được, node tự lỗi và workflow chuyển sang caption mẫu + ảnh gốc.
 - Hai workflow này mình chưa chạy được trên n8n thật (cần key và Fanpage của bạn). Phần logic các node Code đã được kiểm thử tự động bằng `node n8n/test-tiers.js`.
 - Instagram và TikTok hiện chỉ tạo sẵn nội dung ("Nội dung sẵn sàng"), chưa tự đăng.

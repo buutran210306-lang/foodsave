@@ -26,6 +26,10 @@ export const adminController = {
     sendSuccess(res, result, HTTP_STATUS.OK);
   },
 
+  async systemUsers(_req: Request, res: Response): Promise<void> {
+    sendSuccess(res, await adminService.systemUsers());
+  },
+
   // Chạy ngay tác vụ đổi nhãn/giá/thông báo (dùng khi demo, không phải chờ lượt chạy định kỳ)
   async runLabelAutomation(_req: Request, res: Response): Promise<void> {
     sendSuccess(res, await labelAutomationService.run());

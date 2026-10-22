@@ -26,3 +26,5 @@ httpsgraph*.txt
 *token*.txt
 *secret*.txt
 *.bak-*
+Check-token.js
+*.local.json
