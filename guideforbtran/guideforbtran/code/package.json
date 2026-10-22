@@ -1,0 +1,14 @@
+{
+  "name": "foodsave-matching-guide",
+  "private": true,
+  "description": "Engine ghép đơn FoodSave (match-v1) kèm demo chạy độc lập",
+  "scripts": {
+    "demo": "tsx demo/run-demo.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

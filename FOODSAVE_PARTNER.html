@@ -2056,6 +2056,8 @@ function normalizePartnerStoreProfile(data){
     name:String(data?.name||fallback.name||'').trim(),
     address:String(data?.address||fallback.address||'').trim(),
     logo_url:String(data?.logo_url||fallback.logo_url||'').trim(),
+    latitude:data?.latitude??null,
+    longitude:data?.longitude??null,
     business_type:String(data?.business_type||storeMeta.business_type||fallback.business_type||'').trim(),
     opening_hours:String(partnerOpeningHoursData(data)||fallback.opening_hours||'').trim(),
     opening_schedule:partnerOpeningScheduleRows(data),
@@ -2215,14 +2217,14 @@ async function fetchStoreProfileFromSupabase(options={}){
     partnerStoreProfileFetchKey=fetchKey;
     if(!storeId&&!ownerId)return null;
 
-    let query=window.supabase.from('stores').select('id,name,address,logo_url').limit(1);
+    let query=window.supabase.from('stores').select('id,name,address,logo_url,latitude,longitude,district,city').limit(1);
     query=storeId?query.eq('id',storeId):query.eq('owner_id',ownerId);
     let {data,error}=await query.maybeSingle();
     if(error)throw error;
     if(!data&&!storeId&&typeof getCurrentStoreId==='function'){
       storeId=await getCurrentStoreId();
       if(storeId){
-        const retry=await window.supabase.from('stores').select('id,name,address,logo_url').eq('id',storeId).maybeSingle();
+        const retry=await window.supabase.from('stores').select('id,name,address,logo_url,latitude,longitude,district,city').eq('id',storeId).maybeSingle();
         data=retry.data;
         error=retry.error;
         if(error)throw error;
@@ -3432,16 +3434,121 @@ async function savePartnerOpeningHours(){
   tst('Đã cập nhật giờ hoạt động',saved?'Lịch từng ngày đã được lưu lên hệ thống.':'Lịch từng ngày đã cập nhật trên giao diện.','info');
 }
 
+// ===== SỬA HỒ SƠ CỬA HÀNG (lưu lên Supabase qua backend; Admin đọc cùng dữ liệu nên thấy ngay) =====
+const PARTNER_BANKS=['Vietcombank','VietinBank','BIDV','Agribank','Techcombank','MB Bank','ACB','VPBank','Sacombank','TPBank','HDBank','SHB','VIB','MSB','OCB','Eximbank','SeABank','LPBank'];
+let partnerEditBusy=false,partnerEditPicker=null,partnerEditPlace=null;
+
+function partnerCityShort(city){
+  const raw=String(city||'').trim();
+  if(/h[oồ]\s*ch[ií]\s*minh|sài gòn|tp\.?\s*hcm/i.test(raw))return 'TP.HCM';
+  return raw.replace(/^(thành phố|tỉnh)\s+/i,'').trim();
+}
+
+// Gửi thay đổi lên backend. Thành công thì cập nhật hồ sơ trên màn hình và vẽ lại trang Cài đặt.
+async function savePartnerProfile(patch,okMessage){
+  if(partnerEditBusy)return false;
+  if(!(window.FS&&window.FS.sync&&window.FS.sync.request)){tst('Chưa kết nối','Không gọi được máy chủ FoodSave. Hãy tải lại trang.','expiry');return false;}
+  partnerEditBusy=true;
+  try{
+    await window.FS.sync.request('/partner/profile',{method:'PATCH',body:patch});
+    const cur=currentPartnerStoreProfile();
+    const next={...cur,finance:{...(cur.finance||{})}};
+    if(patch.name!==undefined)next.name=patch.name;
+    if(patch.address!==undefined)next.address=patch.address;
+    if(patch.business_type!==undefined)next.business_type=patch.business_type;
+    if(patch.bank_name!==undefined)next.finance.bank_name=patch.bank_name;
+    if(patch.bank_account_number!==undefined)next.finance.bank_account_number=patch.bank_account_number;
+    if(patch.bank_account_holder!==undefined)next.finance.bank_account_holder=patch.bank_account_holder;
+    if(patch.latitude!==undefined){next.latitude=patch.latitude;next.longitude=patch.longitude;}
+    partnerStoreProfile=normalizePartnerStoreProfile(next);
+    window.partnerStoreProfile=partnerStoreProfile;
+    closeM();
+    renderPartnerSidebar(partnerStoreProfile);
+    if(typeof go==='function')go('settings');
+    tst('Đã lưu',okMessage||'Thông tin đã được cập nhật lên hệ thống. Admin sẽ thấy ngay.','info');
+    return true;
+  }catch(err){
+    tst('Chưa lưu được',(err&&err.message)||'Máy chủ báo lỗi','expiry');
+    return false;
+  }finally{partnerEditBusy=false;}
+}
+
+function partnerEditValue(id){return String((document.getElementById(id)||{}).value||'').trim();}
+
+function editStoreName(){
+  const cur=currentPartnerStoreProfile().name||'';
+  modal('Sửa tên cửa hàng','<div class="field"><label>Tên cửa hàng</label><input class="inp" id="pe-name" maxlength="120" value="'+escHtml(cur)+'"></div><button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="submitStoreName()"><i class="ti ti-check"></i> Lưu</button>');
+}
+function submitStoreName(){
+  const name=partnerEditValue('pe-name');
+  if(name.length<2){tst('Thiếu thông tin','Tên cửa hàng cần ít nhất 2 ký tự','expiry');return;}
+  savePartnerProfile({name});
+}
+
+function editStoreType(){
+  const cur=String(currentPartnerStoreProfile().business_type||'').trim();
+  const curId=(BTYPE.find(b=>b.id===cur||b.l===cur)||{}).id||'';
+  modal('Sửa loại hình','<div class="field"><label>Loại hình cửa hàng</label><select class="inp" id="pe-type">'+BTYPE.map(b=>'<option value="'+b.id+'"'+(b.id===curId?' selected':'')+'>'+b.e+' '+escHtml(b.l)+'</option>').join('')+'<option value="other"'+(curId?'':' selected')+'>Khác</option></select></div><button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="savePartnerProfile({business_type:partnerEditValue(\'pe-type\')})"><i class="ti ti-check"></i> Lưu</button>');
+}
+
+function editStoreAddress(){
+  const cur=currentPartnerStoreProfile();
+  partnerEditPlace=null;
+  modal('Sửa địa chỉ cửa hàng',
+    '<div class="field"><label>Địa chỉ</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="inp" id="pe-addr" style="flex:1;min-width:200px" maxlength="300" placeholder="Gõ số nhà, đường, phường rồi bấm Tìm" value="'+escHtml(cur.address||'')+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();partnerEditPicker&&partnerEditPicker.search();}"><button class="btn btn-sm btn-o" type="button" onclick="partnerEditPicker&&partnerEditPicker.search()"><i class="ti ti-search"></i> Tìm</button><button class="btn btn-sm btn-o" type="button" id="pe-locate" onclick="partnerEditPicker&&partnerEditPicker.locate()"><i class="ti ti-current-location"></i> Vị trí hiện tại</button></div>'+
+    '<div id="pe-results"></div><div id="pe-map" style="height:240px;border-radius:12px;border:1px solid var(--line);margin-top:10px;overflow:hidden"></div><div id="pe-status" style="font-size:12px;font-weight:700;margin-top:6px;min-height:16px"></div></div>'+
+    '<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="submitStoreAddress()"><i class="ti ti-check"></i> Lưu địa chỉ</button>');
+  window.setTimeout(()=>{
+    const mapEl=document.getElementById('pe-map');
+    if(!mapEl)return;
+    if(!window.FoodSaveMap||!window.L){mapEl.style.display='none';return;}
+    if(partnerEditPicker){try{partnerEditPicker.destroy();}catch(e){}}
+    const lat=Number(cur.latitude),lng=Number(cur.longitude);
+    partnerEditPicker=window.FoodSaveMap.attachPicker({
+      mapEl,input:document.getElementById('pe-addr'),results:document.getElementById('pe-results'),status:document.getElementById('pe-status'),
+      locateButton:document.getElementById('pe-locate'),initial:Number.isFinite(lat)&&Number.isFinite(lng)?{lat,lng}:null,
+      onChange(place){partnerEditPlace={...(partnerEditPlace||{}),...place};}
+    });
+  },80);
+}
+function submitStoreAddress(){
+  const address=partnerEditValue('pe-addr');
+  if(address.length<5){tst('Thiếu thông tin','Hãy nhập địa chỉ cụ thể (số nhà, đường, phường)','expiry');return;}
+  const patch={address};
+  const place=partnerEditPlace||{};
+  if(Number.isFinite(place.lat)&&Number.isFinite(place.lng)){patch.latitude=place.lat;patch.longitude=place.lng;}
+  if(place.district)patch.district=place.district;
+  if(place.city)patch.city=partnerCityShort(place.city);
+  savePartnerProfile(patch,'Địa chỉ đã được cập nhật'+(patch.latitude!==undefined?' kèm vị trí trên bản đồ':'')+'. Admin sẽ thấy ngay.');
+}
+
+function editFinance(){
+  const f=currentPartnerStoreProfile().finance||{};
+  modal('Sửa thông tin tài chính',
+    '<div class="field"><label>Ngân hàng</label><input class="inp" id="pe-bank" list="pe-banks" maxlength="80" placeholder="VD: Vietcombank" value="'+escHtml(f.bank_name||'')+'"><datalist id="pe-banks">'+PARTNER_BANKS.map(b=>'<option value="'+b+'">').join('')+'</datalist></div>'+
+    '<div class="field"><label>Số tài khoản</label><input class="inp" id="pe-acc" inputmode="numeric" maxlength="30" placeholder="Chỉ gồm chữ số" value="'+escHtml(f.bank_account_number||'')+'"></div>'+
+    '<div class="field"><label>Chủ tài khoản</label><input class="inp" id="pe-holder" maxlength="120" placeholder="VD: NGUYEN VAN A" value="'+escHtml(f.bank_account_holder||'')+'"></div>'+
+    '<p style="font-size:11.5px;color:var(--muted);margin:0 0 12px">Thông tin này dùng để FoodSave chuyển tiền đối soát cho cửa hàng. Chỉ bạn và Admin xem được.</p>'+
+    '<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="submitFinance()"><i class="ti ti-check"></i> Lưu</button>');
+}
+function submitFinance(){
+  const bank_name=partnerEditValue('pe-bank'),bank_account_number=partnerEditValue('pe-acc').replace(/\s+/g,''),bank_account_holder=partnerEditValue('pe-holder').toUpperCase();
+  if(bank_name.length<2){tst('Thiếu thông tin','Hãy nhập tên ngân hàng','expiry');return;}
+  if(!/^[0-9]{6,30}$/.test(bank_account_number)){tst('Số tài khoản chưa đúng','Chỉ gồm chữ số, từ 6 đến 30 số','expiry');return;}
+  if(bank_account_holder.length<2){tst('Thiếu thông tin','Hãy nhập tên chủ tài khoản','expiry');return;}
+  savePartnerProfile({bank_name,bank_account_number,bank_account_holder},'Thông tin tài chính đã được cập nhật. Admin sẽ thấy ngay.');
+}
+
 function pSet(){
   const profile=currentPartnerStoreProfile();
   const finance=profile.finance||{};
   const openingHoursHtml=partnerOpeningScheduleHtml(profile.opening_schedule)||escHtml(profile.opening_hours||"Chưa thiết lập");
   const storeRows=[
-    {l:"Tên cửa hàng",v:profile.name||"Chưa cập nhật",i:"ti-tag",id:"setting-store-name"},
-    {l:"Địa chỉ",v:profile.address||"Chưa cập nhật",i:"ti-map-pin",id:"setting-store-address"},
+    {l:"Tên cửa hàng",v:profile.name||"Chưa cập nhật",i:"ti-tag",id:"setting-store-name",editAction:"editStoreName()"},
+    {l:"Địa chỉ",v:profile.address||"Chưa cập nhật",i:"ti-map-pin",id:"setting-store-address",editAction:"editStoreAddress()"},
     {l:"Giờ hoạt động",v:profile.opening_hours||"Chưa thiết lập",html:openingHoursHtml,i:"ti-clock",id:"setting-store-hours",editAction:"showOpeningHoursModal()"},
-    {l:"Loại hình",v:partnerBusinessTypeLabel(profile.business_type),i:"ti-category",id:"setting-store-type"},
-    {l:"Đánh giá",v:"★ 4.8 (126 lượt)",i:"ti-star",id:"setting-store-rating"}
+    {l:"Loại hình",v:partnerBusinessTypeLabel(profile.business_type),i:"ti-category",id:"setting-store-type",editAction:"editStoreType()"},
+    {l:"Đánh giá",v:"★ 4.8 (126 lượt)",i:"ti-star",id:"setting-store-rating",noEdit:true}
   ];
   const financeRows=[
     {l:"Ngân hàng",v:finance.bank_name||"Chưa cập nhật",id:"setting-finance-bank"},
@@ -3452,8 +3559,8 @@ function pSet(){
   return`
   <div class="grid-2">
   <div>
-    <div class="card"><div class="st"><i class="ti ti-building-store"></i> Hồ sơ cửa hàng</div>${storeRows.map(f=>{const action=f.editAction||`editField('${f.l}',document.getElementById('${f.id}')?.textContent||'')`;const value=f.html||escHtml(f.v);return `<div class="f ac jb" style="padding:12px 0;border-bottom:1px solid var(--line-2)"><div><div style="font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em"><i class="ti ${f.i}"></i> ${f.l}</div><div id="${f.id}" style="font-size:13px;font-weight:800;color:var(--green-950);margin-top:3px;font-family:'Plus Jakarta Sans';line-height:1.65;white-space:normal">${value}</div></div><button class="btn btn-sm btn-o" onclick="${action}">Sửa</button></div>`}).join('')}</div>
-    <div class="card"><div class="st"><i class="ti ti-credit-card"></i> Thông tin tài chính</div>${financeRows.map(f=>`<div style="padding:11px 0;border-bottom:1px solid var(--line-2)"><div style="font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">${f.l}</div><div id="${f.id}" style="font-size:13px;font-weight:800;color:var(--green-950);margin-top:3px;font-family:'Plus Jakarta Sans'">${escHtml(f.v)}</div></div>`).join('')}</div>
+    <div class="card"><div class="st"><i class="ti ti-building-store"></i> Hồ sơ cửa hàng</div>${storeRows.map(f=>{const action=f.editAction||`editField('${f.l}',document.getElementById('${f.id}')?.textContent||'')`;const value=f.html||escHtml(f.v);return `<div class="f ac jb" style="padding:12px 0;border-bottom:1px solid var(--line-2)"><div><div style="font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em"><i class="ti ${f.i}"></i> ${f.l}</div><div id="${f.id}" style="font-size:13px;font-weight:800;color:var(--green-950);margin-top:3px;font-family:'Plus Jakarta Sans';line-height:1.65;white-space:normal">${value}</div></div>${f.noEdit?'':`<button class="btn btn-sm btn-o" onclick="${action}">Sửa</button>`}</div>`}).join('')}</div>
+    <div class="card"><div class="st"><i class="ti ti-credit-card"></i> Thông tin tài chính<button class="btn btn-sm btn-o" style="margin-left:auto" onclick="editFinance()">Sửa</button></div>${financeRows.map(f=>`<div style="padding:11px 0;border-bottom:1px solid var(--line-2)"><div style="font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">${f.l}</div><div id="${f.id}" style="font-size:13px;font-weight:800;color:var(--green-950);margin-top:3px;font-family:'Plus Jakarta Sans'">${escHtml(f.v)}</div></div>`).join('')}</div>
   </div>
   <div>
     <div class="card"><div class="st"><i class="ti ti-plug-connected"></i> Tích hợp POS</div>${[{l:"Máy POS",v:"Sunmi V2 Pro",s:"tg-g",st:"OK",i:"ti-device-tablet"},{l:"Barcode",v:"Honeywell HH400",s:"tg-g",st:"OK",i:"ti-barcode"},{l:"In hóa đơn",v:"Epson TM-T82III",s:"tg-g",st:"OK",i:"ti-printer"},{l:"ERP Kho",v:"Sapo POS · Sync 5p",s:"tg-b",st:"Sync",i:"ti-database"},{l:"Cân",v:"Chưa kết nối",s:"tg-y",st:"Chờ",i:"ti-scale"}].map(d=>`<div class="f ac g12" style="padding:12px 0;border-bottom:1px solid var(--line-2)"><div style="width:38px;height:38px;border-radius:11px;background:var(--green-50);color:var(--green-800);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${d.i}" style="font-size:18px"></i></div><div class="f1"><div class="f ac g6"><span style="font-size:12.5px;font-weight:900;color:var(--green-950);font-family:'Plus Jakarta Sans'">${d.l}</span><span class="tg ${d.s}">${d.st}</span></div><div style="font-size:11px;color:var(--muted);font-weight:500">${d.v}</div></div><button class="btn btn-sm btn-o">Cấu hình</button></div>`).join('')}<button class="btn btn-primary" style="width:100%;margin-top:14px;justify-content:center" onclick="tst('Sync OK','Đồng bộ ERP thành công','info')"><i class="ti ti-refresh"></i> Sync kho ngay</button></div>

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { partnerService } from "../services/partnerService";
+import { partnerService, type PartnerProfileUpdate } from "../services/partnerService";
 import { getActor } from "../utils/requestContext";
 import { sendSuccess } from "../utils/response";
 
@@ -13,6 +13,11 @@ export const partnerController = {
   async listProducts(req: Request, res: Response): Promise<void> {
     const actor = getActor(req);
     sendSuccess(res, await partnerService.listOwnProducts(actor.userId));
+  },
+
+  async updateProfile(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    sendSuccess(res, await partnerService.updateOwnProfile(actor.userId, req.validated?.body as PartnerProfileUpdate));
   },
 
   async createProductImageUploadUrl(req: Request, res: Response): Promise<void> {

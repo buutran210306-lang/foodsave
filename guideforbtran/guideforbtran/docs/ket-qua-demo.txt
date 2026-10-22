@@ -1,0 +1,19 @@
+
+Mái ấm Ánh Dương cần 50 ổ bánh mì trước 18:00, bán kính 5 km
+Xét 5 lô, dùng 3, đã thử 7 tổ hợp
+
+Phương án 1: 50/50 ổ (đủ) · 3 điểm dừng · ~10.9 km · ~76 phút
+   1. Tiệm bánh Mây: lấy 20 ổ lúc khoảng 14:16 (nhãn Đỏ)
+   2. Bếp Xanh: lấy 18 ổ lúc khoảng 14:36 (nhãn Vàng)
+   3. Lò bánh Sớm Mai: lấy 12 ổ lúc khoảng 15:00 (nhãn Vàng)
+Phương án 2: 38/50 ổ (thiếu 12) · 2 điểm dừng · ~7.4 km · ~55 phút
+   1. Bếp Xanh: lấy 18 ổ lúc khoảng 14:17 (nhãn Vàng)
+   2. Tiệm bánh Mây: lấy 20 ổ lúc khoảng 14:38 (nhãn Đỏ)
+Phương án 3: 32/50 ổ (thiếu 18) · 2 điểm dừng · ~8.5 km · ~58 phút
+   1. Tiệm bánh Mây: lấy 20 ổ lúc khoảng 14:16 (nhãn Đỏ)
+   2. Lò bánh Sớm Mai: lấy 12 ổ lúc khoảng 15:00 (nhãn Vàng)
+
+Lô bị loại:
+   - lo-banh-kem: khác loại hàng
+   - lo-xa: ngoài bán kính
+

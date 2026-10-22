@@ -1,0 +1,123 @@
+{
+  "$comment": "Fixture dùng CHUNG cho src/core/labels (Vitest) và public.freshness_label (pgTAP). label_rules version 1. Đổi ngưỡng = migration mới + sửa file này.",
+  "version": 1,
+  "freshness": [
+    {
+      "name": "cooked: còn 13h là Xanh",
+      "perishability": "cooked",
+      "deadline": "2026-10-20T23:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "green"
+    },
+    {
+      "name": "cooked: đúng 12h là Vàng",
+      "perishability": "cooked",
+      "deadline": "2026-10-20T22:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "yellow"
+    },
+    {
+      "name": "cooked: đúng 4h là Vàng",
+      "perishability": "cooked",
+      "deadline": "2026-10-20T14:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "yellow"
+    },
+    {
+      "name": "cooked: 3h59 là Đỏ",
+      "perishability": "cooked",
+      "deadline": "2026-10-20T13:59:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "red"
+    },
+    {
+      "name": "cooked: đúng hạn là Hết hạn",
+      "perishability": "cooked",
+      "deadline": "2026-10-20T10:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "expired"
+    },
+    {
+      "name": "fresh: còn 73h là Xanh",
+      "perishability": "fresh",
+      "deadline": "2026-10-23T11:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "green"
+    },
+    {
+      "name": "fresh: đúng 72h là Vàng",
+      "perishability": "fresh",
+      "deadline": "2026-10-23T10:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "yellow"
+    },
+    {
+      "name": "fresh: đúng 24h là Vàng",
+      "perishability": "fresh",
+      "deadline": "2026-10-21T10:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "yellow"
+    },
+    {
+      "name": "fresh: 23h là Đỏ",
+      "perishability": "fresh",
+      "deadline": "2026-10-21T09:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "red"
+    },
+    {
+      "name": "packaged: còn 8 ngày là Xanh",
+      "perishability": "packaged",
+      "deadline": "2026-10-28T10:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "green"
+    },
+    {
+      "name": "packaged: đúng 7 ngày là Vàng",
+      "perishability": "packaged",
+      "deadline": "2026-10-27T10:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "yellow"
+    },
+    {
+      "name": "packaged: đúng 3 ngày là Vàng",
+      "perishability": "packaged",
+      "deadline": "2026-10-23T10:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "yellow"
+    },
+    {
+      "name": "packaged: 2 ngày 23h là Đỏ",
+      "perishability": "packaged",
+      "deadline": "2026-10-23T09:00:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "red"
+    },
+    {
+      "name": "packaged: quá hạn 1 phút là Hết hạn",
+      "perishability": "packaged",
+      "deadline": "2026-10-20T09:59:00+07:00",
+      "at": "2026-10-20T10:00:00+07:00",
+      "expected": "expired"
+    }
+  ],
+  "effectiveDeadline": [
+    {
+      "name": "Bánh hết hạn 24:00, cửa hàng đóng 21:00 ⇒ hạn hiệu lực 21:00, Đỏ từ 17:00",
+      "expiresAt": "2026-10-21T00:00:00+07:00",
+      "pickupWindowEnd": "2026-10-20T21:00:00+07:00",
+      "siteCloseAt": "2026-10-20T21:00:00+07:00",
+      "expected": "2026-10-20T21:00:00+07:00",
+      "perishability": "cooked",
+      "redFrom": "2026-10-20T17:00:00+07:00"
+    },
+    {
+      "name": "Cửa hàng 24/7 (không có giờ đóng) ⇒ min(hết hạn, cuối khung lấy)",
+      "expiresAt": "2026-10-21T08:00:00+07:00",
+      "pickupWindowEnd": "2026-10-20T22:00:00+07:00",
+      "siteCloseAt": null,
+      "expected": "2026-10-20T22:00:00+07:00"
+    }
+  ],
+  "dateOnly": [{ "date": "2026-10-20", "expected": "2026-10-20T23:59:00+07:00" }]
+}

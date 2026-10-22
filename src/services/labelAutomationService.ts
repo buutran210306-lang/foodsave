@@ -254,8 +254,9 @@ const processProduct = async (product: AutomationProduct, now: Date, result: Lab
   if (Object.keys(update).length > 0) {
     const { error } = await supabaseAdmin.from("products").update(update).eq("id", product.id);
     if (error) logger.warn(`Không cập nhật được nhãn sản phẩm ${product.id}`, error);
-    // Auto-bot của cửa hàng: hàng vừa chuyển sang vàng/đỏ thì gửi lệnh đăng bài (lỗi không làm hỏng việc đổi nhãn)
-    else if (update.label === "yellow" || update.label === "red") await marketingService.autoPostIfEnabled(product.id);
+    // Auto-bot của cửa hàng: hàng vừa chuyển sang vàng/đỏ, hoặc vừa được đăng lên đã là vàng/đỏ (lần đầu gửi thông báo nhãn)
+    // thì gửi lệnh đăng bài ngay (lỗi không làm hỏng việc đổi nhãn). Việc không đăng lặp do autoPostIfEnabled tự kiểm tra.
+    else if (update.label === "yellow" || update.label === "red" || update.yellow_notified_at !== undefined || update.red_notified_at !== undefined) await marketingService.autoPostIfEnabled(product.id);
     else if (state.label === "red") await marketingService.autoReminderIfDue(product.id);
   }
 

@@ -1425,7 +1425,7 @@ document.querySelectorAll('.S-i').forEach(el=>el.classList.toggle('on',el.datase
 document.getElementById('pt').textContent=titles[p]||p;
 document.getElementById('ct').innerHTML=`<div class="page">${(pg[p]||pg.dashboard)()}</div>`;
 }
-document.querySelectorAll('.S-i').forEach(el=>el.addEventListener('click',()=>go(el.dataset.p)));
+document.querySelectorAll('.S-i').forEach(el=>el.addEventListener('click',()=>{go(el.dataset.p);if(el.dataset.p==='merchants'&&typeof syncPartnersFromSupabase==='function')syncPartnersFromSupabase();}));
 // ═══════════ AI AGENT ĐĂNG BÀI (Admin) ═══════════
 // Chỉ đăng bài TỔNG HỢP của FoodSave (Fanpage trung tâm). Không đăng thay từng cửa hàng:
 // mỗi cửa hàng tự quản lý Fanpage / Auto-bot ở trang Đối tác. Dữ liệu lấy từ API /marketing/admin/*.
@@ -1873,6 +1873,12 @@ LABEL_RUN_LOG.forEach(r=>events.push(r));
 stores.forEach(s=>{
 if(s.status==='active'&&s.reviewed_at)events.push([s.reviewed_at,'Quản trị viên','Duyệt cửa hàng',safeText(s.name),'Cửa hàng được kích hoạt']);
 });
+// Cửa hàng tự sửa hồ sơ (backend ghi partner_profiles.metadata.last_profile_update)
+try{
+const FIELD_VN={name:'Tên cửa hàng',address:'Địa chỉ',latitude:'Vị trí bản đồ',business_type:'Loại hình',bank_name:'Ngân hàng',bank_account_number:'Số tài khoản',bank_account_holder:'Chủ tài khoản'};
+const ppRes=await foodsaveAdminSupabase.from('partner_profiles').select('profile_id,metadata').limit(200);
+(ppRes.data||[]).forEach(r=>{const u=r.metadata&&r.metadata.last_profile_update;if(u&&u.at)events.push([u.at,safeText(u.store_name||'Cửa hàng'),'Cập nhật hồ sơ cửa hàng',safeText(u.store_name||''),'Đã sửa: '+(u.fields||[]).map(f=>FIELD_VN[f]||f).join(', ')]);});
+}catch(e){}
 const audRows=events
 .filter(e=>e[0])
 .sort((a,b)=>new Date(b[0])-new Date(a[0]))
@@ -1935,7 +1941,7 @@ go(currentPage);
 // Người mua lấy từ Supabase qua GET /admin/users (service role phía backend). Chưa tải được thì giữ dữ liệu mẫu và báo rõ.
 const SYS_USERS={loaded:false,err:'',at:null,counts:null};
 const NB_KEY='fs_admin_notif_seen';
-const NB_ICON={'Đăng sản phẩm':'🛒','Chuyển nhãn':'🏷️','Tự chuyển từ thiện':'💚','Tạo lô tặng từ thiện':'💚','Nhận lô từ thiện':'🤝','Nhận hàng thành công':'✅','Gửi ảnh minh chứng':'📷','Duyệt cửa hàng':'🏪','Chạy cập nhật nhãn':'⚙️','Người mua mới đăng ký':'👤'};
+const NB_ICON={'Đăng sản phẩm':'🛒','Chuyển nhãn':'🏷️','Tự chuyển từ thiện':'💚','Tạo lô tặng từ thiện':'💚','Nhận lô từ thiện':'🤝','Nhận hàng thành công':'✅','Gửi ảnh minh chứng':'📷','Duyệt cửa hàng':'🏪','Chạy cập nhật nhãn':'⚙️','Người mua mới đăng ký':'👤','Cập nhật hồ sơ cửa hàng':'✏️'};
 
 function sysCountsHtml(link){
 const c=SYS_USERS.counts;

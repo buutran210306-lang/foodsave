@@ -26,7 +26,63 @@ const getOwnStore = async (ownerId: string): Promise<Store | null> => {
   return data as Store | null;
 };
 
+export interface PartnerProfileUpdate {
+  name?: string | undefined;
+  address?: string | undefined;
+  district?: string | undefined;
+  city?: string | undefined;
+  latitude?: number | undefined;
+  longitude?: number | undefined;
+  business_type?: string | undefined;
+  bank_name?: string | undefined;
+  bank_account_number?: string | undefined;
+  bank_account_holder?: string | undefined;
+}
+
 export const partnerService = {
+  // Cửa hàng tự sửa hồ sơ: ghi vào stores (tên, địa chỉ, tọa độ) và partner_profiles (loại hình, ngân hàng).
+  // Admin đọc cùng hai bảng này nên thấy ngay; metadata.last_profile_update giúp Admin biết ai vừa sửa gì.
+  async updateOwnProfile(ownerId: string, body: PartnerProfileUpdate): Promise<unknown> {
+    const store = await getOwnStore(ownerId);
+    if (!store) throw new AppError("Chưa có cửa hàng để cập nhật", HTTP_STATUS.NOT_FOUND, ERROR_CODES.RESOURCE_NOT_FOUND);
+
+    const storePatch: Record<string, unknown> = {};
+    if (body.name !== undefined) storePatch.name = body.name;
+    if (body.address !== undefined) storePatch.address = body.address;
+    if (body.district !== undefined) storePatch.district = body.district;
+    if (body.city !== undefined) storePatch.city = body.city;
+    if (body.latitude !== undefined && body.longitude !== undefined) {
+      storePatch.latitude = body.latitude;
+      storePatch.longitude = body.longitude;
+    }
+    let updatedStore = store;
+    if (Object.keys(storePatch).length > 0) {
+      const { data, error } = await supabaseAdmin.from("stores").update(storePatch).eq("id", store.id).select("*").single();
+      if (error) handleSupabaseError(error, "Failed to update store profile");
+      updatedStore = data as Store;
+    }
+
+    const profilePatch: Record<string, unknown> = {};
+    if (body.business_type !== undefined) profilePatch.business_type = body.business_type;
+    if (body.bank_name !== undefined) profilePatch.bank_name = body.bank_name;
+    if (body.bank_account_number !== undefined) profilePatch.bank_account_number = body.bank_account_number;
+    if (body.bank_account_holder !== undefined) profilePatch.bank_account_holder = body.bank_account_holder;
+
+    const changed = [...Object.keys(storePatch).filter((key) => key !== "longitude" && key !== "district" && key !== "city"), ...Object.keys(profilePatch)];
+    const { data: profile, error: profileError } = await supabaseAdmin.from("partner_profiles").select("profile_id,metadata").eq("profile_id", ownerId).maybeSingle();
+    if (profileError) handleSupabaseError(profileError, "Failed to load partner profile");
+    if (profile && (Object.keys(profilePatch).length > 0 || changed.length > 0)) {
+      const metadata = ((profile as { metadata?: Record<string, unknown> | null }).metadata ?? {}) as Record<string, unknown>;
+      const { error } = await supabaseAdmin.from("partner_profiles").update({
+        ...profilePatch,
+        metadata: { ...metadata, last_profile_update: { at: new Date().toISOString(), fields: changed, store_name: updatedStore.name } }
+      }).eq("profile_id", ownerId);
+      if (error) handleSupabaseError(error, "Failed to update partner profile");
+    }
+
+    return { store: updatedStore, changed };
+  },
+
   async getDashboard(ownerId: string): Promise<unknown> {
     const { data: stores, error: storeError } = await supabaseAdmin
       .from("stores")
