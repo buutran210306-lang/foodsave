@@ -10,6 +10,7 @@ import {
   createVolunteerBodySchema,
   galleryUploadUrlBodySchema,
   publicGalleryQuerySchema,
+  updateBeneficiaryGroupBodySchema,
   updateCharityProfileBodySchema,
   updateVolunteerBodySchema
 } from "../schemas/charitySchemas";
@@ -30,6 +31,8 @@ charityRoutes.post("/volunteers", validateRequest({ body: createVolunteerBodySch
 charityRoutes.patch("/volunteers/:id", validateRequest({ params: uuidParamSchema, body: updateVolunteerBodySchema }), asyncHandler(charityController.updateVolunteer));
 charityRoutes.get("/profiles/:id/beneficiaries", validateRequest({ params: uuidParamSchema }), asyncHandler(charityController.listBeneficiaryGroups));
 charityRoutes.post("/beneficiaries", validateRequest({ body: createBeneficiaryGroupBodySchema }), asyncHandler(charityController.createBeneficiaryGroup));
+charityRoutes.patch("/beneficiaries/:id", validateRequest({ params: uuidParamSchema, body: updateBeneficiaryGroupBodySchema }), asyncHandler(charityController.updateBeneficiaryGroup));
+charityRoutes.delete("/beneficiaries/:id", validateRequest({ params: uuidParamSchema }), asyncHandler(charityController.deleteBeneficiaryGroup));
 charityRoutes.get("/profiles/:id/reports", validateRequest({ params: uuidParamSchema }), asyncHandler(charityController.listImpactReports));
 charityRoutes.post("/reports", validateRequest({ body: createImpactReportBodySchema }), asyncHandler(charityController.createImpactReport));
 charityRoutes.post("/gallery/upload-url", validateRequest({ body: galleryUploadUrlBodySchema }), asyncHandler(charityController.createGalleryUploadUrl));

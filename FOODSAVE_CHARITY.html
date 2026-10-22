@@ -2113,7 +2113,8 @@ function R(){
   document.getElementById('pt').textContent=T[pg]||"Tổng quan";
   const C=document.getElementById('ct');
   const P={dash:pDash,inbox:pInbox,pickup:pPickup,routes:pRoutes,vol:pVol,bene:pBene,reports:pReports,gallery:pGallery,community:pCommunity,impact:pImpact,settings:pSet};
-  C.innerHTML=(P[pg]||pDash)();C.scrollTop=0;
+  try{C.innerHTML=(P[pg]||pDash)();}catch(renderError){console.error('[FoodSave] Lỗi hiển thị trang '+pg,renderError);C.innerHTML='<div class="card" style="text-align:center;padding:34px 20px"><div style="font-size:40px">⚠️</div><h3>Không hiển thị được trang này</h3><p style="color:var(--muted);font-size:13px">'+proofEscape((renderError&&renderError.message)||'Lỗi không xác định')+'</p><button class="btn btn-ghost" onclick="R()">Thử lại</button></div>';}
+  C.scrollTop=0;
   renderCharityProfile(profile);
   scheduleCharityProfileFetch();
 }
@@ -2141,7 +2142,7 @@ function pDash(){
   {l:"Donation mới",v:newD.length,i:"ti-inbox",c:newD.length?"var(--rose)":"var(--green-700)",bg:newD.length?"var(--rose-100)":"var(--green-100)",ch:urgentNew.length?`${urgentNew.length} đơn GẤP`:'Sẵn sàng nhận'},
   {l:"Đang pickup",v:active.length,i:"ti-truck-delivery",c:"var(--blue)",bg:"var(--blue-100)",ch:`${active.length} TNV đang điều phối`},
   {l:"Hoàn thành tháng",v:`${totalMeals} suất`,i:"ti-circle-check",c:"var(--green-700)",bg:"var(--green-100)",ch:`+18% vs T4/2026`},
-  {l:"Người hưởng lợi",v:"45 em",i:"ti-mood-kid",c:"var(--purple)",bg:"var(--purple-100)",ch:`Trẻ 5-17 tuổi`}
+  {l:"Người hưởng lợi",v:BEN_LOADED?`${BENEFICIARIES.reduce((n,x)=>n+x.count,0)} người`:"—",i:"ti-mood-kid",c:"var(--purple)",bg:"var(--purple-100)",ch:BEN_LOADED?(BENEFICIARIES.length?`${BENEFICIARIES.length} nhóm`:'Chưa ghi nhận nhóm nào'):'Đang tải...'}
   ].map(m=>`<div class="metric"><div class="f ac jb"><span class="metric-l">${m.l}</span><div class="metric-ic" style="background:${m.bg};color:${m.c}"><i class="ti ${m.i}"></i></div></div><div class="metric-v" style="color:${m.c}">${m.v}</div><div style="font-size:11px;font-weight:800;color:${m.c};margin-top:5px;display:flex;align-items:center;gap:5px"><i class="ti ti-trending-up"></i>${m.ch}</div></div>`).join('')}</div>
 
   ${urgentNew.length?`<div class="card m12" style="border-left:4px solid var(--red);background:linear-gradient(135deg,#fef2f2,#fff)">
@@ -2696,26 +2697,101 @@ async function submitVolunteer(){
 // ════════════════════════════════════════════════════
 // BENEFICIARIES
 // ════════════════════════════════════════════════════
-function pBene(){
-  const total=BENEFICIARIES.reduce((s,b)=>s+b.count,0);
-  return`
-  <div class="card gradient-card-k m14"><div style="position:relative;z-index:1"><div class="f ac jb"><div><div style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase">Tổng người được hỗ trợ</div><div style="font-family:'Plus Jakarta Sans';font-size:48px;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1;margin-top:8px">${total} người</div><div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px;font-weight:500">Phân bổ theo nhóm tuổi và nhu cầu dinh dưỡng</div></div><div style="text-align:center"><div style="font-family:'Plus Jakarta Sans';font-size:36px;font-weight:900;color:var(--yellow)">${REPORTS[0].meals}</div><div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Bữa ăn tháng này</div></div></div></div></div>
+// Người hưởng lợi: dữ liệu thật từ Supabase (bảng beneficiary_groups), chỉ lưu thống kê theo nhóm, không lưu tên từng người
+let BEN_LOADED=false,benLoading=false,benTried=0,benError='';
+const BEN_COLORS=['var(--rose)','var(--blue)','var(--purple)','var(--green-700)','var(--yellow-600,#ca8a04)'];
+function mapBeneficiaryRow(row){
+  return{id:row.id,group:row.group_name||'',count:Number(row.people_count)||0,meals:row.meals||'',dietary:row.dietary||'',
+    lastFedIso:row.last_fed_at||'',lastFed:row.last_fed_at?new Date(row.last_fed_at).toLocaleDateString('vi-VN'):'Chưa ghi nhận'};
+}
+async function refreshBeneficiaries(force){
+  const charityId=window.charityProfile&&window.charityProfile.id;
+  if(!charityId||benLoading||!window.FS||!window.FS.sync||!window.FS.sync.getBeneficiaryGroups)return;
+  if(!force&&Date.now()-benTried<8000)return;
+  benLoading=true;benTried=Date.now();
+  try{
+    const rows=await window.FS.sync.getBeneficiaryGroups(charityId);
+    BENEFICIARIES.splice(0,BENEFICIARIES.length,...(Array.isArray(rows)?rows:[]).map(mapBeneficiaryRow));
+    BEN_LOADED=true;benError='';
+  }catch(error){
+    benError=(error&&error.message)||'Không tải được dữ liệu';
+    console.warn('[FoodSave] Không tải được nhóm người hưởng lợi:',error);
+  }finally{
+    benLoading=false;
+    const typing=document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if(!typing&&typeof R==='function'&&['bene','dash'].includes(pg))R();
+  }
+}
+setTimeout(()=>refreshBeneficiaries(true),2800);
 
-  <div class="grid-3 m14">${BENEFICIARIES.map(b=>`<div class="card"><div class="st"><i class="ti ti-users"></i> ${b.group}</div>
-  <div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:900;color:var(--rose);line-height:1;margin-bottom:6px">${b.count} <span style="font-size:18px;color:var(--muted)">người</span></div>
-  <div class="grid-2 g8 m10">
-    <div style="padding:11px;background:var(--soft);border-radius:11px"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">Bữa ăn</div><div style="font-size:13px;font-weight:900;color:var(--green-950);margin-top:3px;font-family:'Plus Jakarta Sans'">${b.meals}</div></div>
-    <div style="padding:11px;background:var(--soft);border-radius:11px"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">Lần cuối</div><div style="font-size:13px;font-weight:900;color:var(--rose);margin-top:3px;font-family:'Plus Jakarta Sans'">${b.lastFed}</div></div>
-  </div>
-  <div style="padding:12px;background:var(--green-100);border-radius:11px;font-size:11.5px;color:var(--green-800);font-weight:700;border-left:3px solid var(--green-700)"><i class="ti ti-leaf"></i> ${b.dietary}</div>
+function benForm(id){
+  const b=BENEFICIARIES.find(x=>x.id===id)||{};
+  const field=(label,inner)=>'<div class="field"><label>'+label+'</label>'+inner+'</div>';
+  modal(id?'Sửa nhóm hưởng lợi':'Thêm nhóm hưởng lợi',
+    field('Tên nhóm','<input class="inp" id="ben-group" maxlength="180" placeholder="VD: Trẻ em 5-12 tuổi" value="'+proofEscape(b.group||'')+'">')+
+    '<div class="grid-2 g10">'+
+      field('Số người','<input class="inp" id="ben-count" type="number" min="0" inputmode="numeric" placeholder="VD: 45" value="'+(b.count!=null?b.count:'')+'">')+
+      field('Bữa ăn','<input class="inp" id="ben-meals" maxlength="120" placeholder="VD: 2 bữa/ngày" value="'+proofEscape(b.meals||'')+'">')+
+    '</div>'+
+    field('Lưu ý dinh dưỡng','<input class="inp" id="ben-diet" maxlength="500" placeholder="VD: Ưu tiên rau củ, sữa; tránh đồ cay" value="'+proofEscape(b.dietary||'')+'">')+
+    field('Lần cuối nhận hàng (không bắt buộc)','<input class="inp" id="ben-last" type="date" value="'+(b.lastFedIso?String(b.lastFedIso).slice(0,10):'')+'">')+
+    '<p style="font-size:11.5px;color:var(--muted);margin:0 0 12px">Chỉ ghi số liệu theo nhóm. Không nhập tên hay giấy tờ của từng người.</p>'+
+    '<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="benSave('+(id?"'"+id+"'":'null')+')"><i class="ti ti-check"></i> Lưu</button>');
+}
+async function benSave(id){
+  const val=k=>String((document.getElementById(k)||{}).value||'').trim();
+  const group_name=val('ben-group'),meals=val('ben-meals'),dietary=val('ben-diet'),countRaw=val('ben-count'),last=val('ben-last');
+  const people_count=Number(countRaw);
+  if(group_name.length<2){tst('Thiếu thông tin','Hãy nhập tên nhóm','info');return;}
+  if(countRaw===''||!Number.isInteger(people_count)||people_count<0){tst('Số người chưa đúng','Nhập số nguyên từ 0 trở lên','info');return;}
+  if(!meals){tst('Thiếu thông tin','Hãy ghi số bữa ăn (VD: 2 bữa/ngày)','info');return;}
+  if(!dietary){tst('Thiếu thông tin','Hãy ghi lưu ý dinh dưỡng (có thể ghi "Không có")','info');return;}
+  const body={group_name,people_count,meals,dietary,last_fed_at:last?new Date(last+'T12:00:00+07:00').toISOString():null};
+  try{
+    if(id)await window.FS.sync.updateBeneficiaryGroup(id,body);
+    else await window.FS.sync.createBeneficiaryGroup({...body,charity_id:window.charityProfile&&window.charityProfile.id});
+    closeM();
+    tst('Đã lưu','Thông tin nhóm hưởng lợi đã được cập nhật','charity');
+    await refreshBeneficiaries(true);
+  }catch(error){
+    tst('Chưa lưu được',(error&&error.message)||'Máy chủ báo lỗi','info');
+  }
+}
+async function benDelete(id){
+  const b=BENEFICIARIES.find(x=>x.id===id);
+  if(!b||!window.confirm('Xóa nhóm "'+b.group+'"?'))return;
+  try{
+    await window.FS.sync.deleteBeneficiaryGroup(id);
+    tst('Đã xóa','Nhóm đã được gỡ khỏi danh sách','charity');
+    await refreshBeneficiaries(true);
+  }catch(error){
+    tst('Chưa xóa được',(error&&error.message)||'Máy chủ báo lỗi','info');
+  }
+}
+
+function pBene(){
+  if(!BEN_LOADED)refreshBeneficiaries();
+  const total=BENEFICIARIES.reduce((s,b)=>s+b.count,0);
+  const totals=impactTotals('charity');
+  const meals=totals?impactNumber(totals.meals_equivalent):0;
+  const addBtn='<button class="btn btn-primary" onclick="benForm()"><i class="ti ti-plus"></i> Thêm nhóm</button>';
+  const empty=!BENEFICIARIES.length
+    ?'<div class="card" style="text-align:center;padding:34px 20px;margin-bottom:14px"><div style="font-size:42px">'+(BEN_LOADED?'🤝':'⏳')+'</div><h3 style="margin:8px 0 6px">'+(BEN_LOADED?'Chưa có nhóm hưởng lợi nào':benError?'Chưa tải được dữ liệu':'Đang tải dữ liệu...')+'</h3><p style="color:var(--muted);font-size:13px;margin:0 0 14px">'+(BEN_LOADED?'Thêm các nhóm bạn đang hỗ trợ (VD: trẻ em, người cao tuổi) để theo dõi số người và bữa ăn.':proofEscape(benError)||'Vui lòng chờ trong giây lát.')+'</p>'+(BEN_LOADED?addBtn:'<button class="btn btn-ghost" onclick="refreshBeneficiaries(true)"><i class="ti ti-refresh"></i> Tải lại</button>')+'</div>'
+    :'';
+  const stat=(label,value,color)=>'<div style="padding:11px;background:var(--soft);border-radius:11px"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">'+label+'</div><div style="font-size:13px;font-weight:900;color:'+color+';margin-top:3px;font-family:\'Plus Jakarta Sans\'">'+value+'</div></div>';
+  return`
+  <div class="card gradient-card-k m14"><div style="position:relative;z-index:1"><div class="f ac jb"><div><div style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase">Tổng người được hỗ trợ</div><div style="font-family:'Plus Jakarta Sans';font-size:48px;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1;margin-top:8px">${total} người</div><div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:6px;font-weight:500">${BENEFICIARIES.length} nhóm · phân bổ theo nhóm tuổi và nhu cầu dinh dưỡng</div></div><div style="text-align:center"><div style="font-family:'Plus Jakarta Sans';font-size:36px;font-weight:900;color:var(--yellow)">${meals}</div><div style="font-size:11px;color:rgba(255,255,255,.7);font-weight:700;text-transform:uppercase;letter-spacing:.06em">Suất ăn đã nhận về</div></div></div></div></div>
+
+  <div class="f ac jb m14"><div style="font-size:13px;color:var(--muted);font-weight:600">Chỉ ghi số liệu theo nhóm, không lưu thông tin cá nhân.</div>${BENEFICIARIES.length?addBtn:''}</div>
+  ${empty}
+  <div class="grid-3 m14">${BENEFICIARIES.map(b=>`<div class="card"><div class="f ac jb"><div class="st" style="margin-bottom:0"><i class="ti ti-users"></i> ${proofEscape(b.group)}</div><div class="f g6"><button class="btn btn-sm btn-o" onclick="benForm('${b.id}')">Sửa</button><button class="btn btn-sm btn-o" style="color:var(--red)" onclick="benDelete('${b.id}')"><i class="ti ti-trash"></i></button></div></div>
+  <div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:900;color:var(--rose);line-height:1;margin:10px 0 6px">${b.count} <span style="font-size:18px;color:var(--muted)">người</span></div>
+  <div class="grid-2 g8 m10">${stat('Bữa ăn',proofEscape(b.meals),'var(--green-950)')}${stat('Lần cuối',b.lastFed,'var(--rose)')}</div>
+  <div style="padding:12px;background:var(--green-100);border-radius:11px;font-size:11.5px;color:var(--green-800);font-weight:700;border-left:3px solid var(--green-700)"><i class="ti ti-leaf"></i> ${proofEscape(b.dietary)}</div>
   </div>`).join('')}</div>
 
-  <div class="card"><div class="st"><i class="ti ti-chart-pie"></i> Phân bổ thực phẩm theo nhóm</div>
-  <div class="grid-3 g10">${[
-  {l:"Trẻ em (40%)",v:"165 bữa",p:40,c:"var(--rose)"},
-  {l:"Vị thành niên (35%)",v:"143 bữa",p:35,c:"var(--blue)"},
-  {l:"Người cao tuổi (25%)",v:"100 bữa",p:25,c:"var(--purple)"}
-  ].map(m=>`<div style="padding:16px;background:var(--soft);border-radius:13px"><div class="f ac jb m8"><div style="font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">${m.l}</div><div style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:900;color:${m.c}">${m.v}</div></div><div class="ptk"><div class="ptf" style="width:${m.p}%;background:${m.c}"></div></div></div>`).join('')}</div></div>
+  ${BENEFICIARIES.length?`<div class="card"><div class="st"><i class="ti ti-chart-pie"></i> Tỷ lệ người được hỗ trợ theo nhóm</div>
+  <div class="grid-3 g10">${BENEFICIARIES.map((b,i)=>{const p=total?Math.round(b.count/total*100):0,c=BEN_COLORS[i%BEN_COLORS.length];return`<div style="padding:16px;background:var(--soft);border-radius:13px"><div class="f ac jb m8"><div style="font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em">${proofEscape(b.group)} (${p}%)</div><div style="font-family:'Plus Jakarta Sans';font-size:18px;font-weight:900;color:${c}">${b.count} người</div></div><div class="ptk"><div class="ptf" style="width:${p}%;background:${c}"></div></div></div>`;}).join('')}</div></div>`:''}
 
   <div class="card"><div class="st"><i class="ti ti-shield-check"></i> Bảo mật & Tuân thủ</div>
   <div class="grid-2 g10">${[
@@ -2723,7 +2799,7 @@ function pBene(){
   {t:"Quản lý nội bộ",d:"Tổ chức tự lưu danh sách chi tiết theo quy định nội bộ.",i:"ti-clipboard-list"},
   {t:"Tuân thủ PCI",d:"Mọi dữ liệu mã hóa AES-256, lưu trữ tại Việt Nam.",i:"ti-lock"},
   {t:"GDPR-ready",d:"Hỗ trợ xoá dữ liệu theo yêu cầu trong 30 ngày.",i:"ti-file-shredder"}
-  ].map(s=>`<div style="padding:14px;background:var(--soft);border-radius:12px;display:flex;gap:12px;align-items:flex-start"><i class="ti ${s.i}" style="font-size:24px;color:var(--green-700);flex-shrink:0"></i><div><div style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--green-950);margin-bottom:4px">${s.t}</div><div style="font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.6">${s.d}</div></div></div>`).join('')}</div></div>`;
+  ].map(s=>`<div style="padding:14px;background:var(--soft);border-radius:12px;display:flex;gap:12px;align-items:flex-start"><i class="ti ${s.i}" style="font-size:24px;color:var(--green-700);flex-shrink:0"></i><div><div style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--green-950);margin-bottom:4px">${s.t}</div><div style="font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.5">${s.d}</div></div></div>`).join('')}</div></div>`;
 }
 
 // ════════════════════════════════════════════════════
@@ -3548,7 +3624,7 @@ window.addEventListener('error',function(e){
 });
 </script>
 
-<script src="frontend/foodsave-live-data.js?v=20261019g"></script>
+<script src="frontend/foodsave-live-data.js?v=20261022a"></script>
 
 
 <script>window.FS = window.FS || {}; /* Backend data sync is loaded from frontend/foodsave-live-data.js. */</script>

@@ -6,6 +6,7 @@ import type {
   CreateVolunteerBody,
   GalleryUploadUrlBody,
   UpdateCharityProfileBody,
+  UpdateBeneficiaryGroupBody,
   UpdateVolunteerBody
 } from "../schemas/charitySchemas";
 import { ERROR_CODES } from "../constants/errors";
@@ -14,6 +15,13 @@ import { randomUUID } from "crypto";
 import type { UserRole } from "../types/domain";
 import { AppError } from "../utils/appError";
 import { handleSupabaseError, requireRecord, supabaseAdmin } from "./supabaseService";
+
+const assertBeneficiaryGroupOwner = async (groupId: string, actorId: string, actorRole: UserRole): Promise<void> => {
+  const { data, error } = await supabaseAdmin.from("beneficiary_groups").select("charity_id").eq("id", groupId).maybeSingle();
+  if (error) handleSupabaseError(error, "Failed to load beneficiary group");
+  const group = requireRecord(data as { charity_id: string } | null, "Beneficiary group was not found");
+  await assertCharityOwner(group.charity_id, actorId, actorRole);
+};
 
 const assertCharityOwner = async (charityId: string, actorId: string, actorRole: UserRole): Promise<void> => {
   if (actorRole === "admin") return;
@@ -186,6 +194,21 @@ export const charityService = {
 
     if (error) handleSupabaseError(error, "Failed to create beneficiary group");
     return data;
+  },
+
+  // Nhóm người hưởng lợi: kiểm tra nhóm thuộc tổ chức của người gọi rồi mới sửa/xóa
+  async updateBeneficiaryGroup(actorId: string, actorRole: UserRole, groupId: string, body: UpdateBeneficiaryGroupBody): Promise<unknown> {
+    await assertBeneficiaryGroupOwner(groupId, actorId, actorRole);
+    const { data, error } = await supabaseAdmin.from("beneficiary_groups").update(body).eq("id", groupId).select("*").single();
+    if (error) handleSupabaseError(error, "Failed to update beneficiary group");
+    return data;
+  },
+
+  async deleteBeneficiaryGroup(actorId: string, actorRole: UserRole, groupId: string): Promise<{ id: string }> {
+    await assertBeneficiaryGroupOwner(groupId, actorId, actorRole);
+    const { error } = await supabaseAdmin.from("beneficiary_groups").delete().eq("id", groupId);
+    if (error) handleSupabaseError(error, "Failed to delete beneficiary group");
+    return { id: groupId };
   },
 
   async listBeneficiaryGroups(actorId: string, actorRole: UserRole, charityId: string): Promise<unknown[]> {

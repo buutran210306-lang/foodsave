@@ -40,6 +40,9 @@ export const createBeneficiaryGroupBodySchema = z.object({
   last_fed_at: z.string().datetime().nullable().optional()
 }).strict();
 
+export const updateBeneficiaryGroupBodySchema = createBeneficiaryGroupBodySchema.omit({ charity_id: true }).partial().strict()
+  .refine((body) => Object.keys(body).length > 0, { message: "Không có thông tin nào để cập nhật" });
+
 export const createImpactReportBodySchema = z.object({
   charity_id: z.string().uuid(),
   month_start: z.string().datetime(),
@@ -77,6 +80,7 @@ export type UpdateCharityProfileBody = z.infer<typeof updateCharityProfileBodySc
 export type CreateVolunteerBody = z.infer<typeof createVolunteerBodySchema>;
 export type UpdateVolunteerBody = z.infer<typeof updateVolunteerBodySchema>;
 export type CreateBeneficiaryGroupBody = z.infer<typeof createBeneficiaryGroupBodySchema>;
+export type UpdateBeneficiaryGroupBody = z.infer<typeof updateBeneficiaryGroupBodySchema>;
 export type CreateImpactReportBody = z.infer<typeof createImpactReportBodySchema>;
 export type CreateGalleryItemBody = z.infer<typeof createGalleryItemBodySchema>;
 export type GalleryUploadUrlBody = z.infer<typeof galleryUploadUrlBodySchema>;

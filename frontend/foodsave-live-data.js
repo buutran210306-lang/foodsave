@@ -724,6 +724,18 @@
     createCharityGalleryItem(body) {
       return request("/charity/gallery", { method: "POST", body });
     },
+    getBeneficiaryGroups(charityId) {
+      return request(`/charity/profiles/${encodeURIComponent(charityId)}/beneficiaries`);
+    },
+    createBeneficiaryGroup(body) {
+      return request("/charity/beneficiaries", { method: "POST", body });
+    },
+    updateBeneficiaryGroup(groupId, body) {
+      return request(`/charity/beneficiaries/${encodeURIComponent(groupId)}`, { method: "PATCH", body });
+    },
+    deleteBeneficiaryGroup(groupId) {
+      return request(`/charity/beneficiaries/${encodeURIComponent(groupId)}`, { method: "DELETE" });
+    },
     getCharityVolunteers(charityId) {
       return request(`/charity/profiles/${encodeURIComponent(charityId)}/volunteers`);
     },
