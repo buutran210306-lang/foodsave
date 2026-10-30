@@ -8,6 +8,13 @@
 </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#006C4D">
+  <link rel="manifest" href="/manifest-user.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FoodSave">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>FoodSave – Khu vực người dùng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2849,14 +2856,8 @@
               <div class="field"><label>CCCD/CMND (tùy chọn)</label><input id="co-id" placeholder="Cần khi nhận sản phẩm trên 500.000đ"></div>
             </div>
 
-            <div style="margin-top:18px">
-              <label style="font-size:13px;font-weight:800;color:var(--green-900);display:block;margin-bottom:10px">Chọn khung giờ đến nhận hàng tại cửa hàng</label>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="pickup-slots">
-                <label class="pickup-slot selected" onclick="selectSlot(this)"><input type="radio" name="slot" value="now" checked><div class="pickup-slot-time">30 phút</div><div class="pickup-slot-label">Ngay</div></label>
-                <label class="pickup-slot" onclick="selectSlot(this)"><input type="radio" name="slot" value="2h"><div class="pickup-slot-time">2 giờ</div><div class="pickup-slot-label">Trong hôm nay</div></label>
-                <label class="pickup-slot" onclick="selectSlot(this)"><input type="radio" name="slot" value="tonight"><div class="pickup-slot-time">18-22h</div><div class="pickup-slot-label">Tối nay</div></label>
-                <label class="pickup-slot" onclick="selectSlot(this)"><input type="radio" name="slot" value="tomorrow"><div class="pickup-slot-time">9-12h</div><div class="pickup-slot-label">Ngày mai</div></label>
-              </div>
+            <div id="pickup-policy-note" style="margin-top:18px;padding:12px 14px;border-radius:12px;background:var(--orange-100);font-size:12.5px;line-height:1.6;color:var(--green-900);font-weight:600">
+              <i class="ti ti-clock-check" style="color:var(--orange-500)"></i> <strong>Thanh toán trước, lấy hàng sau.</strong> Bạn có <strong>5-10 phút</strong> để thanh toán (nhãn đỏ 5 phút, xanh/vàng 10 phút). Hạn đến lấy hàng sẽ hiện ngay sau khi thanh toán (tối đa 60-120 phút tùy nhãn). Hủy sớm được hoàn 100%; hủy muộn hoặc không đến lấy sẽ <strong>không được hoàn tiền</strong>.
             </div>
 
             <div class="field" style="margin-top:18px"><label>Ghi chú cho cửa hàng <span class="text-muted" style="font-weight:500">(tùy chọn)</span></label><textarea id="co-note" placeholder="VD: Cho xin túi giấy, check kỹ hạn sử dụng, gọi trước khi tới..."></textarea></div>
@@ -2880,12 +2881,7 @@
                   <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="card" style="display:none"><div class="pay-logo card"><i class="ti ti-credit-card" style="font-size:22px"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Visa / Mastercard</div><div style="font-size:12px;color:var(--muted)">Thẻ tín dụng hoặc ghi nợ quốc tế</div></div></label>
                 </div>
               </div>
-              <div class="pay-group">
-                <div class="pay-group-title"><i class="ti ti-cash"></i> Tiền mặt</div>
-                <div class="pay-group-list">
-                  <label class="pay-method" onclick="selectPay(this)"><input type="radio" name="pay" value="cash" style="display:none"><div class="pay-logo cash"><i class="ti ti-cash"></i></div><div style="flex:1"><div style="font-weight:800;font-size:14px">Tiền mặt khi nhận hàng</div><div style="font-size:12px;color:var(--muted)">COD tại cửa hàng</div></div></label>
-                </div>
-              </div>
+              
             </div>
           </div>
 
@@ -3699,7 +3695,8 @@
             <div class="card text-center" style="background:linear-gradient(135deg,#fef3c7,#fff)">
               <div style="font-family:'Plus Jakarta Sans';font-size:48px;font-weight:800;color:#b45309;line-height:1;margin-bottom:8px"><span data-points>0</span> <span style="font-size:24px">⭐</span></div>
               <h3>Hạng: <span data-rank>Tin cậy</span></h3>
-              <p class="text-muted" style="font-size:13px">Khởi đầu 100 điểm · nhận hàng thành công +5 · lấy trễ -10 · bỏ đơn -15</p>
+              <p class="text-muted" style="font-size:13px">Khởi đầu 100 điểm · nhận hàng thành công +5 · hủy muộn -5 · vắng mặt -15 · khiếu nại sai -10</p>
+              <div id="trust-note" style="display:none;margin-top:10px;font-size:12.5px;font-weight:700"></div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:12px"><span class="text-muted">Chặn &lt;40</span><span class="text-muted">Hạn chế 40-84</span><span class="text-muted">Tin cậy ≥85</span></div>
               <div style="height:8px;background:var(--soft);border-radius:4px;margin-top:6px;overflow:hidden"><div data-rank-progress style="width:5%;height:100%;background:linear-gradient(90deg,#b45309,#f59e0b)"></div></div>
               <p class="text-muted" style="font-size:11px;margin-top:8px"><span data-points>0</span> điểm uy tín hiện có</p>
@@ -5478,8 +5475,9 @@ function paymentUsesQr(payCode) {
 }
 
 async function placeOrder() {
-  const slot = $('input[name="slot"]:checked').value;
-  const slotMap = { now:'Trong 30 phút', '2h':'Trong 2 giờ', tonight:'Tối nay 18-22h', tomorrow:'Mai 9-12h' };
+  // Không còn chọn khung giờ: hạn lấy hàng do hệ thống tính theo nhãn sản phẩm (hiện sau khi thanh toán)
+  const slot = 'policy';
+  const slotMap = { policy:'Sau khi thanh toán' };
   const pay = $('input[name="pay"]:checked').value;
   const payMap = { momo:'Ví MoMo', zalopay:'ZaloPay', vnpay:'VNPay', card:'Visa/Mastercard', vietqr:'VietQR ngân hàng', cash:'COD tiền mặt' };
   const subtotal = cartSubtotal();
@@ -5505,6 +5503,7 @@ async function placeOrder() {
     toast('Không tạo được đơn hàng: ' + ((orderError && orderError.message) || 'Vui lòng đăng nhập lại và thử lại.'), 'error');
     return;
   }
+  slotMap.policy = backendResult.order.pickup_window || slotMap.policy;
 
   const pickupQr = backendResult?.order?.qr_code || qr;
   const paymentQr = backendResult?.payment?.qrCodeUrl || backendResult?.payment?.payUrl || pickupQr;
@@ -5513,7 +5512,8 @@ async function placeOrder() {
     backendId: backendResult?.order?.id || null,
     momoOrderId: backendResult?.order?.order_number || null,
     momoRequestId: backendResult?.payment?.requestId || null,
-    items:[...cart], status:'pending', paymentStatus:'pending', date:'Vừa xong', total, store, storeId,
+    items:[...cart], status:backendResult.order.status || 'awaiting_payment', paymentStatus:'pending', date:'Vừa xong', total, store, storeId,
+    payDeadline: backendResult.order.pay_deadline || null, policyLabel: backendResult.order.policy_label || null,
     qr: pickupQr,
     paymentQr,
     payUrl: backendResult?.payment?.payUrl || '',
@@ -5553,7 +5553,8 @@ async function placeOrder() {
     note,
     email,
     paymentMethod:pay,
-    payUrl:order.payUrl
+    payUrl:order.payUrl,
+    payDeadline:order.payDeadline
   };
 
   navTo('payment-confirm');
@@ -5601,7 +5602,7 @@ function populatePaymentConfirm(d) {
   if ($('#pc-qr-box')) $('#pc-qr-box').style.display = usesQr ? 'flex' : 'none';
   if ($('#pc-expired-note')) $('#pc-expired-note').style.display = usesQr ? '' : 'none';
   if ($('#pc-timer-wrap')) {
-    $('#pc-timer-wrap').style.display = usesQr ? 'block' : 'none';
+    $('#pc-timer-wrap').style.display = 'block';
     $('#pc-timer-wrap').style.background = 'linear-gradient(135deg,var(--orange-500),#d97706)';
   }
   if ($('#pc-confirm-btn')) $('#pc-confirm-btn').innerHTML = d.payCode === 'cash' ? '<i class="ti ti-check"></i> Xác nhận đặt hàng' : '<i class="ti ti-check"></i> Đã thanh toán';
@@ -5632,29 +5633,34 @@ function populatePaymentConfirm(d) {
     $('#pc-note-wrap').style.display = 'none';
   }
 
-  if (usesQr) startPaymentTimer();
-  else if (__pcTimerInterval) clearInterval(__pcTimerInterval);
+  startPaymentTimer();
 }
 
 function startPaymentTimer() {
   if (__pcTimerInterval) clearInterval(__pcTimerInterval);
-  let secs = 600; // 10 minutes
+  // Hạn thanh toán do Backend tính theo nhãn (5 phút nhãn đỏ, 10 phút còn lại)
+  const pending = window.__pendingOrder;
+  const deadline = pending && pending.payDeadline ? new Date(pending.payDeadline).getTime() : Date.now() + 600000;
   const tEl = $('#pc-timer');
   const wrap = $('#pc-timer-wrap');
   function tick() {
+    const secs = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
     const m = Math.floor(secs/60);
     const s = secs%60;
     if (tEl) tEl.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
     if (secs <= 60 && wrap) wrap.style.background = 'linear-gradient(135deg,var(--red-500),#991b1b)';
     if (secs <= 0) {
       clearInterval(__pcTimerInterval);
-      expirePaymentQr();
-      return;
+      handlePaymentDeadline();
     }
-    secs--;
   }
   tick();
   __pcTimerInterval = setInterval(tick, 1000);
+}
+
+// Hết hạn thanh toán: đơn tự hủy, hàng trả về kho, không tính lỗi người mua
+function handlePaymentDeadline() {
+  cancelPayment(true);
 }
 
 function expirePaymentQr() {
@@ -5794,55 +5800,6 @@ function pickupSlotKeyForOrder(o, localOrder) {
   const text = o?.slotText || o?.pickupWindow || localOrder?.pickup || '';
   const byText = { 'Trong 30 phút': 'now', 'Trong 2 giờ': '2h', 'Tối nay 18-22h': 'tonight', 'Mai 9-12h': 'tomorrow' };
   return o?.slotKey || localOrder?.slotKey || byText[text] || 'now';
-}
-
-async function buildSupabaseOrderData(client, o, localOrder, isCash) {
-  const orderNumber = normalizeOrderNumber(o, localOrder);
-  const nowIso = new Date().toISOString();
-  const subtotal = moneyInt(o?.subtotal ?? localOrder?.subtotal ?? 0);
-  const discount = moneyInt(o?.discount ?? localOrder?.discount ?? 0);
-  const platformFee = moneyInt(o?.platformFee ?? localOrder?.platformFee ?? 2000);
-  const donation = moneyInt(o?.donation ?? localOrder?.donation ?? 0);
-  const total = moneyInt(o?.total ?? localOrder?.total ?? Math.max(0, subtotal - discount + platformFee + donation));
-  const paymentMethod = normalizePaymentMethod(o?.paymentMethod || localOrder?.paymentMethod);
-
-  const orderData = {
-    id: isValidUuid(o?.backendId || localOrder?.backendId) ? (o?.backendId || localOrder?.backendId) : createMockUuid(),
-    order_number: orderNumber,
-    customer_id: await currentCustomerUuidForOrder(client),
-    store_id: await storeUuidForOrder(client, o, localOrder),
-    status: normalizeOrderStatus(o?.status || localOrder?.status || 'pending'),
-    pickup_slot_key: pickupSlotKeyForOrder(o, localOrder),
-    pickup_window: o?.pickupWindow || o?.slotText || localOrder?.pickup || 'Trong 30 phút',
-    payment_method: paymentMethod,
-    payment_status: normalizePaymentStatus(isCash ? 'pending' : 'paid'),
-    subtotal_cents: subtotal,
-    discount_cents: discount,
-    platform_fee_cents: platformFee,
-    donation_cents: donation,
-    total_cents: total,
-    voucher_code: o?.voucherCode || localOrder?.voucherCode || null,
-    qr_code: String(o?.qr || localOrder?.qr || `${orderNumber}-QR`),
-    customer_note: o?.note || localOrder?.note || null,
-    created_at: nowIso,
-    updated_at: nowIso
-  };
-
-  return orderData;
-}
-
-async function insertSupabaseOrderOnConfirm(o, localOrder, isCash) {
-  const supabase = foodsaveSupabaseClient();
-  const orderData = await buildSupabaseOrderData(supabase, o, localOrder, isCash);
-  const { data, error } = await supabase.from('orders').insert([orderData]).select('*').single();
-
-  if (error) {
-    console.error("Lỗi insert:", error);
-    throw error;
-  }
-
-  console.log("Thành công:", data);
-  return data;
 }
 
 // ============ TREE REPUTATION GAME ============
@@ -6108,7 +6065,8 @@ async function confirmPaymentDone() {
   if (__pcTimerInterval) clearInterval(__pcTimerInterval);
   const o = window.__pendingOrder;
   if (!o) { navTo('home'); return; }
-  const isCash = o.paymentMethod === 'cash';
+  const isCash = false; // đã bỏ thanh toán khi nhận hàng (đơn trả trước)
+  let paidOrder = null;
   const localOrder = orders.find(x => x.id === o.id);
   const confirmBtn = $('#pc-confirm-btn');
   const confirmBtnHtml = confirmBtn?.innerHTML;
@@ -6123,17 +6081,22 @@ async function confirmPaymentDone() {
       throw new Error('Đơn hàng chưa được tạo trên hệ thống. Vui lòng đặt hàng lại.');
     }
 
-    if (localOrder) {
-      localOrder.paymentStatus = isCash ? 'pending' : 'paid';
-      // Trạng thái đơn vẫn là "chờ cửa hàng nhận"; cửa hàng nhận đơn thì mới chuyển sang "đã nhận"
-    }
+    // Thanh toán đi qua Backend: kiểm tra hạn, ghi giờ thanh toán, tính hạn lấy hàng. Lỗi phải báo cho người dùng.
+    if (!window.FS?.sync?.markOrderPaymentPaid) throw new Error('Chưa kết nối được máy chủ, vui lòng thử lại.');
+    paidOrder = await window.FS.sync.markOrderPaymentPaid(o.backendId, o.paymentMethod);
 
-    if (o.backendId && !isCash && window.FS?.sync?.markOrderPaymentPaid) {
-      await window.FS.sync.markOrderPaymentPaid(o.backendId, o.paymentMethod).catch(error => {
-        console.warn('[FoodSave] Direct orders payment paid update skipped:', error);
-      });
+    if (localOrder && paidOrder) {
+      localOrder.status = paidOrder.status || 'pending';
+      localOrder.paymentStatus = 'paid';
+      localOrder.payDeadline = null;
+      localOrder.pickupDeadline = paidOrder.pickup_deadline || null;
+      localOrder.cancelFreeUntil = paidOrder.cancel_free_until || null;
     }
   } catch (error) {
+    if (error && error.code === 'PAYMENT_EXPIRED') {
+      cancelPayment(true);
+      return;
+    }
     if (confirmBtn) {
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = confirmBtnHtml || '<i class="ti ti-check"></i> Xác nhận đặt hàng';
@@ -6152,7 +6115,9 @@ async function confirmPaymentDone() {
   $('#success-id').textContent = o.id;
   if ($('#success-email')) $('#success-email').textContent = o.email;
   $('#success-store').textContent = o.store;
-  $('#success-time').textContent = o.slotText;
+  $('#success-time').textContent = paidOrder && paidOrder.pickup_deadline
+    ? 'Trước ' + new Date(paidOrder.pickup_deadline).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    : o.slotText;
   $('#success-total').textContent = fmt(o.total);
   drawQR('qr-success', o.qr);
   $('#qr-success-code').textContent = o.qr;
@@ -6166,8 +6131,8 @@ function cancelPayment(expired) {
   if (__pcTimerInterval) clearInterval(__pcTimerInterval);
   // Huỷ đơn trên hệ thống để cửa hàng không còn thấy đơn bỏ dở và hàng được trả về kho
   const abandonedBackendId = window.__pendingOrder && window.__pendingOrder.backendId;
-  if (abandonedBackendId && window.FS && window.FS.sync && window.FS.sync.updateOrderStatus) {
-    window.FS.sync.updateOrderStatus(abandonedBackendId, 'cancelled').catch(error => {
+  if (abandonedBackendId && window.FS && window.FS.sync && window.FS.sync.cancelOrder) {
+    window.FS.sync.cancelOrder(abandonedBackendId).catch(error => {
       console.warn('[FoodSave] Không huỷ được đơn bỏ dở trên hệ thống:', error);
     });
   }
@@ -6184,6 +6149,8 @@ function cancelPayment(expired) {
 // ============ ORDERS ============
 // Trạng thái đơn hàng (khớp backend: pending, confirmed, ready, completed, cancelled)
 const ORDER_STATUS_VIEW = {
+  awaiting_payment: { t: 'Chờ thanh toán', c: 'tag-yellow' },
+  no_show: { t: 'Đã quá hạn lấy hàng', c: 'tag-red' },
   pending: { t: 'Chờ cửa hàng nhận', c: 'tag-yellow' },
   confirmed: { t: 'Cửa hàng đang chuẩn bị', c: 'tag-orange' },
   preparing: { t: 'Cửa hàng đang chuẩn bị', c: 'tag-orange' },
@@ -6198,6 +6165,8 @@ function renderOrders(filter) {
   if (typeof filter === 'string') currentOrderFilter = filter; else filter = currentOrderFilter;
   let list = orders;
   if (filter === 'preparing') list = list.filter(o => ['confirmed', 'preparing', 'ready'].includes(o.status));
+  else if (filter === 'pending') list = list.filter(o => ['pending', 'awaiting_payment'].includes(o.status));
+  else if (filter === 'cancelled') list = list.filter(o => ['cancelled', 'no_show'].includes(o.status));
   else if (filter !== 'all') list = list.filter(o => o.status === filter);
 
   if (list.length === 0) {
@@ -6237,10 +6206,10 @@ function filterOrders(s, btn) {
 
 function updateOrderCounts() {
   $('#ord-c-all').textContent = orders.length;
-  $('#ord-c-pending').textContent = orders.filter(o => o.status === 'pending').length;
+  $('#ord-c-pending').textContent = orders.filter(o => ['pending', 'awaiting_payment'].includes(o.status)).length;
   $('#ord-c-preparing').textContent = orders.filter(o => ['confirmed', 'preparing', 'ready'].includes(o.status)).length;
   $('#ord-c-completed').textContent = orders.filter(o => o.status === 'completed').length;
-  $('#ord-c-cancelled').textContent = orders.filter(o => o.status === 'cancelled').length;
+  $('#ord-c-cancelled').textContent = orders.filter(o => ['cancelled', 'no_show'].includes(o.status)).length;
 }
 
 function renderOrderDetail() {
@@ -6358,12 +6327,29 @@ function submitRating() {
 
 function cancelOrder() { $('#cancel-modal').classList.add('active'); }
 function closeCancel() { $('#cancel-modal').classList.remove('active'); }
-function doCancelOrder() {
+async function doCancelOrder() {
   const o = orders.find(x => x.id === currentOrderId);
-  if (o) { o.status = 'cancelled'; o.total = 0; }
-  closeCancel();
-  toast('Đã hủy đơn hàng. Hoàn tiền trong 1-3 ngày.', 'info');
-  setTimeout(() => navTo('orders'), 400);
+  if (!o || !o.backendId) { closeCancel(); return; }
+  if (!window.FS || !window.FS.sync || !window.FS.sync.cancelOrder) { toast('Chưa kết nối được máy chủ, vui lòng thử lại', 'warn'); return; }
+  const checked = document.querySelector('#cancel-modal input[name="cancel-reason"]:checked');
+  const reason = checked && checked.parentElement ? checked.parentElement.textContent.trim() : '';
+  const confirmBtn = document.querySelector('#cancel-modal .modal-footer .btn-danger, #cancel-modal .modal-footer .btn-primary');
+  if (confirmBtn) confirmBtn.disabled = true;
+  try {
+    const result = await window.FS.sync.cancelOrder(o.backendId, reason);
+    closeCancel();
+    o.status = 'cancelled';
+    toast(result && result.refunded
+      ? 'Đã hủy đơn · hoàn ' + fmt(result.refund_cents) + ' (100%)'
+      : (result && result.order && result.order.payment_status !== 'paid' ? 'Đã hủy đơn hàng.' : 'Đã hủy đơn · không được hoàn tiền do hủy sau thời gian miễn phí'), 'info');
+    if (window.FS.sync.refresh) window.FS.sync.refresh().catch(() => {});
+    if (typeof loadCustomerTrust === 'function') loadCustomerTrust();
+    setTimeout(() => navTo('orders'), 400);
+  } catch (error) {
+    toast((error && error.message) || 'Chưa hủy được đơn hàng, vui lòng thử lại', 'error');
+  } finally {
+    if (confirmBtn) confirmBtn.disabled = false;
+  }
 }
 
 // ============ FAVORITES ============
@@ -7057,13 +7043,38 @@ function openComplaint(){
   document.getElementById('complaint-modal').classList.add('active');
 }
 function closeComplaint(){document.getElementById('complaint-modal').classList.remove('active');}
-function submitComplaint(){
+let complaintSending = false;
+async function submitComplaint(){
+  if(complaintSending) return;
   const desc = document.getElementById('cp-desc').value.trim();
   if(!desc || desc.length<10){toast('Vui lòng mô tả vấn đề tối thiểu 10 ký tự','info');return;}
-  closeComplaint();
-  toast('Đã gửi khiếu nại · FoodSave sẽ phản hồi trong 24h', 'info');
-  // Reset
-  document.getElementById('cp-desc').value='';
+  const o = orders.find(x=>x.id===currentOrderId) || orders[0];
+  if(!o || !o.backendId){toast('Không tìm thấy đơn hàng để khiếu nại','info');return;}
+  if(!window.FS || !window.FS.sync || typeof window.FS.sync.request !== 'function'){toast('Chưa kết nối được máy chủ, vui lòng thử lại','info');return;}
+  const typeEl = document.getElementById('cp-type');
+  const typeLabel = typeEl && typeEl.options[typeEl.selectedIndex] ? typeEl.options[typeEl.selectedIndex].text : '';
+  const priority = {quality:'high', expired:'high', missing:'medium', payment:'medium'}[typeEl && typeEl.value] || 'low';
+  const names = o.items.map(it=>{const p=productFromCartItem(it);return (p && p.name) || it.name || '';}).filter(Boolean);
+  complaintSending = true;
+  try {
+    await window.FS.sync.request('/orders/complaints', {
+      method: 'POST',
+      body: {
+        order_id: o.backendId,
+        product_names: names.length ? names : ['Đơn hàng'],
+        issue: (typeLabel ? '[' + typeLabel + '] ' : '') + desc,
+        priority,
+        image_urls: []
+      }
+    });
+    closeComplaint();
+    document.getElementById('cp-desc').value='';
+    toast('Đã gửi khiếu nại · Cửa hàng sẽ phản hồi, bạn sẽ nhận thông báo', 'info');
+  } catch (error) {
+    toast((error && error.message) || 'Chưa gửi được khiếu nại, vui lòng thử lại', 'info');
+  } finally {
+    complaintSending = false;
+  }
 }
 
 // Disable cancel button when order is delivered/completed
@@ -7099,56 +7110,47 @@ function updateCancelButton(){
 })();
 
 
-// ============ LOYALTY POINTS SYSTEM ============
-const USER_POINTS_STORAGE_KEY = 'foodsave.userPoints.v1';
-const savedUserPoints = Number.parseInt(localStorage.getItem(USER_POINTS_STORAGE_KEY) || '', 10);
-window.userPoints = Number.isFinite(savedUserPoints) ? savedUserPoints : (window.userPoints || 100); // Starting reputation score
-const POINT_RULES = {
-  pickup_success: +5,
-  late_pickup: -10,
-  order_no_show: -15
-};
-function addPoints(action, customAmount){
-  const amount = customAmount !== undefined ? customAmount : (POINT_RULES[action] || 0);
-  window.userPoints = (Number(window.userPoints) || 0) + amount;
-  try { localStorage.setItem(USER_POINTS_STORAGE_KEY, String(window.userPoints)); } catch (error) {}
-  updateReputationUI();
-  return amount;
-}
+// ============ ĐIỂM UY TÍN NGƯỜI MUA (do Backend quản lý) ============
+// Điểm, hạng, số lần vắng mặt và khóa nhãn đỏ lấy từ GET /customers/me/trust. Trình duyệt không tự cộng/trừ điểm.
+window.CUSTOMER_TRUST = window.CUSTOMER_TRUST || null;
+window.userPoints = 100;
 function getRank(pts){
   if (pts >= 85) return {name:'Tin cậy',color:'#16a34a',pct:100};
   if (pts >= 40) return {name:'Hạn chế',color:'#f59e0b',pct:Math.max(0,Math.min(100,((pts-40)/45)*100))};
   return {name:'Chặn',color:'#dc2626',pct:Math.max(0,Math.min(100,(pts/40)*100))};
 }
 function updateReputationUI(){
-  const points = Number(window.userPoints) || 0;
+  const trust = window.CUSTOMER_TRUST;
+  const points = trust ? Number(trust.points) : (Number(window.userPoints) || 0);
   const r = getRank(points);
-  // Update any rank/points display elements
   document.querySelectorAll('[data-points]').forEach(el=>el.textContent=points);
   document.querySelectorAll('[data-rank]').forEach(el=>{el.textContent=r.name;el.style.color=r.color;});
   document.querySelectorAll('[data-rank-progress]').forEach(el=>{el.style.width=r.pct+'%';el.style.background=r.color;});
+  const note = document.getElementById('trust-note');
+  if (note) {
+    if (!trust) { note.style.display = 'none'; return; }
+    const parts = ['Vắng mặt: ' + trust.no_show_count + '/' + trust.no_show_limit + ' lần trong ' + trust.window_days + ' ngày'];
+    if (trust.red_banned && trust.red_ban_until) parts.push('Bị khóa mua hàng nhãn đỏ đến ' + new Date(trust.red_ban_until).toLocaleDateString('vi-VN'));
+    if (trust.blocked) parts.push('Điểm dưới 40: tạm thời không đặt hàng được');
+    note.style.display = 'block';
+    note.innerHTML = parts.map(p => '<div>' + p + '</div>').join('');
+    note.style.color = (trust.red_banned || trust.blocked) ? '#b3261e' : '';
+  }
 }
-// Reputation is updated when an order is completed, not when it is only placed.
-(function(){
-  if (typeof placeOrder === 'function') {
-    const orig = placeOrder;
-    window.placeOrder = async function(){
-      const result = await orig.apply(this,arguments);
-      return result;
-    };
+async function loadCustomerTrust(){
+  if (!window.FS || !window.FS.sync || typeof window.FS.sync.request !== 'function') return null;
+  try {
+    window.CUSTOMER_TRUST = await window.FS.sync.request('/customers/me/trust');
+    window.userPoints = window.CUSTOMER_TRUST.points;
+    updateReputationUI();
+    return window.CUSTOMER_TRUST;
+  } catch (error) {
+    return null; // chưa đăng nhập hoặc mất kết nối: giữ nguyên giao diện
   }
-})();
-// Hook into confirmPaymentDone: +5 when pickup is confirmed.
-(function(){
-  if (typeof confirmPaymentDone === 'function') {
-    const orig = confirmPaymentDone;
-    window.confirmPaymentDone = function(){
-      const result = orig.apply(this,arguments);
-      addPoints('pickup_success');
-      return result;
-    };
-  }
-})();
+}
+window.loadCustomerTrust = loadCustomerTrust;
+setTimeout(loadCustomerTrust, 1500);
+setInterval(() => { if (!document.hidden) loadCustomerTrust(); }, 60000);
 updateReputationUI();
 if (typeof updateTreeGameUI === 'function') updateTreeGameUI();
 
@@ -7495,13 +7497,19 @@ function updateReputationRules(){
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="frontend/foodsave-map.js?v=20261003e"></script>
-<script src="frontend/foodsave-live-data.js?v=20261022a"></script>
+<script src="frontend/foodsave-live-data.js?v=20261029a"></script>
 
 
 <script>window.FS = window.FS || {}; /* Backend data sync is loaded from frontend/foodsave-live-data.js. */</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="frontend/foodsave-auth-client.js?v=20261003e"></script>
+<script src="frontend/foodsave-order-flow.js?v=20261029b"></script>
+<script src="frontend/foodsave-pwa.js?v=20261029a"></script>
+<script>
+  // PWA: service worker, nút "Cài ứng dụng", nút "Bật thông báo" (chỉ hỏi quyền khi người dùng bấm)
+  if (window.FSPwa) FSPwa.init({ role: 'customer', request: function (path, options) { return window.FS.sync.request(path, options || {}); } });
+</script>
 <script>
   const EMAIL_OTP_DURATION_SECONDS = 180;
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

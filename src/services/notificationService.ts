@@ -1,7 +1,72 @@
 import type { NotificationListQuery } from "../schemas/notificationSchemas";
 import type { PaginatedResponse } from "../types/api";
 import type { Notification, UserRole } from "../types/domain";
+import { logger } from "../utils/logger";
+import { pushService } from "./pushService";
 import { getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
+
+export interface NewNotification {
+  /** Người nhận cụ thể. Bỏ trống = gửi theo vai trò (cần roleTarget) */
+  recipientId?: string | null;
+  roleTarget?: UserRole | null;
+  type: string;
+  title: string;
+  body: string;
+  relatedType?: string | null;
+  relatedId?: string | null;
+}
+
+// Loại thông báo của NGƯỜI MUA được gửi kèm push (cửa hàng / tổ chức không có push)
+const PUSH_TYPES = new Set([
+  "order-paid", "order-update", "order-reminder-mid", "order-reminder-final", "order-no-show", "no-show-warning",
+  "red-label-banned", "order-chat", "complaint-update", "complaint-decision"
+]);
+
+const pushUrl = (input: NewNotification): string => {
+  if (input.relatedType === "order" && input.relatedId) return `/FOODSAVE_USER.html#order=${input.relatedId}`;
+  if (input.relatedType === "complaint" && input.relatedId) return `/FOODSAVE_USER.html#complaint=${input.relatedId}`;
+  return "/FOODSAVE_USER.html";
+};
+
+const sendPush = async (input: NewNotification): Promise<void> => {
+  if (input.roleTarget !== "customer" || !input.recipientId || !PUSH_TYPES.has(input.type)) return;
+  await pushService.sendToUser(input.recipientId, {
+    title: input.title,
+    body: input.body,
+    url: pushUrl(input),
+    tag: `${input.type === "order-chat" ? "chat" : input.type}-${input.relatedId ?? ""}`,
+    type: input.type
+  });
+};
+
+/**
+ * Điểm ghi thông báo DUY NHẤT của hệ thống: ghi bảng notifications rồi (với người mua) gửi Web Push.
+ * Mặc định KHÔNG BAO GIỜ ném lỗi: thông báo hỏng không được làm hỏng nghiệp vụ gọi nó.
+ * Chỉ khi truyền { strict: true } thì lỗi ghi thông báo được ném ra (dùng cho chỗ cần báo lỗi cho người gọi, ví dụ marketing).
+ */
+export const createNotification = async (input: NewNotification, options: { strict?: boolean } = {}): Promise<void> => {
+  if (!input.recipientId && !input.roleTarget) return;
+  try {
+    const { error } = await supabaseAdmin.from("notifications").insert({
+      recipient_id: input.recipientId ?? null,
+      role_target: input.roleTarget ?? null,
+      type: input.type,
+      title: input.title,
+      body: input.body,
+      related_type: input.relatedType ?? null,
+      related_id: input.relatedId ?? null
+    });
+    if (error) {
+      if (options.strict) handleSupabaseError(error, "Failed to create notification");
+      logger.warn("Không ghi được thông báo", { type: input.type, error });
+      return;
+    }
+    await sendPush(input);
+  } catch (error) {
+    if (options.strict) throw error;
+    logger.warn("Không ghi được thông báo", { type: input.type, error });
+  }
+};
 
 // Thông báo gửi riêng (recipient_id) dùng cột read_at.
 // Thông báo gửi theo vai trò (role_target) dùng bảng notification_reads để mỗi người có trạng thái đọc riêng.

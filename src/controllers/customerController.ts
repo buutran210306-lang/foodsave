@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/http";
 import type { FavoriteProductBody, FavoriteStoreBody, RecentViewBody } from "../schemas/customerSchemas";
+import { customerReputationService } from "../services/customerReputationService";
 import { customerService } from "../services/customerService";
 import { getActor } from "../utils/requestContext";
 import { sendSuccess } from "../utils/response";
@@ -8,6 +9,11 @@ import { sendSuccess } from "../utils/response";
 type UuidParams = { id: string };
 
 export const customerController = {
+  async myTrust(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    sendSuccess(res, await customerReputationService.getStatus(actor.userId));
+  },
+
   async listFavorites(req: Request, res: Response): Promise<void> {
     const actor = getActor(req);
     const favorites = await customerService.listFavorites(actor.userId);

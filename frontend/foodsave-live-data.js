@@ -155,15 +155,6 @@
     return null;
   }
 
-  function normalizeOrderLookup(orderId) {
-    const raw = String(orderId || "").trim().replace(/^#/, "");
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return {
-      column: uuidPattern.test(raw) ? "id" : "order_number",
-      value: raw
-    };
-  }
-
   // Ưu tiên token của phiên Supabase (tự làm mới), sau đó mới đến phiên lưu trong localStorage
   // Token đã bị server trả 401 thì coi như không có: không gọi lại các API cần đăng nhập
   // (tránh lặp lỗi 401 liên tục khi phiên lưu sẵn đã hết hạn). Đăng nhập lại sẽ có token mới.
@@ -203,51 +194,13 @@
       const message = payload && payload.error && payload.error.message ? payload.error.message : "FoodSave API không phản hồi hợp lệ";
       const detail = payload && payload.error && Array.isArray(payload.error.details) ? payload.error.details.map((d) => (d.path ? d.path + ": " : "") + (d.message || "")).join("; ") : "";
       if (detail) console.warn("[FoodSave] Chi tiết lỗi dữ liệu:", payload.error.details);
-      throw new Error(detail ? message + " (" + detail + ")" : message);
-
+      const failure = new Error(detail ? message + " (" + detail + ")" : message);
+      failure.code = payload && payload.error ? payload.error.code : undefined;
+      failure.status = response.status;
+      throw failure;
     }
 
     return payload.data;
-  }
-
-  async function updateOrderPaymentDirect(orderId, patch) {
-    const client = directSupabaseClient();
-    if (!client) throw new Error("Supabase client is not ready for direct orders update.");
-
-    const lookup = normalizeOrderLookup(orderId);
-    const payload = {};
-    if (patch.payment_method) payload.payment_method = patch.payment_method;
-    if (patch.payment_status) payload.payment_status = patch.payment_status;
-    if (patch.status) payload.status = patch.status;
-
-    const { data, error } = await client
-      .from("orders")
-      .update(payload)
-      .eq(lookup.column, lookup.value)
-      .select("*")
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  async function updateOrderPayment(orderId, patch) {
-    try {
-      return await updateOrderPaymentDirect(orderId, patch);
-    } catch (directError) {
-      if (!patch.status && patch.payment_method) {
-        throw directError;
-      }
-      const data = await request(`/orders/${encodeURIComponent(orderId)}/status`, {
-        method: "PATCH",
-        body: {
-          status: patch.status || "confirmed",
-          ...(patch.payment_status ? { payment_status: patch.payment_status } : {})
-        }
-      });
-      if (patch.payment_method) data.payment_method = patch.payment_method;
-      return data;
-    }
   }
 
   function getGlobalArray(name) {
@@ -350,7 +303,22 @@
     "label-yellow": { type: "new", icon: "ti-clock-hour-4" },
     "label-red": { type: "urgent", icon: "ti-flame" },
     "label-red-reminder": { type: "urgent", icon: "ti-alarm" },
-    "charity-offer": { type: "urgent", icon: "ti-heart-handshake" }
+    "charity-offer": { type: "urgent", icon: "ti-heart-handshake" },
+    "order-paid": { type: "new", icon: "ti-circle-check" },
+    "order-reminder-mid": { type: "urgent", icon: "ti-alarm" },
+    "order-reminder-final": { type: "urgent", icon: "ti-alarm" },
+    "order-no-show": { type: "urgent", icon: "ti-user-off" },
+    "order-payment-timeout": { type: "system", icon: "ti-hourglass-off" },
+    "no-show-warning": { type: "urgent", icon: "ti-alert-triangle" },
+    "red-label-banned": { type: "urgent", icon: "ti-ban" },
+    "account-unlocked": { type: "new", icon: "ti-lock-open" },
+    "order-chat": { type: "new", icon: "ti-messages" },
+    "new-complaint": { type: "urgent", icon: "ti-message-report" },
+    "complaint-update": { type: "new", icon: "ti-message-report" },
+    "complaint-decision": { type: "new", icon: "ti-gavel" },
+    "complaint-escalated": { type: "urgent", icon: "ti-arrow-up-circle" },
+    "withdrawal-update": { type: "new", icon: "ti-cash" },
+    "payout-account-decision": { type: "new", icon: "ti-building-bank" }
   };
 
   function mapNotification(notification) {
@@ -390,6 +358,16 @@
       momoOrderId: order.order_number,
       code: order.order_number,
       status: order.status,
+      payDeadline: order.pay_deadline || null,
+      paidAt: order.paid_at || null,
+      pickupDeadline: order.pickup_deadline || null,
+      cancelFreeUntil: order.cancel_free_until || null,
+      cancelReason: order.cancel_reason || "",
+      cancelledBy: order.cancelled_by || "",
+      policyLabel: order.policy_label || "",
+      completedAt: order.completed_at || null,
+      complaintDeadlineAt: order.complaint_deadline_at || null,
+      settlementStatus: order.settlement_status || "none",
       store: order.stores && order.stores.name ? order.stores.name : "",
       storeId: order.store_id,
       total: centsToVnd(order.total_cents),
@@ -411,6 +389,43 @@
         qty: item.quantity,
         price: centsToVnd(item.unit_price_cents)
       }))
+    };
+  }
+
+  // Khiếu nại từ API -> dạng trang Cửa hàng đang dùng (st: open | in-review | resolved)
+  function mapComplaint(row) {
+    const status = row.status === "in_review" ? "in-review" : row.status === "open" ? "open" : "resolved";
+    const created = row.created_at ? new Date(row.created_at) : null;
+    const orderNumber = row.order_number || (row.orders && row.orders.order_number) || "";
+    const due = row.response_due_at ? new Date(row.response_due_at).getTime() : 0;
+    const REASONS = { wrong_item: "Giao sai sản phẩm", spoiled_expired: "Hư hỏng / hết hạn", missing_items: "Thiếu sản phẩm", other: "Lý do khác" };
+    const photos = Array.isArray(row.image_urls) ? row.image_urls : [];
+    return {
+      id: row.id,
+      uuid: row.id,
+      orderId: row.order_id,
+      code: "KN-" + String(row.id || "").slice(0, 6).toUpperCase(),
+      img: "📦",
+      user: row.customer_name || "Khách hàng",
+      order: orderNumber ? "#" + orderNumber : "",
+      time: created && Number.isFinite(created.getTime()) ? created.toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }) : "",
+      product: Array.isArray(row.product_names) ? row.product_names.join(", ") : "",
+      issue: row.issue || "",
+      priority: row.priority || "medium",
+      st: status,
+      apiStatus: row.status,
+      resolution: row.resolution || "",
+      // luồng mới (Đợt 3)
+      reasonCode: row.reason_code || "",
+      reason: row.reason_code ? (REASONS[row.reason_code] || row.reason_code) : "",
+      respondBy: status === "open" && Number.isFinite(due) ? due : 0,
+      photoUrls: photos,
+      photos: photos.length,
+      amount: row.order_total != null ? Number(row.order_total) : 0,
+      decision: row.decision || "",
+      refund: Number(row.refund_cents) || 0,
+      storeResponse: row.store_response || "",
+      storeAction: row.store_response_action || ""
     };
   }
 
@@ -568,7 +583,7 @@
     if (typeof window.foodsaveAfterDonationsReplace === "function") window.foodsaveAfterDonationsReplace();
     replaceArray("NOTIFS", (notifications.items || []).map(mapNotification));
     if (typeof window.foodsaveAfterNotifsReplace === "function") window.foodsaveAfterNotifsReplace();
-    replaceArray("COMPLAINTS", Array.isArray(complaints) ? complaints : []);
+    replaceArray("COMPLAINTS", Array.isArray(complaints) ? complaints.map(mapComplaint) : []);
     window.ECO_IMPACT = {
       me: impactMe,
       partner: impactPartner,
@@ -680,8 +695,9 @@
     pollMomoPayment(orderId) {
       return request(`/orders/${encodeURIComponent(orderId)}/payments/momo/status`, { method: "GET" });
     },
-    updateOrderPayment(orderId, patch) {
-      return updateOrderPayment(orderId, patch);
+    // Người mua hủy đơn (hoàn tiền hay không do Backend quyết định theo hạn miễn phí)
+    cancelOrder(orderId, reason) {
+      return request(`/orders/${encodeURIComponent(orderId)}/cancel`, { method: "POST", body: reason ? { reason } : {} });
     },
     // Đơn mới tạo đã ở trạng thái "chờ thanh toán": không cần ghi thêm
     markOrderPaymentPending() {

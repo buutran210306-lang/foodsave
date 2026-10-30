@@ -4035,6 +4035,8 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     const account = state.account || {};
     const profile = state.profile || {};
     const finance = state.finance || {};
+    // Số tài khoản đầy đủ KHÔNG ghi vào hồ sơ/metadata trong Supabase: chỉ lưu dạng che (4 số cuối). Số đầy đủ chỉ gửi qua Backend để mã hóa.
+    const maskedAccountNumber = maskBankAccount(finance.accountNumber);
     const schedule = state.operations?.schedule?.length
       ? state.operations.schedule
       : partnerWeekDays().map((day) => ({ day, open: true, from: "08:00", to: "22:00" }));
@@ -4076,7 +4078,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       address: addressInfo,
       finance: {
         bank_name: finance.bankName || "",
-        bank_account_number: finance.accountNumber || "",
+        bank_account_number: maskedAccountNumber,
         bank_account_holder: finance.accountHolder || ""
       },
       documents,
@@ -4127,7 +4129,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       admin_email: profile.adminEmail || email,
       admin_phone: profile.adminPhone || phone,
       bank_name: finance.bankName || "",
-      bank_account_number: finance.accountNumber || "",
+      bank_account_number: maskedAccountNumber,
       bank_account_holder: finance.accountHolder || "",
       documents,
       opening_schedule: schedule,
@@ -4155,7 +4157,7 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       district: addressInfo.district,
       city: addressInfo.city || "TP.HCM",
       bank_name: finance.bankName || "",
-      bank_account_number: finance.accountNumber || "",
+      bank_account_number: maskedAccountNumber,
       bank_account_holder: finance.accountHolder || "",
       documents,
       opening_schedule: schedule,
@@ -4198,6 +4200,28 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
       partnersLeanPayload,
       partnersMstPayload
     };
+  }
+
+  function maskBankAccount(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (digits.length < 4) return "";
+    return "•".repeat(Math.max(0, digits.length - 4)) + digits.slice(-4);
+  }
+
+  // Số tài khoản nhận tiền: gửi qua Backend (HTTPS), được mã hóa AES-256-GCM và chờ admin xác minh. Lỗi thì đăng ký vẫn thành công,
+  // cửa hàng thêm lại trong mục Ví.
+  async function sendPayoutAccountToBackend(finance, accessToken) {
+    try {
+      const digits = String((finance && finance.accountNumber) || "").replace(/\D/g, "");
+      if (!digits || !finance.bankName || !finance.accountHolder || !accessToken) return;
+      await request("/partner/payout-account", {
+        method: "POST",
+        token: accessToken,
+        body: { bank_name: finance.bankName, account_holder_name: finance.accountHolder, account_number: digits }
+      });
+    } catch (error) {
+      console.warn("[FoodSave] Chưa lưu được tài khoản nhận tiền (sẽ thêm lại trong mục Ví):", error && error.message);
+    }
   }
 
   async function insertPartnerRow(supabaseClient, payloads) {
@@ -4396,6 +4420,11 @@ ${["OCR giấy phép kinh doanh", "Xác minh vị trí GPS", "Kiểm tra tài kh
     // Bảng "partners" không có trong database hiện tại (luôn 404). Dữ liệu đã nằm ở partner_profiles và stores.
     const partnersRow = null;
     const { data: sessionData } = await supabaseClient.auth.getSession();
+
+    if (sessionData?.session && store?.id) {
+      await sendPayoutAccountToBackend(state.finance, sessionData.session.access_token);
+    }
+    if (state.finance) state.finance.accountNumber = ""; // không giữ số đầy đủ trong bộ nhớ sau khi gửi
 
     if (sessionData?.session) {
       // PARTNER SECTION START

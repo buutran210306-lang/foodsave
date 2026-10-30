@@ -2,6 +2,7 @@ import type { FoodGroup, ProductLabel, UserRole } from "../types/domain";
 import { computeProductLabelState, isFoodGroup } from "../utils/productExpiryLabel";
 import { logger } from "../utils/logger";
 import { generateCode, handleSupabaseError, supabaseAdmin } from "./supabaseService";
+import { createNotification } from "./notificationService";
 import { marketingService } from "./marketingService";
 
 const MINUTE_MS = 60_000;
@@ -71,13 +72,16 @@ const notifyRoles = async (
   roles: UserRole[],
   notification: { type: string; title: string; body: string; related_type: string; related_id: string }
 ): Promise<number> => {
-  const rows = roles.map((role) => ({ ...notification, role_target: role, recipient_id: null }));
-  const { error } = await supabaseAdmin.from("notifications").insert(rows);
-  if (error) {
-    logger.warn("Không tạo được thông báo nhãn sản phẩm", error);
-    return 0;
-  }
-  return rows.length;
+  // Thông báo theo vai trò (chưa gửi push: push chỉ cho thông báo của từng người mua)
+  await Promise.all(roles.map((role) => createNotification({
+    roleTarget: role,
+    type: notification.type,
+    title: notification.title,
+    body: notification.body,
+    relatedType: notification.related_type,
+    relatedId: notification.related_id
+  })));
+  return roles.length;
 };
 
 const createCharityOffer = async (product: AutomationProduct, deadline: Date, now: Date): Promise<number> => {

@@ -1,0 +1,35 @@
+
+/* ═════════ FOODSAVE ADMIN · UI v2 ═════════ */
+.S{background:#0f2a1f}
+.S-b h1{letter-spacing:-.01em}
+.S-s{color:#7fa08d;letter-spacing:.12em}
+.S-i{border-radius:9px}
+.S-i.on{background:linear-gradient(90deg,#1c7c45,#23944f);color:#fff}
+.S-i em{background:#e5484d;color:#fff;border-radius:99px;font-style:normal;font-size:.62rem;padding:1px 6px;margin-left:auto}
+.hero-main{background:linear-gradient(120deg,#0f3d2a 0%,#1c7c45 75%,#2aa35c 100%)!important}
+.P,.K{border-radius:14px}
+.v2note{background:#f3f8f4;border:1px solid #dcebe0;border-radius:12px;padding:10px 14px;font-size:.78rem;color:#33523f;line-height:1.6;margin-bottom:14px}
+.v2tag{display:inline-block;background:#fff4d6;color:#8a5a00;border:1px solid #f1d27a;border-radius:6px;font-size:.6rem;font-weight:800;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.v2demo{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;background:#111512;color:#fff;border-radius:99px;padding:7px 16px;font-size:.75rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.v2demo b{color:#7ee2a8}
+.v2toast{position:fixed;right:20px;bottom:20px;z-index:10000;background:#111512;color:#fff;padding:10px 16px;border-radius:10px;font-size:.8rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.v2cd{font-variant-numeric:tabular-nums;font-weight:800;font-size:.7rem;padding:2px 8px;border-radius:99px;display:inline-block}
+.v2cd.ok{background:#e3f6ea;color:#14683b}.v2cd.warn{background:#fff3cd;color:#8a5a00}.v2cd.bad{background:#fde4e2;color:#b3261e}.v2cd.off{background:#eef1ee;color:#667067}
+.v2strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.v2chip{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:.15s}
+.v2chip:hover{border-color:#9fd5b5;transform:translateY(-1px)}
+.v2chip b{font-size:1.25rem;font-family:var(--m)}.v2chip span{font-size:.68rem;color:var(--t3);font-weight:600}
+.v2board{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.v2col{background:#f3f6f3;border-radius:14px;padding:10px;min-height:220px}
+.v2col-h{font-size:.78rem;font-weight:800;padding:4px 6px 10px;border-bottom:3px solid;margin-bottom:10px;display:flex;justify-content:space-between}
+.v2card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:11px 12px;margin-bottom:9px;cursor:pointer}
+.v2card:hover{border-color:#9fd5b5}
+.v2card-t{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.v2card-b{font-size:.8rem;font-weight:700;margin-bottom:4px;white-space:normal}
+.v2card-s{font-size:.68rem;color:var(--t3);margin-bottom:8px;white-space:normal}
+.v2card-f{display:flex;justify-content:space-between;align-items:center;font-size:.74rem}
+.v2in{width:54px;padding:4px 6px;border:1px solid var(--bd2);border-radius:6px;font-family:var(--m);font-weight:700;text-align:center}
+.G3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.G5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:1000px){.v2strip,.G5{grid-template-columns:repeat(2,1fr)}.v2board,.G3{grid-template-columns:1fr}}
+

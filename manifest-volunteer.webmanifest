@@ -1,0 +1,18 @@
+{
+  "name": "FoodSave Tình nguyện viên",
+  "short_name": "FoodSave TNV",
+  "description": "Nhận nhiệm vụ lấy và phát thực phẩm, chụp ảnh minh chứng.",
+  "id": "/FOODSAVE_VOLUNTEER.html",
+  "start_url": "/FOODSAVE_VOLUNTEER.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "vi",
+  "theme_color": "#006C4D",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

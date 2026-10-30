@@ -2,7 +2,9 @@ export type UserRole = "customer" | "partner" | "charity" | "admin";
 export type ProfileStatus = "active" | "pending" | "suspended" | "rejected";
 export type ProductLabel = "green" | "yellow" | "red";
 export type FoodGroup = "cooked" | "fresh" | "packaged";
-export type OrderStatus = "pending" | "confirmed" | "ready" | "completed" | "cancelled";
+export type OrderStatus = "awaiting_payment" | "pending" | "confirmed" | "ready" | "completed" | "cancelled" | "no_show";
+export type SettlementStatus = "none" | "held" | "released" | "forfeited" | "refunded" | "partially_refunded";
+export type OrderCancelledBy = "customer" | "store" | "system" | "admin";
 export type PaymentMethod = "momo" | "zalopay" | "vnpay" | "card" | "vietqr" | "cash";
 export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 export type ComplaintPriority = "low" | "medium" | "high";
@@ -21,6 +23,8 @@ export interface Profile {
   avatar_url: string | null;
   points: number;
   rank: string;
+  /** Khóa mua hàng nhãn đỏ đến thời điểm này (null = không khóa) */
+  red_ban_until?: string | null;
   status: ProfileStatus;
   auth_provider: string;
   last_login_at: string | null;
@@ -137,6 +141,24 @@ export interface Order {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  // Quy trình trả trước (SQL 029). Đơn cũ có thể là null.
+  pay_deadline?: string | null;
+  paid_at?: string | null;
+  pickup_deadline?: string | null;
+  cancel_free_until?: string | null;
+  policy_label?: ProductLabel | null;
+  no_show_at?: string | null;
+  cancel_reason?: string | null;
+  cancelled_by?: OrderCancelledBy | null;
+  reminder_mid_sent_at?: string | null;
+  reminder_final_sent_at?: string | null;
+  settlement_status?: SettlementStatus;
+  complaint_deadline_at?: string | null;
+  stock_restored_at?: string | null;
+  ledger_synced_status?: string | null;
+  // Nhà cung cấp thanh toán và mã tham chiếu của họ (SQL 034)
+  payment_provider?: string | null;
+  payment_ref?: string | null;
 }
 
 export interface OrderItem {

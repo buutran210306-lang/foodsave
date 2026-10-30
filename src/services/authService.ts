@@ -22,6 +22,8 @@ import type { Profile, UserRole } from "../types/domain";
 import { AppError } from "../utils/appError";
 import { logger } from "../utils/logger";
 import { handleSupabaseError } from "./supabaseService";
+import { payoutAccountService } from "./payoutAccountService";
+import { maskAccountNumber, normalizeAccountNumber } from "../utils/payoutCrypto";
 
 type AuthAuditEvent =
   | "REGISTER_SUCCESS"
@@ -672,12 +674,32 @@ const partnerAutomationDefaults = (automation: RegisterPartnerBody["automation"]
   return values;
 };
 
+/**
+ * Số tài khoản đầy đủ KHÔNG được lưu trong hồ sơ cửa hàng / đơn đăng ký. Mã hóa vào store_payout_accounts (chờ admin xác minh);
+ * hồ sơ chỉ giữ dạng che (4 số cuối). Thiếu khóa mã hóa thì đăng ký vẫn thành công, cửa hàng thêm tài khoản sau trong mục Ví.
+ */
+const capturePayoutAccount = async (storeId: string, body: RegisterPartnerBody): Promise<string | null> => {
+  const raw = body.bank_account_number;
+  if (!raw) return null;
+  const digits = normalizeAccountNumber(raw);
+  if (!digits) return maskAccountNumber(String(raw).replace(/\D/g, ""));
+  if (body.bank_name && body.bank_account_holder) {
+    try {
+      await payoutAccountService.submit(storeId, { bank_name: body.bank_name, account_holder_name: body.bank_account_holder, account_number: digits });
+    } catch (error) {
+      logger.warn("Chưa lưu được tài khoản nhận tiền khi đăng ký (cửa hàng sẽ thêm lại trong mục Ví)", error instanceof Error ? error.message : error);
+    }
+  }
+  return maskAccountNumber(digits);
+};
+
 const upsertPartnerProfile = async (
   userId: string,
   storeId: string,
   body: RegisterPartnerBody,
   phone: string
-): Promise<void> => {
+): Promise<string | null> => {
+  const maskedAccount = await capturePayoutAccount(storeId, body);
   const adminPhone = normalizePhone(body.admin_phone ?? body.phone);
   const publicHotline = body.public_hotline ? normalizePhone(body.public_hotline) : adminPhone;
   const { error } = await supabaseAdmin
@@ -698,7 +720,7 @@ const upsertPartnerProfile = async (
       admin_email: body.admin_email ?? body.email,
       admin_phone: adminPhone,
       bank_name: body.bank_name ?? null,
-      bank_account_number: body.bank_account_number ?? null,
+      bank_account_number: maskedAccount,
       bank_account_holder: body.bank_account_holder ?? null,
       documents: body.documents ?? {},
       opening_schedule: body.opening_schedule ?? [],
@@ -718,6 +740,7 @@ const upsertPartnerProfile = async (
     }, { onConflict: "profile_id" });
 
   if (error) handleSupabaseError(error, "Failed to upsert partner profile");
+  return maskedAccount;
 };
 
 const deleteCreatedUser = async (userId: string | null): Promise<void> => {
@@ -1346,7 +1369,7 @@ export const authService = {
       }
 
       const storeId = (store as { id: string }).id;
-      await upsertPartnerProfile(user.id, storeId, body, phone);
+      const maskedAccount = await upsertPartnerProfile(user.id, storeId, body, phone);
 
       const { error: reputationError } = await supabaseAdmin.from("seller_reputation").insert({
         seller_id: storeId
@@ -1382,7 +1405,7 @@ export const authService = {
           admin_email: body.admin_email ?? body.email,
           admin_phone: adminPhone,
           bank_name: body.bank_name,
-          bank_account_number: body.bank_account_number,
+          bank_account_number: maskedAccount ?? undefined,
           bank_account_holder: body.bank_account_holder,
           documents: body.documents,
           opening_schedule: body.opening_schedule,

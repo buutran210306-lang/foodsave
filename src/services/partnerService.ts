@@ -34,9 +34,6 @@ export interface PartnerProfileUpdate {
   latitude?: number | undefined;
   longitude?: number | undefined;
   business_type?: string | undefined;
-  bank_name?: string | undefined;
-  bank_account_number?: string | undefined;
-  bank_account_holder?: string | undefined;
 }
 
 export const partnerService = {
@@ -64,9 +61,6 @@ export const partnerService = {
 
     const profilePatch: Record<string, unknown> = {};
     if (body.business_type !== undefined) profilePatch.business_type = body.business_type;
-    if (body.bank_name !== undefined) profilePatch.bank_name = body.bank_name;
-    if (body.bank_account_number !== undefined) profilePatch.bank_account_number = body.bank_account_number;
-    if (body.bank_account_holder !== undefined) profilePatch.bank_account_holder = body.bank_account_holder;
 
     const changed = [...Object.keys(storePatch).filter((key) => key !== "longitude" && key !== "district" && key !== "city"), ...Object.keys(profilePatch)];
     const { data: profile, error: profileError } = await supabaseAdmin.from("partner_profiles").select("profile_id,metadata").eq("profile_id", ownerId).maybeSingle();
@@ -115,7 +109,7 @@ export const partnerService = {
       stores: stores ?? [],
       metrics: {
         store_count: storeIds.length,
-        active_order_count: (orders ?? []).filter((order) => !["completed", "cancelled"].includes((order as { status: string }).status)).length,
+        active_order_count: (orders ?? []).filter((order) => !["completed", "cancelled", "no_show", "awaiting_payment"].includes((order as { status: string }).status)).length,
         completed_order_count: completedOrders.length,
         total_revenue_cents: totalRevenue,
         active_product_count: (products ?? []).filter((product) => (product as { is_active: boolean }).is_active).length,

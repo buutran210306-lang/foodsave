@@ -226,14 +226,19 @@ export const adminService = {
       countRole("customer"), countRole("partner"), countRole("charity"), countRole("admin"), countTable("volunteers"), countTable("stores")
     ]);
 
-    const { data: profiles, error: profilesError } = await supabaseAdmin
+    const loadBuyers = (columns: string) => supabaseAdmin
       .from("profiles")
-      .select("id,full_name,phone,status,points,rank,created_at")
+      .select(columns)
       .eq("role", "customer")
       .order("created_at", { ascending: false })
       .limit(500);
+    let { data: profiles, error: profilesError } = await loadBuyers("id,full_name,phone,status,points,rank,red_ban_until,created_at");
+    // Chưa chạy SQL 029 (chưa có cột red_ban_until): vẫn liệt kê được người mua như cũ
+    if (profilesError && (profilesError.code === "42703" || profilesError.code === "PGRST204")) {
+      ({ data: profiles, error: profilesError } = await loadBuyers("id,full_name,phone,status,points,rank,created_at"));
+    }
     if (profilesError) handleSupabaseError(profilesError, "Failed to list buyers");
-    const buyers = profiles ?? [];
+    const buyers = (profiles ?? []) as unknown as Array<Record<string, any>>;
 
     // Email + cách đăng nhập nằm ở auth.users, đơn hàng nằm ở bảng orders
     const authInfo = new Map<string, { email: string; provider: string; lastSignIn: string | null }>();
@@ -275,6 +280,7 @@ export const adminService = {
           provider: auth?.provider ?? "email",
           points: b.points ?? 0,
           rank: b.rank ?? "",
+          red_ban_until: b.red_ban_until ?? null,
           created_at: b.created_at,
           last_sign_in_at: auth?.lastSignIn ?? null,
           orders_total: stat?.total ?? 0,

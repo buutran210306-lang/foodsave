@@ -64,18 +64,10 @@ const postMomo = async <T>(path: string, body: Record<string, unknown>): Promise
   return payload;
 };
 
+// Thanh toán thành công đi qua đúng một đường với nút mô phỏng: orderService.markPaid (hạn thanh toán, hạn lấy hàng, sổ cái...)
 const markOrderPaid = async (orderId: string): Promise<Order> => {
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .update({
-      payment_status: "paid"
-    })
-    .eq("id", orderId)
-    .select("*")
-    .single();
-
-  if (error) handleSupabaseError(error, "Failed to mark MoMo order as paid");
-  return data as Order;
+  const { orderService } = await import("./orderService");
+  return orderService.markPaidBySystem(orderId);
 };
 
 const markOrderFailed = async (orderId: string): Promise<Order> => {

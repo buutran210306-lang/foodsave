@@ -7,6 +7,8 @@ import type { UserRole } from "../types/domain";
 import { AppError } from "../utils/appError";
 import { distanceKmBetween, isValidCoordinates } from "../utils/geoDistance";
 import { handleSupabaseError, requireRecord, supabaseAdmin } from "./supabaseService";
+import { createNotification } from "./notificationService";
+import { pushService } from "./pushService";
 
 // Đội TNV nhiều người cho mỗi lô + ảnh minh chứng do TNV chụp (tổ chức duyệt, quá hạn tự gửi sang cửa hàng)
 
@@ -59,7 +61,7 @@ const loadDonation = async (donationId: string): Promise<DonationBrief> => {
 
 const notify = async (recipientId: string | null | undefined, role: UserRole, type: string, title: string, body: string, donationId: string): Promise<void> => {
   if (!recipientId) return;
-  await supabaseAdmin.from("notifications").insert({ recipient_id: recipientId, role_target: role, type, title, body, related_type: "donation", related_id: donationId });
+  await createNotification({ recipientId: recipientId, roleTarget: role, type, title, body, relatedType: "donation", relatedId: donationId });
 };
 
 // ── Thời hạn duyệt ảnh: ảnh nộp sau 20:00 (hoặc trước 8:00) tính hạn từ 8:00 sáng, giờ Việt Nam
@@ -144,6 +146,10 @@ export const teamService = {
       if (volunteer.status !== "active") throw conflict("Tình nguyện viên " + volunteer.full_name + " chưa được kích hoạt hoặc đang tạm ngưng");
     }
 
+    // Nhớ ai đã được giao trước đó để chỉ gửi push "nhiệm vụ mới" cho người MỚI được thêm
+    const { data: priorRows } = await supabaseAdmin.from("donation_assignments").select("volunteer_id,stage").eq("donation_id", donationId);
+    const priorKeys = new Set(((priorRows ?? []) as Array<{ volunteer_id: string; stage: string }>).map((row) => row.stage + ":" + row.volunteer_id));
+
     const now = new Date().toISOString();
     const stages: Array<[Stage, AssignTeamBody["pickup"]]> = [["pickup", body.pickup], ["distribute", body.distribute]];
     for (const [stage, list] of stages) {
@@ -162,6 +168,22 @@ export const teamService = {
         .upsert(list.map((member) => ({ donation_id: donationId, volunteer_id: member.volunteer_id, stage, share: member.share, assigned_at: now })), { onConflict: "donation_id,volunteer_id,stage" });
       if (upsertError) handleSupabaseError(upsertError, "Failed to save team");
     }
+
+    // Push cho tình nguyện viên mới được giao (chạy song song, lỗi push không làm hỏng việc phân công)
+    const pushJobs: Array<Promise<unknown>> = [];
+    for (const [stage, list] of stages) {
+      for (const member of list ?? []) {
+        if (priorKeys.has(stage + ":" + member.volunteer_id)) continue;
+        pushJobs.push(pushService.sendToVolunteer(member.volunteer_id, {
+          title: "Nhiệm vụ mới",
+          body: "Lô " + donation.donation_code + ": " + (stage === "pickup" ? "đến cửa hàng lấy hàng" : "phát hàng cho người nhận"),
+          url: "/FOODSAVE_VOLUNTEER.html#task=" + donationId,
+          tag: "task-" + donationId,
+          type: "volunteer-task-assigned"
+        }));
+      }
+    }
+    await Promise.all(pushJobs);
 
     const update: Record<string, unknown> = {};
     if (body.pickup) {

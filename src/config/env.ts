@@ -31,6 +31,19 @@ const envSchema = z.object({
   PHOTO_REVIEW_MINUTES: z.coerce.number().int().min(1).max(10080).default(360),
   // Cho phép TNV tải ảnh từ thư viện (chỉ để demo trên laptop). Bản thật để false.
   DEMO_MODE: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  // Rút ngắn mọi hạn của đơn hàng khi demo (0.05: 60 phút thành 3 phút). CHỈ có tác dụng khi DEMO_MODE=true; môi trường thật luôn là 1.
+  ORDER_POLICY_TIME_SCALE: z.coerce.number().min(0.01).max(1).default(1),
+  // Nhà cung cấp thanh toán (thu tiền): simulated = nút "Đã thanh toán" mô phỏng (mặc định); momo = khung chưa cấu hình
+  PAYMENT_PROVIDER: z.enum(["simulated", "momo"]).default("simulated"),
+  // Nhà cung cấp chi trả (rút tiền cho cửa hàng): manual = admin chuyển khoản thủ công (mặc định); bank_api = khung chưa nối
+  PAYOUT_PROVIDER: z.enum(["manual", "bank_api"]).default("manual"),
+  // Khóa mã hóa số tài khoản nhận tiền (AES-256-GCM): 32 byte dạng base64 hoặc hex 64 ký tự. KHÔNG ghi vào repo.
+  // Sinh khóa: node scripts/generate-payout-key.js
+  PAYOUT_ENCRYPTION_KEY: optionalNonEmptyString,
+  // Web Push (người mua + tình nguyện viên). Sinh khóa: npm run gen:vapid. Thiếu thì thông báo đẩy tự tắt (thông báo trong app vẫn chạy).
+  VAPID_PUBLIC_KEY: optionalNonEmptyString,
+  VAPID_PRIVATE_KEY: optionalNonEmptyString,
+  VAPID_SUBJECT: optionalNonEmptyString,
   // Ảnh chụp cách cửa hàng / tổ chức quá số mét này thì bị gắn cờ GPS
   PHOTO_GPS_MAX_METERS: z.coerce.number().int().min(50).max(50000).default(500),
   // Marketing Studio: n8n nhận lệnh đăng bài. Để trống = chỉ gửi thông báo trong FoodSave, không đăng mạng xã hội.
