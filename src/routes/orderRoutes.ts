@@ -33,6 +33,7 @@ orderRoutes.post("/complaints/:id/respond", requireRoles("partner"), validateReq
 orderRoutes.post("/complaints", requireRoles("customer", "admin"), validateRequest({ body: createComplaintBodySchema }), asyncHandler(orderController.createComplaint));
 orderRoutes.patch("/complaints/:id", requireRoles("partner", "admin"), validateRequest({ params: uuidParamSchema, body: updateComplaintBodySchema }), asyncHandler(orderController.updateComplaint));
 orderRoutes.get("/chat/unread", requireRoles("customer", "partner"), asyncHandler(orderController.unreadMessages));
+orderRoutes.get("/:id/cancel-preview", requireRoles("customer"), validateRequest({ params: uuidParamSchema }), asyncHandler(orderController.previewCancel));
 orderRoutes.post("/:id/cancel", requireRoles("customer"), validateRequest({ params: uuidParamSchema, body: cancelOrderBodySchema }), asyncHandler(orderController.cancelOrder));
 orderRoutes.get("/:id/messages", requireRoles("customer", "partner", "admin"), validateRequest({ params: uuidParamSchema }), asyncHandler(orderController.listMessages));
 orderRoutes.post("/:id/messages", requireRoles("customer", "partner"), validateRequest({ params: uuidParamSchema, body: chatMessageBodySchema }), asyncHandler(orderController.sendMessage));

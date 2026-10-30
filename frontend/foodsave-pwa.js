@@ -9,7 +9,7 @@
 (function () {
   "use strict";
 
-  var state = { role: null, request: null, registration: null, installPrompt: null, publicKey: null, enabled: false, subscribed: false, busy: false, bar: null };
+  var state = { client: "web", ui: true, role: null, request: null, registration: null, installPrompt: null, publicKey: null, enabled: false, subscribed: false, busy: false, bar: null };
 
   function isStandalone() {
     try { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; } catch (e) { return false; }
@@ -46,7 +46,7 @@
 
   function sendToServer(subscription) {
     var json = subscription.toJSON();
-    return state.request("/push/subscribe", { method: "POST", body: { endpoint: json.endpoint, keys: { p256dh: json.keys && json.keys.p256dh, auth: json.keys && json.keys.auth } } });
+    return state.request("/push/subscribe", { method: "POST", body: { endpoint: json.endpoint, keys: { p256dh: json.keys && json.keys.p256dh, auth: json.keys && json.keys.auth }, client: state.client } });
   }
 
   /* ---------- giao diện: hai nút nhỏ ở góc dưới bên trái ---------- */
@@ -57,6 +57,7 @@
     return b;
   }
   function ensureBar() {
+    if (state.ui === false) return null;   // app người mua tự vẽ nút bật/tắt trong màn Cài đặt thông báo
     if (state.bar) return state.bar;
     var bar = document.createElement("div");
     bar.id = "fs-pwa-bar";
@@ -174,6 +175,8 @@
 
   function init(config) {
     state.role = config && config.role;
+    state.client = config && config.client === "app" ? "app" : "web";
+    state.ui = !(config && config.ui === false);
     state.request = config && config.request;
     if (!state.request) return;
     try {
@@ -206,5 +209,11 @@
     }
   }
 
-  window.FSPwa = { init: init, sync: syncQuietly, _state: state };
+  window.FSPwa = {
+    init: init, sync: syncQuietly, _state: state,
+    /* Dành cho app người mua (giao diện riêng): trạng thái + bật/tắt thông báo đẩy cho thiết bị này */
+    info: function () { return { supported: pushSupported(), serverEnabled: state.enabled, subscribed: state.subscribed, permission: ("Notification" in window) ? Notification.permission : "unsupported", standalone: isStandalone(), ios: isIOS() }; },
+    pushEnable: function () { return enable().then(function () { return state.subscribed; }); },
+    pushDisable: function () { return currentSubscription().then(function (s) { return s ? disable(s) : null; }); }
+  };
 })();

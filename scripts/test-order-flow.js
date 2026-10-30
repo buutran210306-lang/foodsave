@@ -181,6 +181,23 @@ const scenario = async (name, fn) => {
     assert.ok(!db.table("order_events").some((e) => e.event_type === "stock_not_restored"), "không có cảnh báo không-trả-kho");
   });
 
+  await scenario("4a. Xem trước hủy (app): khớp kết quả hủy thật, không ghi gì, đơn người khác bị từ chối", async () => {
+    const o = await pay(await create("p-yellow"));
+    const before = JSON.stringify(row(o.id));
+    const free = await orderService.previewCancel(CUST, o.id);
+    assert.deepStrictEqual([free.can_cancel, free.paid, free.free, free.refund_cents, free.penalty_points], [true, true, true, o.total_cents, 0]);
+    assert.strictEqual(JSON.stringify(row(o.id)), before, "xem trước không đổi đơn");
+    row(o.id).cancel_free_until = iso(-MIN);
+    const late = await orderService.previewCancel(CUST, o.id);
+    assert.deepStrictEqual([late.free, late.refund_cents, late.penalty_points], [false, 0, 5]);
+    await assert.rejects(() => orderService.previewCancel("nguoi-khac", o.id), (e) => e.statusCode === 403);
+    const result = await orderService.cancelByCustomer(CUST, o.id, {});
+    assert.strictEqual(result.refund_cents, late.refund_cents, "kết quả thật = kết quả xem trước");
+    assert.strictEqual(points(), 100 - late.penalty_points);
+    const done = await orderService.previewCancel(CUST, o.id);
+    assert.strictEqual(done.can_cancel, false, "đơn đã hủy thì không hủy được nữa");
+  });
+
   await scenario("4b. Hủy muộn khi sản phẩm sắp hết hạn: KHÔNG trả về kho, ghi nhật ký đơn", async () => {
     const o = await pay(await create("p-yellow"));
     prod("p-yellow").effective_deadline_at = iso(10 * MIN); // còn 10 phút < 15 phút
@@ -1154,9 +1171,11 @@ const scenario = async (name, fn) => {
       await partner(o, "ready");
       await partner(o, "completed");
       const updates = pushTo("dev-a").filter((p) => p.type === "order-update");
-      assert.strictEqual(updates.length, 3, "nhận đơn, sẵn sàng, hoàn tất");
-      assert.ok(updates.some((p) => /sẵn sàng/.test(p.title)));
-      assert.ok(updates.every((p) => p.url === "/FOODSAVE_USER.html#order=" + o.id));
+      assert.strictEqual(updates.length, 2, "nhận đơn, hoàn tất");
+      const ready = pushTo("dev-a").filter((p) => p.type === "order-ready");
+      assert.strictEqual(ready.length, 1, "cửa hàng chuẩn bị xong: loại push riêng, một lần");
+      assert.ok(/đã chuẩn bị xong đơn/.test(ready[0].title));
+      assert.ok(updates.concat(ready).every((p) => p.url === "/FOODSAVE_USER.html#order=" + o.id));
       // hoàn tiền (hủy sớm)
       const o2 = await pay(await createD(0, 1, "p-green"));
       await orderService.cancelByCustomer(CUST, o2.id, {});
@@ -1553,6 +1572,57 @@ const scenario = async (name, fn) => {
     assert.strictEqual(w.customers_locked, 1);
     assert.ok(w.withdrawals_pending >= 1);
     assert.strictEqual(typeof w.fraud_open, "number");
+  });
+
+  await scenario("A1. App người mua: push 'cửa hàng đã chuẩn bị xong' đúng người, một lần, mở đúng đơn trong app; tắt nhóm Đơn hàng thì không push nhưng vẫn có thông báo trong app", async () => {
+    db.table("push_subscriptions").splice(0);
+    await pushService.subscribe({ kind: "user", id: CUST }, { endpoint: EP("app1"), keys: KEYS, client: "app" });
+    await pushService.subscribe({ kind: "user", id: CUST }, { endpoint: EP("web1"), keys: KEYS, client: "web" });
+    await pushService.subscribe({ kind: "user", id: OTHER }, { endpoint: EP("other"), keys: KEYS, client: "app" });
+    await withPush(async () => {
+      const o = await pay(await create("p-yellow"));
+      await partner(o, "confirmed");
+      sentPush.length = 0;
+      await partner(o, "ready");
+      await partner(o, "ready"); // bấm lặp: không báo lần hai
+      assert.strictEqual(notes((n) => n.recipient_id === CUST && n.type === "order-ready").length, 1, "đúng một thông báo");
+      assert.strictEqual(pushTo("app1").length, 1);
+      assert.strictEqual(pushTo("other").length, 0, "không gửi nhầm người");
+      assert.ok(pushTo("app1")[0].url === "/FOODSAVE_APP.html#order=" + o.id, "thiết bị app mở đúng đơn trong app");
+      assert.ok(pushTo("web1")[0].url === "/FOODSAVE_USER.html#order=" + o.id, "thiết bị web mở bản web");
+      assert.ok(/đã chuẩn bị xong đơn/.test(pushTo("app1")[0].title) && /đến nhận trước/.test(pushTo("app1")[0].body));
+      // tắt nhóm Đơn hàng
+      db.table("profiles").find((p) => p.id === CUST).metadata = { notification_prefs: { orders: false } };
+      const o2 = await pay(await create("p-yellow"));
+      await partner(o2, "confirmed");
+      sentPush.length = 0;
+      await partner(o2, "ready");
+      assert.strictEqual(sentPush.length, 0, "đã tắt nhóm Đơn hàng: không push");
+      assert.strictEqual(notes((n) => n.recipient_id === CUST && n.type === "order-ready").length, 2, "vẫn có thông báo trong app");
+      db.table("profiles").find((p) => p.id === CUST).metadata = {};
+    });
+  });
+
+  await scenario("A2. Voucher mới: báo một lần cho người mua đã bật thông báo, bỏ qua ai tắt nhóm Khuyến mãi; bật/tắt lại không báo thêm; voucher chưa tới ngày thì không báo", async () => {
+    db.table("push_subscriptions").splice(0);
+    await pushService.subscribe({ kind: "user", id: CUST }, { endpoint: EP("c-app"), keys: KEYS, client: "app" });
+    await pushService.subscribe({ kind: "user", id: OTHER }, { endpoint: EP("o-app"), keys: KEYS, client: "app" });
+    db.table("profiles").find((p) => p.id === OTHER).metadata = { notification_prefs: { promo: false } };
+    await withPush(async () => {
+      const before = notes((n) => n.type === "voucher-new").length;
+      const v = await adminOpsService.adminOpsService.createVoucher(null, { code: "MOI20", name: "Giảm 20%", percent_off: 20, starts_at: iso(-MIN), expires_at: iso(24 * HOUR) }, null);
+      assert.strictEqual(notes((n) => n.type === "voucher-new").length, before + 1, "một thông báo cho mọi người mua (chuông)");
+      assert.strictEqual(pushTo("c-app").length, 1);
+      assert.strictEqual(pushTo("c-app")[0].url, "/FOODSAVE_APP.html#voucher");
+      assert.ok(/MOI20/.test(pushTo("c-app")[0].body));
+      assert.strictEqual(pushTo("o-app").length, 0, "đã tắt nhóm Khuyến mãi");
+      await adminOpsService.adminOpsService.toggleVoucher(v.id, false, null, null);
+      await adminOpsService.adminOpsService.toggleVoucher(v.id, true, null, null);
+      assert.strictEqual(pushTo("c-app").length, 1, "bật/tắt lại không báo thêm");
+      await adminOpsService.adminOpsService.createVoucher(null, { code: "SAUNAY", name: "Sau này", percent_off: 10, starts_at: iso(48 * HOUR), expires_at: iso(72 * HOUR) }, null);
+      assert.strictEqual(pushTo("c-app").length, 1, "chưa tới ngày bắt đầu thì chưa báo");
+    });
+    db.table("profiles").find((p) => p.id === OTHER).metadata = {};
   });
 
   const failed = results.filter((r) => !r[0]).length;

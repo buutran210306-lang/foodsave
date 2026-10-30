@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14613b">
+<title>FoodSave App · Demo giao diện</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--g9:#0f4a2e;--g8:#14613b;--g7:#1c7c45;--g5:#22a55b;--mint:#eaf6ef;--mint2:#d9efe2;--y:#f3c94f;--ink:#111512;--mut:#6b756d;--line:#e2e9e3;--red:#dc3b2f;--redbg:#fde8e6;--ylbg:#fff4d1;--grbg:#dff3e7;--bg:#f3f8f4;--af:430px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:#dfe6e0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);max-width:var(--af);margin:0 auto;height:100vh;height:100dvh;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.15)}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea{font-family:inherit;font-size:15px;color:inherit}
+i.ti{font-size:20px;line-height:1}
+#view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+#view::-webkit-scrollbar{display:none}
+.scr{min-height:100%;padding-bottom:20px;animation:in .22s ease-out}
+.scr.tabbed{padding-bottom:96px}
+@keyframes in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+h1{font-size:26px;font-weight:900;line-height:1.1;letter-spacing:-.01em;text-transform:uppercase}
+h2{font-size:17px;font-weight:800}
+.mut{color:var(--mut)}.sm{font-size:12.5px}.xs{font-size:11px}.b{font-weight:800}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.grow{flex:1;min-width:0}
+.pad{padding:0 16px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}
+.card{background:#fff;border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(15,74,46,.06);border:1px solid #edf2ee}
+.btn{height:50px;border-radius:15px;background:var(--g8);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-shadow:0 6px 16px rgba(20,97,59,.25)}
+.btn.ghost{background:#fff;color:var(--g8);border:1.5px solid var(--g8);box-shadow:none}
+.btn.red{background:var(--red);box-shadow:none}
+.btn.soft{background:var(--mint2);color:var(--g8);box-shadow:none}
+.btn.sm{height:38px;font-size:13px;border-radius:12px;width:auto;padding:0 14px}
+.btn[disabled]{opacity:.45}
+.top{display:flex;align-items:center;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;background:var(--bg);z-index:20}
+.top h3{font-size:16px;font-weight:900;text-transform:uppercase;flex:1}
+.ib{width:40px;height:40px;border-radius:13px;background:#fff;display:grid;place-items:center;border:1px solid var(--line);position:relative;flex:none}
+.ib .dot{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;border-radius:7px;padding:3px 7px;text-transform:uppercase;letter-spacing:.02em}
+.tag.green{background:var(--g7);color:#fff}.tag.yellow{background:#e0a512;color:#fff}.tag.red{background:var(--red);color:#fff}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:8px;padding:3px 8px;background:var(--grbg);color:var(--g8)}
+.chip.y{background:var(--ylbg);color:#8a5a00}.chip.r{background:var(--redbg);color:#b3261e}.chip.g{background:#eef1ee;color:#586159}
+.hs{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 6px;scrollbar-width:none;scroll-padding-left:16px}.hs::-webkit-scrollbar{display:none}
+.pill{flex:none;padding:9px 15px;border-radius:99px;background:#fff;border:1px solid var(--line);font-weight:700;font-size:13px}
+.pill.on{background:var(--g8);color:#fff;border-color:var(--g8)}
+/* tab bar */
+#tabs{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:none;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(8px + env(safe-area-inset-bottom));z-index:50}
+#tabs.on{display:grid}
+#tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:800;color:#8b958d;padding:5px 0;text-transform:uppercase;position:relative}
+#tabs button i{font-size:23px}
+#tabs button.on{color:var(--g8)}
+#tabs button.on:after{content:"";width:5px;height:5px;border-radius:50%;background:var(--g7);margin-top:1px}
+#tabs .bd{position:absolute;top:2px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9.5px;display:grid;place-items:center;padding:0 4px}
+/* product row */
+.prod{display:flex;gap:12px;padding:12px;background:#fff;border-radius:18px;border:1px solid #edf2ee;box-shadow:0 2px 10px rgba(15,74,46,.05);position:relative;margin-bottom:10px;cursor:pointer}
+.pimg{width:84px;height:84px;border-radius:16px;display:grid;place-items:center;font-size:44px;flex:none;position:relative}
+.pimg{overflow:visible}.pimg img{width:100%;height:100%;object-fit:cover;border-radius:16px;display:block}.pimg.green{background:linear-gradient(135deg,#d9f2e2,#f1fbf4)}.pimg.yellow{background:linear-gradient(135deg,#fff0bf,#fffaea)}.pimg.red{background:linear-gradient(135deg,#fbd6d2,#fff1ef)}
+.pname{font-weight:800;font-size:15px;line-height:1.2}
+.price{font-weight:900;font-size:17px;color:var(--red)}.price s{font-size:11.5px;font-weight:600;color:#9aa39c;margin-left:4px}
+.off{background:var(--red);color:#fff;font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 6px;margin-left:6px}
+.heart{position:absolute;top:10px;right:10px;font-size:19px;color:#9aa39c}.heart.on{color:var(--red)}
+/* hero */
+.hero{margin:6px 16px 0;border-radius:22px;background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;padding:18px;position:relative;overflow:hidden;min-height:150px}
+.hero h2{font-size:23px;line-height:1.1;font-weight:900}.hero p{font-size:12.5px;opacity:.9;margin:6px 0 12px}
+.hero .big{position:absolute;right:10px;bottom:0;font-size:92px;opacity:.95}
+.hero .b2{background:#fff;color:var(--g8);border-radius:11px;padding:9px 14px;font-weight:800;font-size:12.5px;display:inline-flex;gap:6px;align-items:center}
+.lab{border-radius:18px;padding:13px;display:flex;flex-direction:column;gap:3px;text-align:left}
+.lab.green{background:var(--grbg)}.lab.yellow{background:var(--ylbg)}.lab.red{background:var(--redbg)}
+.lab .ic{width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center;margin-bottom:5px}
+.lab b{font-size:13.5px}.lab small{font-size:10.5px;color:var(--mut)}.lab em{font-style:normal;font-weight:900;font-size:13px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mapbox{margin:0 16px;height:150px;border-radius:18px;background:#cfe6dc;position:relative;overflow:hidden;border:1px solid var(--line)}
+.mapbox:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 48%,#fff 48% 52%,transparent 52%),linear-gradient(0deg,transparent 48%,#fff 48% 52%,transparent 52%),repeating-linear-gradient(60deg,transparent 0 40px,rgba(255,255,255,.5) 40px 43px);opacity:.9}
+.pin{position:absolute;background:#fff;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;box-shadow:0 3px 8px rgba(0,0,0,.18);display:flex;gap:3px;align-items:center;z-index:2}
+.me{position:absolute;left:50%;top:55%;width:18px;height:18px;border-radius:50%;background:#2f6bf0;border:3px solid #fff;box-shadow:0 0 0 8px rgba(47,107,240,.2);z-index:2}
+/* forms */
+.field{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:13px 14px;width:100%;outline:none}
+.field:focus{border-color:var(--g7)}
+label.l{display:block;font-size:11px;font-weight:800;text-transform:uppercase;color:#3d4a41;margin:14px 0 6px;letter-spacing:.03em}
+.steps{display:flex;gap:5px;margin-left:auto}.steps i{width:22px;height:4px;border-radius:3px;background:#cfe0d5}.steps i.on{background:var(--g8)}
+.otp{display:flex;gap:8px;justify-content:space-between}.otp input{width:100%;aspect-ratio:1/1.15;text-align:center;font-size:22px;font-weight:800;border:1.5px solid var(--g5);background:var(--grbg);border-radius:12px;outline:none;min-width:0}
+.sw{display:flex;background:var(--mint2);border-radius:13px;padding:4px}.sw button{flex:1;padding:10px 0;border-radius:10px;font-weight:800;font-size:13px;color:var(--mut)}.sw button.on{background:#fff;color:var(--g8);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.sopt{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;width:100%;text-align:left;font-weight:700}
+.sopt .ico{width:36px;height:36px;border-radius:11px;background:var(--grbg);color:var(--g8);display:grid;place-items:center;flex:none}
+/* sheet & toast */
+#sheetbg{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:90;display:none}
+#sheetbg.on{display:block}
+#sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;z-index:100;padding:10px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:88%;overflow-y:auto}
+#sheet.on{transform:none}
+#sheet:before{content:"";display:block;width:38px;height:4px;border-radius:3px;background:#d5ddd6;margin:0 auto 12px}
+#pushb{position:absolute;left:10px;right:10px;top:10px;z-index:300;background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border-radius:18px;padding:12px 14px;display:flex;gap:11px;align-items:center;box-shadow:0 14px 36px rgba(0,0,0,.35);transform:translateY(-140%);transition:transform .4s cubic-bezier(.2,1.2,.4,1);cursor:pointer}#pushb.on{transform:none}#pushb .ic{width:40px;height:40px;border-radius:13px;background:#fff3;display:grid;place-items:center;flex:none}#pushb b{font-size:13.5px;display:block}#pushb span{font-size:12px;opacity:.9}#pushb em{font-style:normal;font-size:10px;opacity:.7;margin-left:auto;align-self:flex-start}
+#toast{position:absolute;left:16px;right:16px;bottom:96px;background:#111512;color:#fff;padding:12px 16px;border-radius:14px;font-weight:700;font-size:13.5px;z-index:200;opacity:0;pointer-events:none;transform:translateY(10px);transition:.25s}
+#toast.on{opacity:1;transform:none}
+.timer{font-variant-numeric:tabular-nums;font-weight:900}
+.bar{height:6px;border-radius:4px;background:#d3e6da;overflow:hidden}.bar i{display:block;height:100%;background:var(--g7);border-radius:4px}
+.stepper{display:flex;align-items:flex-start;justify-content:space-between;margin:6px 0}
+.stp{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:#8b958d;text-transform:uppercase;flex:1;position:relative}
+.stp b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#e4ece6;color:#9aa39c;font-size:12px;position:relative;z-index:1}
+.stp.done b,.stp.cur b{background:var(--g7);color:#fff}.stp.cur b{box-shadow:0 0 0 4px rgba(34,165,91,.25)}.stp.done,.stp.cur{color:var(--g8)}
+.stp:not(:last-child):after{content:"";position:absolute;top:12px;left:calc(50% + 14px);right:calc(-50% + 14px);height:2px;background:#d3e2d8}
+.stp.done:not(:last-child):after{background:var(--g7)}
+.qrbox{background:#fff;border:2px solid var(--g7);border-radius:22px;padding:16px;text-align:center}
+.qrbox svg{width:190px;height:190px;border:1px solid var(--line);border-radius:14px;padding:8px}
+.bub{max-width:78%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.35;margin-bottom:8px}
+.bub.mine{background:var(--g8);color:#fff;margin-left:auto;border-bottom-right-radius:5px}
+.bub.you{background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub small{display:block;font-size:10px;opacity:.65;margin-top:3px}
+.menu{background:#fff;border-radius:18px;border:1px solid #edf2ee;overflow:hidden}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;padding:14px;font-weight:700;font-size:14.5px;text-align:left;border-bottom:1px solid #f1f4f1}
+.menu button:last-child{border:0}.menu i.ti:first-child{color:var(--g7)}.menu .chev{margin-left:auto;color:#a2aba4;font-size:17px}
+.splash{background:linear-gradient(170deg,rgba(15,74,46,.55),rgba(20,97,59,.9)),url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=80') center/cover,var(--g9);color:#fff;min-height:100%}
+.empty{text-align:center;padding:50px 24px;color:var(--mut)}.empty .e{font-size:50px}
+.seg{display:flex;border-bottom:1px solid var(--line);margin:0 16px}.seg button{flex:1;padding:12px 0;font-weight:800;font-size:12.5px;color:#8b958d;text-transform:uppercase;border-bottom:3px solid transparent}.seg button.on{color:var(--g8);border-color:var(--g8)}
+.acc{background:#fff;border-radius:14px;border:1px solid #edf2ee;margin-bottom:8px;overflow:hidden}.acc button{width:100%;padding:14px;text-align:left;font-weight:700;display:flex;justify-content:space-between;gap:8px}.acc div{display:none;padding:0 14px 14px;font-size:13.5px;color:#4a554d;line-height:1.5}.acc.on div{display:block}
+
+/* ===== game cây ===== */
+.garden{border-radius:24px;overflow:hidden;background:#fff;border:1px solid #edf2ee;box-shadow:0 4px 18px rgba(15,74,46,.1)}
+.scene{position:relative;height:370px;background:linear-gradient(180deg,#bfe6ff 0%,#e6f7ff 55%,#dff3e7 100%);overflow:hidden}
+.scene[data-stage=young],.scene[data-stage=ready]{background:linear-gradient(180deg,#a9ddff 0%,#e6f7ff 55%,#d9f2e2 100%)}
+.scene svg.tree{position:absolute;left:0;right:0;bottom:66px;width:100%;height:270px;overflow:visible}
+.sun{position:absolute;right:22px;top:20px;width:46px;height:46px;border-radius:50%;background:#ffe066;box-shadow:0 0 0 10px #ffe06655,0 0 0 22px #ffe06622}
+.cloud{position:absolute;height:18px;width:60px;background:#fff;border-radius:99px;opacity:.9;animation:drift 22s linear infinite}
+.cloud:before,.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud:before{width:26px;height:26px;left:10px;top:-12px}.cloud:after{width:20px;height:20px;left:30px;top:-8px}
+@keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(480px)}}
+.scene .sign{position:absolute;left:14px;bottom:78px;background:#8a5a2b;color:#fff;font-size:10.5px;font-weight:800;border-radius:8px;padding:5px 9px;line-height:1.2;box-shadow:0 3px 0 #5e3b19}
+.scene .sign span{display:block;font-size:15px;color:#ffe9a8}
+.tools{position:absolute;left:12px;top:12px;display:grid;gap:8px}
+.tools button{width:50px;border-radius:14px;background:#fff;color:var(--g8);font-size:9.5px;font-weight:800;padding:7px 0 5px;display:flex;flex-direction:column;align-items:center;gap:1px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.tools button:nth-child(2){background:linear-gradient(135deg,#ffd54a,#ff9f43);color:#7a3a00}
+.boost{position:absolute;right:12px;top:84px;background:#fff;border-radius:14px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--mut);box-shadow:0 3px 10px rgba(0,0,0,.1);line-height:1.2;text-align:center}
+.boost b{display:block;font-size:17px;color:#e07a00}
+.dock{position:absolute;left:10px;right:10px;bottom:8px;display:flex;gap:8px;align-items:center;background:#fffffff2;border-radius:18px;padding:8px;box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.dock .res{display:flex;align-items:center;gap:6px;padding:0 6px;min-width:70px}
+.dock .res i{color:#2a9df4;font-size:24px}.dock .res b{font-size:17px;display:block;line-height:1}.dock .res span{font-size:9.5px;color:var(--mut);font-weight:700}
+.dock .wbtn{flex:1;height:44px;border-radius:13px;background:linear-gradient(135deg,#2a9df4,#1b6fd1);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.dock .wbtn[disabled]{background:#c9d3cc;color:#fff}
+.dock .wbtn.alt{flex:none;background:var(--grbg);color:var(--g8);padding:0 12px;font-size:12.5px}
+.drops{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+.drops i{position:absolute;top:-20px;font-style:normal;font-size:22px;opacity:0}
+.scene.water .drops i{animation:fall .9s ease-in forwards}
+.drops i:nth-child(1){left:44%}.drops i:nth-child(2){left:52%;animation-delay:.12s!important}.drops i:nth-child(3){left:48%;animation-delay:.25s!important}.drops i:nth-child(4){left:56%;animation-delay:.18s!important}.drops i:nth-child(5){left:40%;animation-delay:.3s!important}
+@keyframes fall{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(190px)}}
+.scene.water svg.tree{animation:pop .7s .55s ease-out}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+.scene.harvest:after{content:"🎉 🌟 🎊 ✨ 🎉";position:absolute;left:0;right:0;top:40px;text-align:center;font-size:28px;animation:conf 1.6s ease-out forwards;letter-spacing:8px}
+@keyframes conf{0%{opacity:0;transform:translateY(40px) scale(.6)}30%{opacity:1}100%{opacity:0;transform:translateY(-30px) scale(1.2)}}
+.can{position:absolute;left:30%;top:30px;font-size:46px;opacity:0;transform:rotate(0)}
+.scene.water .can{animation:cantilt 1.1s ease-in-out}
+@keyframes cantilt{0%{opacity:0;transform:translate(-30px,-10px) rotate(0)}25%{opacity:1;transform:translate(0,0) rotate(0)}55%{opacity:1;transform:translate(10px,0) rotate(-28deg)}100%{opacity:0;transform:translate(10px,0) rotate(-28deg)}}
+.pill2{background:#f3f8f4;border-radius:14px;padding:10px 4px;text-align:center}.pill2 b{display:block;font-size:17px}.pill2 span{font-size:10px;color:var(--mut);font-weight:700}
+.mis{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #f1f4f1}.mis:last-child{border:0}
+.mis .mi{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+.tree-card{background:linear-gradient(120deg,#e8f8ff,var(--grbg));border-radius:18px;padding:12px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid #cfe8f2}
+.tree-card .mini{font-size:40px;line-height:1}
+@media(min-width:500px){body{height:min(100vh,900px);margin-top:max(0px,calc((100vh - 900px)/2));border-radius:34px;border:8px solid #111512}}
+</style>
+</head>
+<body>
+<div id="view"></div>
+<nav id="tabs"></nav>
+<div id="sheetbg" onclick="closeSheet()"></div>
+<div id="sheet"></div>
+<div id="pushb" onclick="pushGo()"></div>
+<div id="toast"></div>
+
+<script>
+/* ====================== DỮ LIỆU MẪU ====================== */
+const fmt=n=>n===0?'Miễn phí':n.toLocaleString('vi-VN')+'đ';
+const LAB={green:{n:'Xanh',sub:'Tươi mới · >5 ngày',pay:10,pick:120,free:30,cls:'green',ic:'ti-circle-check'},
+           yellow:{n:'Vàng',sub:'Cận date · 3-5 ngày',pay:10,pick:90,free:20,cls:'yellow',ic:'ti-clock'},
+           red:{n:'Đỏ',sub:'Cứu trợ khẩn cấp · <24h',pay:5,pick:60,free:15,cls:'red',ic:'ti-alert-triangle'}};
+const STORES=[
+ {id:'s1',name:'AEON Mall Long Biên',em:'🏬',dist:2.5,rate:4.9,addr:'27 Cổ Linh, Long Biên',hours:'09:00 – 22:00',phone:'024-3456-7890',kg:2.5,co2:1.8,meals:500},
+ {id:'s2',name:'Circle K',em:'🏪',dist:1.1,rate:4.4,addr:'45 Lê Lợi, Q.1',hours:'06:00 – 23:00',phone:'028-3822-1111',kg:1.2,co2:.9,meals:210},
+ {id:'s3',name:'Bách Hóa Xanh',em:'🛒',dist:.8,rate:4.8,addr:'12 Nguyễn Huệ, Q.1',hours:'07:00 – 22:00',phone:'028-3911-2233',kg:3.1,co2:2.2,meals:640},
+ {id:'s4',name:'ABC Bakery',em:'🥖',dist:.5,rate:4.5,addr:'8 Pasteur, Q.1',hours:'06:00 – 21:00',phone:'028-3829-5566',kg:.9,co2:.6,meals:180}];
+const P=[
+ {id:'p1',img:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',n:'Sushi tổng hợp cao cấp',s:'s1',em:'🍣',l:'red',price:120000,old:250000,left:2,hrs:1.5,tags:['Bán chạy'],desc:'Bộ sushi cao cấp 12 miếng, cá hồi, cá ngừ, tôm.',ing:'Gạo sushi, cá hồi, cá ngừ, tôm, wasabi',mfg:'07/05/2026 10:00',exp:'21:00 hôm nay',cat:'meal'},
+ {id:'p2',img:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',n:'Gà nướng mật ong',s:'s2',em:'🍗',l:'red',price:42000,old:85000,left:3,hrs:1,tags:['Sắp hết hàng'],desc:'Đùi gà nướng mật ong, nóng giòn.',ing:'Đùi gà, mật ong, tỏi',mfg:'07/05/2026 09:00',exp:'20:00 hôm nay',cat:'meal'},
+ {id:'p3',img:'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',n:'Combo bánh ngọt Pháp',s:'s4',em:'🥐',l:'red',price:55000,old:150000,left:1,hrs:2,tags:['Bán chạy'],desc:'Combo croissant, éclair và macaron.',ing:'Bột mì, bơ, trứng, đường',mfg:'07/05/2026 06:00',exp:'21:30 hôm nay',cat:'bakery'},
+ {id:'p4',img:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',n:'Cơm nắm sốt kem',s:'s2',em:'🍙',l:'yellow',price:30000,old:42000,left:3,hrs:30,tags:['Sắp hết hạn'],desc:'Cơm nắm nhân sốt kem phô mai.',ing:'Gạo, rong biển, sốt kem',mfg:'06/05/2026 22:00',exp:'09/05 22:00',cat:'meal'},
+ {id:'p5',img:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',n:'Túi rau củ hữu cơ',s:'s3',em:'🥕',l:'yellow',price:45000,old:80000,left:4,hrs:48,tags:['Hữu cơ'],desc:'Túi rau củ tươi hữu cơ các loại.',ing:'Cà rốt, cải, bí, hành',mfg:'05/05/2026',exp:'09/05',cat:'veggie'},
+ {id:'p6',img:'https://images.unsplash.com/photo-1556761223-4c4282c73f77?auto=format&fit=crop&w=600&q=80',n:'Ba chỉ heo nướng',s:'s3',em:'🥩',l:'green',price:89000,old:110000,left:5,hrs:120,tags:['Thực phẩm tươi'],desc:'Ba chỉ heo tươi, sơ chế sẵn để nướng.',ing:'Thịt ba chỉ heo, gia vị',mfg:'07/05/2026',exp:'12/05',cat:'meat'},
+ {id:'p7',img:'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=80',n:'Bánh mì thập cẩm',s:'s4',em:'🥖',l:'red',price:10000,old:35000,left:8,hrs:3,tags:['Siêu giảm giá'],desc:'Bánh mì giòn nhân thập cẩm.',ing:'Bột mì, pate, thịt nguội',mfg:'07/05/2026 05:00',exp:'20:00 hôm nay',cat:'bakery'},
+ {id:'p8',img:'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',n:'Sữa chua Hy Lạp',s:'s1',em:'🥛',l:'green',price:18000,old:30000,left:6,hrs:140,tags:['Ít đường'],desc:'Sữa chua Hy Lạp béo mịn, ít đường.',ing:'Sữa tươi, men sống',mfg:'05/05/2026',exp:'13/05',cat:'dairy'}];
+const pic=(p,fs)=>p.img?`<img src="${p.img}" alt="${p.n}" loading="lazy" onerror="this.outerHTML='<span style=font-size:${fs||44}px>${p.em}</span>'">`:p.em;
+const pr=id=>P.find(x=>x.id===id), st=id=>STORES.find(x=>x.id===id);
+const pct=p=>Math.round((1-p.price/p.old)*100);
+const left=h=>h<1?Math.round(h*60)+' phút':h<24?h.toFixed(1).replace('.0','')+' giờ':Math.round(h/24)+' ngày';
+
+/* ====================== STATE ====================== */
+const S={tree:{cur:1,water:25,reserve:50,waterings:1,donated:0,orders:2,pts:5},user:null,fav:new Set(['p4','p6','p7','p2']),cart:[],orders:[],notifs:[],stack:[],tab:'home',filt:{},
+ rep:95,vouchers:[{c:'FOODSAVE30',t:'Giảm 30% tối đa 30.000đ',min:50000,pct:30,max:30000},{c:'CHAOBAN',t:'Giảm 10.000đ đơn đầu tiên',min:0,amt:10000}],
+ pay:{momo:true,zalopay:true,vnpay:false,shopee:false,bank:false},wallet:0,chat:{},tickets:[{id:'YS01',t:'Không nhận được mã đặt hàng',st:'Đã xử lý',d:'05/05/2026'},{id:'YS02',t:'Hóa đơn chưa đúng',st:'Chờ phản hồi',d:'06/05/2026'}]};
+const now=()=>Date.now(), MIN=60000;
+function seedOrders(){
+ S.orders=[
+  {id:'ORD-CVU7',items:[{p:'p1',q:2}],total:240000,st:'paid',created:now()-5*MIN,paidAt:now()-4*MIN,pay:'MoMo',pickBy:now()+55*MIN,earn:120,store:'s1'},
+  {id:'ORD-CCAC',items:[{p:'p3',q:1}],total:55000,st:'done',created:now()-5*3600000,paidAt:now()-5*3600000,pay:'MoMo',pickBy:now()-4*3600000,doneAt:now()-3*3600000,store:'s4'},
+  {id:'ORD-RPL6',items:[{p:'p6',q:1}],total:89000,st:'done',created:now()-3*86400000,paidAt:now()-3*86400000,pay:'ZaloPay',doneAt:now()-3*86400000+3600000,store:'s3'},
+  {id:'ORD-1WGT',items:[{p:'p2',q:1}],total:42000,st:'cancelled',created:now()-2*86400000,pay:'MoMo',refund:42000,why:'Huỷ trong thời gian miễn phí',store:'s2'}];
+ S.notifs=[{i:'ti-bolt',t:'Flash Deal mới!',d:'Sushi giảm 52% – chỉ còn 2 túi!',a:'5 phút trước',u:1,go:['detail','p1']},
+  {i:'ti-package',t:'Đơn #ORD-CVU7 đã sẵn sàng',d:'Đến AEON Mall nhận hàng trước 21:00',a:'30 phút trước',u:1,go:['order','ORD-CVU7']},
+  {i:'ti-leaf',t:'Bạn đã cứu 2.5 kg thực phẩm!',d:'Cảm ơn bạn đã góp phần giảm lãng phí',a:'2 giờ trước',u:0},
+  {i:'ti-gift',t:'Mã giảm giá FOODSAVE30',d:'Giảm thêm 30% cho đơn tiếp theo',a:'5 giờ trước',u:0,go:['vouchers']}];
+}
+seedOrders();
+
+
+/* ====================== GAME CÂY ====================== */
+const T_FULL=100,T_COST=25,T_PT=5,T_DONATE=25;
+const stageKey=w=>w>=75?'ready':w>=50?'young':w>=25?'bud':'sprout';
+const stageLbl=w=>({ready:'Sắp ra quả',young:'Cây non khỏe mạnh',bud:'Chồi xanh',sprout:'Mầm xanh'})[stageKey(w)];
+function treeSVG(w){const k=stageKey(w),sc=(.62+w/T_FULL*.38).toFixed(2);
+ const leaf=(x,y,r,c)=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.55}" fill="${c}" transform="rotate(${x>0?-28:28} ${x} ${y})"/>`;
+ let can='';
+ if(k==='sprout')can=leaf(-16,-70,16,'#3fbf6a')+leaf(16,-74,16,'#2fa85a');
+ else if(k==='bud')can=leaf(-26,-78,20,'#3fbf6a')+leaf(26,-82,20,'#2fa85a')+leaf(-12,-104,18,'#56d27f')+leaf(14,-108,18,'#3fbf6a');
+ else can=`<circle cx="0" cy="-112" r="52" fill="#2fa85a"/><circle cx="-40" cy="-92" r="34" fill="#34b563"/><circle cx="40" cy="-92" r="34" fill="#34b563"/><circle cx="0" cy="-142" r="34" fill="#46c474"/><circle cx="-16" cy="-122" r="14" fill="#6fdc97" opacity=".6"/><circle cx="26" cy="-104" r="10" fill="#6fdc97" opacity=".5"/>`;
+ const fruit=k==='ready'?`<circle cx="-24" cy="-96" r="8" fill="#ff5a4f"/><circle cx="30" cy="-120" r="8" fill="#ff8a3d"/><circle cx="6" cy="-82" r="8" fill="#ff5a4f"/><circle cx="-34" cy="-124" r="7" fill="#ffd23f"/><circle cx="44" cy="-86" r="7" fill="#ffd23f"/>`:'';
+ const th=k==='sprout'?60:k==='bud'?84:100;
+ return `<svg class="tree" viewBox="0 0 300 250"><ellipse cx="150" cy="222" rx="118" ry="22" fill="#79c46d"/><ellipse cx="150" cy="232" rx="104" ry="18" fill="#8a5a2b"/><ellipse cx="150" cy="218" rx="46" ry="9" fill="#6a431d"/>
+ <g transform="translate(150,214) scale(${sc})"><path d="M-9 0 C-7 -${th*.5} -5 -${th*.8} -5 -${th} L5 -${th} C5 -${th*.8} 7 -${th*.5} 9 0Z" fill="#9a6a38"/>${can}${fruit}</g></svg>`}
+function sceneHTML(){const t=S.tree,k=stageKey(t.water),can=t.reserve>=T_COST;
+ return `<div class="scene" id="scene" data-stage="${k}"><div class="sun"></div><span class="cloud" style="top:30px;animation-delay:-6s"></span><span class="cloud" style="top:74px;animation-duration:30s;animation-delay:-18s;transform:scale(.7)"></span>
+ <div class="tools"><button onclick="toast('Bộ sưu tập giống cây sẽ mở ở mùa kế tiếp')"><i class="ti ti-replace"></i>Đổi cây</button><button onclick="toast('Vật phẩm chăm cây đổi bằng điểm xanh')"><i class="ti ti-gift"></i>Vật phẩm</button></div>
+ <div class="boost"><b>x2</b>tốc độ lớn<br>khi có sự kiện</div>
+ ${treeSVG(t.water)}<div class="can">🚿</div><div class="drops"><i>💧</i><i>💧</i><i>💧</i><i>💧</i><i>💧</i></div>
+ <div class="sign">Quỹ cây xanh<span>#${t.cur}</span></div>
+ <div class="dock"><div class="res"><i class="ti ti-droplet-filled"></i><div><b>${t.reserve}</b><span>giọt nước</span></div></div>
+ <button class="wbtn" ${can?'':'disabled'} onclick="waterTree()"><i class="ti ti-droplet-up"></i>${can?'Tưới ngay':'Thiếu nước'}</button><button class="wbtn alt" onclick="tab('search')"><i class="ti ti-shopping-bag-plus"></i>Cứu thêm</button></div></div>`}
+function waterTree(){const t=S.tree;if(t.reserve<T_COST){toast('Bạn chưa có nước. Hãy cứu thêm thực phẩm để nhận 25 giọt nước.');return}
+ t.reserve-=T_COST;let w=t.water+T_COST,don=0;while(w>=T_FULL){don++;w-=T_FULL}
+ const pts=T_PT+don*T_DONATE;t.water=w;t.cur+=don;t.donated+=don;t.waterings++;t.pts+=pts;
+ const sc=document.getElementById('scene');if(sc){sc.classList.add('water');if(don)sc.classList.add('harvest')}
+ setTimeout(()=>{if(S.stack[S.stack.length-1][0]==='impact')draw();toast(don?'🎉 Cây đã trưởng thành và được góp vào quỹ xanh! +'+pts+' điểm':'Đã tưới cây +25% · +'+pts+' điểm xanh')},1250)}
+function earnWater(){S.tree.reserve+=25;S.tree.orders++}
+function treeNext(){const t=S.tree,need=Math.ceil((T_FULL-t.water)/T_COST);return t.reserve>=T_COST?`Đang có ${Math.floor(t.reserve/T_COST)} lượt tưới sẵn sàng. Bấm Tưới ngay để cây lớn thêm.`:`Cần thêm ${need} lượt tưới để cây trưởng thành. Cứu thêm đơn hàng để nhận nước.`}
+
+/* ====================== ROUTER ====================== */
+const V=document.getElementById('view'),T=document.getElementById('tabs');
+const TABS=[['home','ti-home-2','Khám phá'],['search','ti-search','Tìm kiếm'],['fav','ti-heart','Yêu thích'],['orders','ti-receipt-2','Đơn hàng'],['me','ti-user','Cá nhân']];
+function go(name,arg){S.stack.push([name,arg]);draw()}
+function back(){S.stack.pop();if(!S.stack.length)S.stack.push(['tab',S.tab]);draw()}
+function tab(t){S.tab=t;S.stack=[['tab',t]];draw()}
+function root(name){S.stack=[[name]];draw()}
+function draw(){
+ const [n,a]=S.stack[S.stack.length-1]||['welcome'];
+ const f=n==='tab'?TABV[a]:SCR[n];
+ V.innerHTML=f(a);V.scrollTop=0;
+ const showTabs=n==='tab';
+ T.className=showTabs?'on':'';
+ if(showTabs){const unr=S.orders.filter(o=>o.st==='paid'||o.st==='awaiting').length;
+  T.innerHTML=TABS.map(x=>`<button class="${x[0]===a?'on':''}" onclick="tab('${x[0]}')"><i class="ti ${x[1]}"></i>${x[2]}${x[0]==='orders'&&unr?`<span class="bd">${unr}</span>`:''}</button>`).join('')}
+ const sc=V.firstElementChild;if(sc&&showTabs)sc.classList.add('tabbed');
+ tick();
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='on';clearTimeout(toast.t);toast.t=setTimeout(()=>t.className='',2200)}
+function sheet(h){const s=document.getElementById('sheet');s.innerHTML=h;s.classList.add('on');document.getElementById('sheetbg').classList.add('on')}
+let _pg=null;function push(ic,t,d,g){const e=document.getElementById('pushb');e.innerHTML=`<div class="ic"><i class="ti ${ic}" style="font-size:22px"></i></div><div><b>${t}</b><span>${d}</span></div><em>Bây giờ</em>`;_pg=g||null;e.classList.add('on');clearTimeout(push.t);push.t=setTimeout(()=>e.classList.remove('on'),5200)}
+function pushGo(){document.getElementById('pushb').classList.remove('on');if(_pg){const g=_pg;_pg=null;go(g[0],g[1])}}
+function closeSheet(){document.getElementById('sheet').classList.remove('on');document.getElementById('sheetbg').classList.remove('on')}
+const topbar=(t,right='')=>`<div class="top"><button class="ib" onclick="back()"><i class="ti ti-arrow-left"></i></button><h3>${t}</h3>${right}</div>`;
+const cartN=()=>S.cart.reduce((a,c)=>a+c.q,0);
+const unread=()=>S.notifs.filter(n=>n.u).length;
+
+/* countdowns */
+function fmtT(ms){ms=Math.max(0,ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;return(h?h+':':'')+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0')}
+function tick(){document.querySelectorAll('[data-cd]').forEach(e=>{const t=+e.dataset.cd-now();e.textContent=fmtT(t);if(e.dataset.bar){const tot=+e.dataset.tot,el=document.getElementById(e.dataset.bar);if(el)el.style.width=Math.max(0,Math.min(100,t/tot*100))+'%'}})}
+setInterval(tick,1000);
+
+/* ====================== COMPONENTS ====================== */
+function prodRow(p){const s=st(p.s),L=LAB[p.l];
+ return `<div class="prod" onclick="go('detail','${p.id}')">
+  <div class="pimg ${p.l}">${pic(p,44)}<span class="tag ${p.l}" style="position:absolute;left:-4px;top:-4px">Nhãn ${L.n}</span></div>
+  <div class="grow"><div class="xs mut row" style="gap:4px"><i class="ti ti-map-pin" style="font-size:12px"></i>${s.name} · ${s.dist}km <span style="margin-left:auto;margin-right:22px" class="b"><i class="ti ti-star-filled" style="font-size:11px;color:#e0a512"></i> ${s.rate}</span></div>
+  <div class="pname mt8" style="margin-top:3px">${p.n}</div>
+  <div class="row" style="gap:5px;margin:5px 0;flex-wrap:wrap"><span class="chip">Còn ${p.left} túi</span>${p.tags.map(t=>`<span class="chip y">${t}</span>`).join('')}</div>
+  <div class="row between"><div class="price">${fmt(p.price)}<s>${fmt(p.old)}</s><span class="off">-${pct(p)}%</span></div></div>
+  <div class="mt8"><span class="chip ${p.hrs<6?'r':''}"><i class="ti ti-clock" style="font-size:12px"></i>Còn ${left(p.hrs)}</span></div></div>
+  <button class="heart ${S.fav.has(p.id)?'on':''}" onclick="event.stopPropagation();fav('${p.id}')"><i class="ti ti-heart${S.fav.has(p.id)?'-filled':''}"></i></button></div>`}
+function fav(id){S.fav.has(id)?S.fav.delete(id):S.fav.add(id);draw()}
+function addCart(id,go2){const c=S.cart.find(x=>x.p===id);const p=pr(id);
+ if(S.cart.length&&pr(S.cart[0].p).s!==p.s){sheet(`<h2>Giỏ hàng có cửa hàng khác</h2><p class="mut sm mt8">Mỗi đơn chỉ nhận hàng tại 1 cửa hàng. Bạn muốn xóa giỏ cũ và thêm món này?</p><div class="row mt16"><button class="btn ghost" onclick="closeSheet()">Giữ giỏ cũ</button><button class="btn" onclick="S.cart=[];closeSheet();addCart('${id}',${!!go2})">Đổi giỏ</button></div>`);return}
+ if(c){if(c.q<p.left)c.q++;else{toast('Đã đạt số lượng tối đa còn lại');return}}else S.cart.push({p:id,q:1});
+ toast('Đã thêm vào giỏ hàng');if(go2)go('cart');else draw()}
+
+/* ====================== MÀN HÌNH CHÍNH (TAB) ====================== */
+const TABV={
+home(){const nearby=P.filter(p=>p.l==='red');
+ return `<div class="scr">
+ <div class="top" style="padding-bottom:6px"><div class="grow"><div class="xs mut">Vị trí của bạn</div><button class="b row" style="gap:4px;font-size:14px" onclick="go('map')"><i class="ti ti-map-pin" style="color:var(--g7)"></i>${S.user?S.user.addr:'TP.HCM, Việt Nam'}<i class="ti ti-chevron-down" style="font-size:14px"></i></button></div>
+  <button class="ib" onclick="go('notifs')"><i class="ti ti-bell"></i>${unread()?`<span class="dot">${unread()}</span>`:''}</button><button class="ib" onclick="go('cart')"><i class="ti ti-shopping-bag"></i>${cartN()?`<span class="dot">${cartN()}</span>`:''}</button></div>
+ ${S.orders.find(o=>o.st==='paid')?(()=>{const o=S.orders.find(o=>o.st==='paid');return `<div class="pad mt8"><div class="card row" style="background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border:0;cursor:pointer" onclick="go('order','${o.id}')"><i class="ti ti-qrcode" style="font-size:30px"></i><div class="grow"><div class="b" style="font-size:13.5px">Đơn ${o.id} đang chờ bạn nhận</div><div class="xs" style="opacity:.85">Còn <span class="timer" data-cd="${o.pickBy}"></span> để nhận hàng · Xem mã QR</div></div><i class="ti ti-chevron-right"></i></div></div>`})():''}
+ <div class="hs mt8">${['Tất cả','Bữa ăn','Bánh mì','Thực phẩm tươi','Đồ uống'].map((c,i)=>`<button class="pill ${i?'':'on'}" onclick="go('list',{t:'${c}',cat:'${['','meal','bakery','veggie','drink'][i]}'})">${c}</button>`).join('')}</div>
+ <div class="hero mt8"><h2>Ăn ngon –<br>Tiết kiệm</h2><p>Giảm giá cuối ngày đến 70%</p><button class="b2" onclick="go('list',{t:'Flash Deal',l:'red'})">Săn deal ngay <i class="ti ti-arrow-right" style="font-size:14px"></i></button><div class="big">🥗</div></div>
+ <div class="pad mt16"><h2>Danh mục theo nhãn</h2></div>
+ <div class="pad mt8 grid3">${Object.entries(LAB).map(([k,L])=>`<button class="lab ${k}" onclick="go('list',{t:'Nhãn ${L.n}',l:'${k}'})"><div class="ic"><i class="ti ${L.ic}" style="color:${k==='green'?'var(--g7)':k==='yellow'?'#c48a00':'var(--red)'}"></i></div><b>Nhãn ${L.n}</b><small>${L.sub}</small><em>${P.filter(p=>p.l===k).length*14+12}+ ›</em></button>`).join('')}</div>
+ <div class="pad mt16"><h2>Bộ lọc nhanh</h2></div>
+ <div class="hs mt8">${[['ti-leaf','Đồ chay','veggie'],['ti-meat','Thực phẩm tươi','meat'],['ti-bread','Bánh mì cuối ngày','bakery'],['ti-package','Túi cứu hộ combo','meal']].map(f=>`<button style="flex:none;width:84px;text-align:center;font-size:11px;font-weight:700" onclick="go('list',{t:'${f[1]}',cat:'${f[2]}'})"><div class="ib" style="width:58px;height:58px;margin:0 auto 5px;border-radius:50%"><i class="ti ${f[0]}" style="color:var(--g7);font-size:24px"></i></div>${f[1]}</button>`).join('')}</div>
+ <div class="pad mt16"><div class="tree-card" onclick="go('impact')"><div class="mini">${S.tree.water>=75?'🌳':S.tree.water>=50?'🌿':S.tree.water>=25?'🌱':'🌱'}</div><div class="grow"><b class="sm">Vườn cây uy tín #${S.tree.cur} · ${S.tree.water}%</b><div class="bar mt8"><i style="width:${S.tree.water}%"></i></div><div class="xs mut mt8">${S.tree.reserve>=25?'💧 Có '+S.tree.reserve+' giọt nước – tưới ngay!':'Cứu thêm đơn để nhận nước'}</div></div><i class="ti ti-chevron-right mut"></i></div></div>
+ <div class="pad mt16 row between"><h2><i class="ti ti-map-2" style="color:var(--g7)"></i> Gần bạn</h2><button class="b sm" style="color:var(--g8)" onclick="go('map')">Xem bản đồ ›</button></div>
+ <div class="mapbox mt8" onclick="go('map')"><span class="pin" style="left:18%;top:20%">🥖 12</span><span class="pin" style="left:62%;top:14%">🍱 5</span><span class="pin" style="left:75%;top:55%">🛒 8</span><span class="pin" style="left:20%;top:62%">🍰 3</span><span class="me"></span></div>
+ <div class="pad mt16 row between"><h2><i class="ti ti-bolt" style="color:#e0a512"></i> Flash Deal <span class="tag red" style="margin-left:4px">Live</span></h2><button class="b sm" style="color:var(--g8)" onclick="go('list',{t:'Flash Deal',l:'red'})">Xem tất cả ›</button></div>
+ <div class="pad mt8">${nearby.slice(0,3).map(prodRow).join('')}</div>
+ <div class="pad mt8"><div class="card row" style="background:var(--g9);color:#fff;border:0" onclick="go('vouchers')"><div class="ib" style="background:var(--y);border:0"><i class="ti ti-ticket" style="color:var(--g9)"></i></div><div class="grow"><div class="b">${S.vouchers.length} mã giảm giá đang chờ</div><div class="xs" style="opacity:.8">Áp dụng khi thanh toán</div></div><i class="ti ti-chevron-right"></i></div></div>
+ </div>`},
+
+search(){const q=S.filt.q||'',sort=S.filt.sort||'near';
+ let L=P.filter(p=>!q||(p.n+st(p.s).name).toLowerCase().includes(q.toLowerCase()));
+ if(S.filt.l)L=L.filter(p=>p.l===S.filt.l);
+ L=[...L].sort((a,b)=>sort==='price'?a.price-b.price:sort==='exp'?a.hrs-b.hrs:st(a.s).dist-st(b.s).dist);
+ return `<div class="scr"><div class="top"><h3 style="font-size:20px">Tìm kiếm</h3></div>
+ <div class="pad"><div class="row card" style="padding:6px 8px 6px 14px"><i class="ti ti-search mut"></i><input id="q" class="grow" style="border:0;outline:0;padding:8px 0;background:none" placeholder="Tìm món ăn, cửa hàng…" value="${q}" oninput="S.filt.q=this.value;sres()"><button class="ib" style="width:36px;height:36px;background:var(--grbg);border:0" onclick="filterSheet()"><i class="ti ti-adjustments-horizontal" style="color:var(--g8)"></i></button></div></div>
+ <div class="hs mt12">${[['near','Gần bạn'],['price','Giá tăng dần'],['exp','Sắp hết hạn']].map(s=>`<button class="pill ${sort===s[0]?'on':''}" onclick="S.filt.sort='${s[0]}';draw()">${s[1]}</button>`).join('')}${['green','yellow','red'].map(k=>`<button class="pill ${S.filt.l===k?'on':''}" onclick="S.filt.l=S.filt.l==='${k}'?null:'${k}';draw()">Nhãn ${LAB[k].n}</button>`).join('')}</div>
+ <div class="pad mt12" id="sres"><div class="xs mut" style="margin-bottom:8px">${L.length} sản phẩm</div>${L.map(prodRow).join('')||'<div class="empty"><div class="e">🔍</div>Không tìm thấy sản phẩm</div>'}</div></div>`},
+
+fav(){const L=P.filter(p=>S.fav.has(p.id));
+ return `<div class="scr"><div class="top"><h3 style="font-size:20px">Yêu thích (${L.length})</h3></div><div class="pad">${L.map(prodRow).join('')||'<div class="empty"><div class="e">💚</div>Chưa có sản phẩm yêu thích<br><span class="sm">Bấm vào biểu tượng tim để lưu món bạn thích</span></div>'}</div>
+ ${S.fav.size?`<div class="pad"><div class="card sm row" style="background:var(--grbg);border:0"><i class="ti ti-bell-ringing" style="color:var(--g8)"></i><span>Chúng tôi sẽ báo khi món yêu thích <b>sắp hết hạn</b> hoặc giảm giá sâu.</span></div></div>`:''}</div>`},
+
+orders(){const t=S.filt.ot||'now';
+ const grp={now:o=>o.st==='paid'||o.st==='awaiting',done:o=>o.st==='done',cancel:o=>o.st==='cancelled'||o.st==='noshow'};
+ const L=S.orders.filter(grp[t]);
+ return `<div class="scr"><div class="top"><h3 style="font-size:20px">Đơn hàng</h3></div>
+ <div class="seg">${[['now','Đang xử lý'],['done','Đã lấy'],['cancel','Đã hủy']].map(x=>`<button class="${t===x[0]?'on':''}" onclick="S.filt.ot='${x[0]}';draw()">${x[1]}</button>`).join('')}</div>
+ <div class="pad mt12">${L.map(orderCard).join('')||'<div class="empty"><div class="e">🧾</div>Chưa có đơn hàng</div>'}</div></div>`},
+
+me(){const u=S.user||{name:'Nguyễn Văn A',email:'nguyen.van.a@gmail.com'};
+ const saved=S.orders.filter(o=>o.st==='done').reduce((a,o)=>a+o.total*.6,0)|0;
+ return `<div class="scr"><div style="background:linear-gradient(170deg,var(--g9),var(--g7));color:#fff;padding:calc(28px + env(safe-area-inset-top)) 16px 54px;text-align:center;border-radius:0 0 28px 28px">
+  <div style="width:70px;height:70px;border-radius:50%;background:#fff3;margin:0 auto 8px;display:grid;place-items:center;font-size:34px;border:3px solid #fff6">🙂</div>
+  <div class="b" style="font-size:18px">${u.name}</div><div class="xs" style="opacity:.8">${u.email||u.phone||''}</div>
+  <button class="chip mt12" style="background:#fff2;color:#fff;padding:6px 12px" onclick="go('rep')"><i class="ti ti-star"></i> Điểm uy tín: ${S.rep}</button></div>
+ <div class="pad" style="margin-top:-34px"><div class="card grid3" style="text-align:center;gap:0"><div><b style="font-size:19px">${S.orders.filter(o=>o.st==='done'||o.st==='paid').length}</b><div class="xs mut">Đơn hàng</div></div><div><b style="font-size:19px">${(saved/1000).toFixed(0)}K</b><div class="xs mut">Tiết kiệm</div></div><div><b style="font-size:19px">${S.rep}</b><div class="xs mut">Điểm uy tín</div></div></div></div>
+ <div class="pad mt16"><div class="menu">
+  <button onclick="tab('orders')"><i class="ti ti-package"></i>Đơn hàng của tôi<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="go('wallet')"><i class="ti ti-wallet"></i>Ví hoàn tiền<span class="chip" style="margin-left:auto">${(S.wallet.toLocaleString('vi-VN')+'đ')}</span><i class="ti ti-chevron-right chev" style="margin-left:6px"></i></button>
+  <button onclick="go('vouchers')"><i class="ti ti-ticket"></i>Voucher của tôi<span class="chip y" style="margin-left:auto">${S.vouchers.length}</span><i class="ti ti-chevron-right chev" style="margin-left:6px"></i></button>
+  <button onclick="go('paymeth')"><i class="ti ti-credit-card"></i>Phương thức thanh toán<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="go('notifs')"><i class="ti ti-bell"></i>Thông báo<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="go('impact')"><i class="ti ti-plant-2"></i>Vườn cây & tác động<span class="chip" style="margin-left:auto">${S.tree.reserve} 💧</span><i class="ti ti-chevron-right chev" style="margin-left:6px"></i></button>
+  <button onclick="go('help')"><i class="ti ti-help-circle"></i>Trợ giúp & hỗ trợ<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="S.user=null;S.cart=[];root('welcome')" style="color:var(--red)"><i class="ti ti-logout" style="color:var(--red)"></i>Đăng xuất</button></div></div></div>`}
+};
+function sres(){const q=(S.filt.q||'').toLowerCase();const el=document.getElementById('sres');
+ let L=P.filter(p=>!q||(p.n+st(p.s).name).toLowerCase().includes(q));if(S.filt.l)L=L.filter(p=>p.l===S.filt.l);
+ el.innerHTML=`<div class="xs mut" style="margin-bottom:8px">${L.length} sản phẩm</div>`+(L.map(prodRow).join('')||'<div class="empty"><div class="e">🔍</div>Không tìm thấy sản phẩm</div>')}
+function filterSheet(){sheet(`<h2>Bộ lọc</h2><label class="l">Danh mục</label><div class="row" style="flex-wrap:wrap">${[['','Tất cả'],['meal','Bữa ăn'],['bakery','Bánh mì'],['veggie','Rau củ'],['meat','Thịt & hải sản'],['dairy','Sữa']].map(c=>`<button class="pill ${(S.filt.cat||'')===c[0]?'on':''}" onclick="S.filt.cat='${c[0]}';closeSheet();go('list',{t:'${c[1]}',cat:'${c[0]}'})">${c[1]}</button>`).join('')}</div><button class="btn mt16" onclick="closeSheet()">Áp dụng</button>`)}
+
+function orderCard(o){const p=pr(o.items[0].p),s=st(o.store),n=o.items.reduce((a,i)=>a+i.q,0);
+ const badge={paid:o.ready?'<span class="chip">Sẵn sàng nhận</span>':'<span class="chip y">Đang chuẩn bị</span>',awaiting:'<span class="chip r">Chờ thanh toán</span>',done:'<span class="chip">Đã lấy</span>',cancelled:'<span class="chip g">Đã hủy</span>',noshow:'<span class="chip r">Không đến nhận</span>'}[o.st];
+ return `<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="go('order','${o.id}')"><div class="row between"><b>#${o.id}</b>${badge}</div>
+ <div class="row mt8"><div class="pimg ${p.l}" style="width:56px;height:56px;font-size:30px;border-radius:14px">${pic(p,30)}</div><div class="grow"><div class="b sm">${p.n}${o.items.length>1?' +'+(o.items.length-1):''}</div><div class="xs mut">${s.name} · ${n} sản phẩm</div></div><b>${fmt(o.total)}</b></div>
+ ${o.st==='paid'?`<div class="row mt12 xs b" style="color:var(--g8)"><i class="ti ti-clock" style="font-size:14px"></i>Nhận hàng trước <span class="timer" data-cd="${o.pickBy}"></span></div>`:''}
+ ${o.st==='awaiting'?`<div class="row mt12 xs b" style="color:var(--red)"><i class="ti ti-hourglass" style="font-size:14px"></i>Thanh toán trong <span class="timer" data-cd="${o.payBy}"></span></div>`:''}</div>`}
+
+/* ====================== MÀN HÌNH PHỤ ====================== */
+const SCR={
+/* ---------- onboarding ---------- */
+welcome(){return `<div class="splash scr" style="display:flex;flex-direction:column">
+ <div style="padding:calc(48px + env(safe-area-inset-top)) 22px 28px"><span class="chip" style="background:#fff2;color:#fff">● THAM GIA NGAY</span><h1 style="font-size:30px;margin-top:14px;color:#fff">CHÀO MỪNG ĐẾN<br>FOOD<span style="color:var(--y)">SAVE</span></h1><p class="sm" style="opacity:.85;margin-top:8px">Cứu thực phẩm cận hạn – giảm tới 70%. Tạo tài khoản miễn phí trong 2 phút.</p></div>
+ <div style="background:var(--bg);border-radius:28px 28px 0 0;padding:22px 16px calc(24px + env(safe-area-inset-bottom));flex:1;color:var(--ink)">
+  <button class="sopt" onclick="loginAs('Google')"><span class="ico" style="background:#fde8e6;color:#db4437"><i class="ti ti-brand-google"></i></span>Tiếp tục với Google<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <button class="sopt" onclick="loginAs('Facebook')"><span class="ico" style="background:#e5edff;color:#1877f2"><i class="ti ti-brand-facebook"></i></span>Tiếp tục với Facebook<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <button class="sopt" onclick="go('email')"><span class="ico" style="background:#fde8e6;color:#db4437"><i class="ti ti-mail"></i></span>Tiếp tục với Gmail<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <button class="sopt" onclick="go('phone')"><span class="ico"><i class="ti ti-device-mobile"></i></span>Tiếp tục với SĐT<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <div class="xs mut" style="text-align:center;margin:8px 0">đã có tài khoản?</div>
+  <button class="sopt" onclick="loginAs('Đăng nhập',true)"><span class="ico"><i class="ti ti-login"></i></span>Đăng nhập<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <p class="xs mut" style="text-align:center;margin-top:10px">Tiếp tục đồng nghĩa bạn chấp nhận <b style="color:var(--g8)">Điều khoản</b> & <b style="color:var(--g8)">Bảo mật</b> của FoodSave.</p></div></div>`},
+email(){return `<div class="scr">${topbar('','<div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>')}<div class="pad"><h1>Nhập Gmail<br>của bạn</h1><p class="sm mut mt8">Chúng tôi sẽ gửi mã OTP 6 chữ số đến email này.</p>
+ <label class="l">Địa chỉ Gmail</label><input id="em" class="field" inputmode="email" autocapitalize="off" placeholder="ten.ban@gmail.com" value="nguyen.van.an@gmail.com">
+ <div class="card row mt16 sm"><i class="ti ti-mail-check" style="color:var(--g7)"></i><span class="mut">Kiểm tra cả mục Spam/Quảng cáo nếu chưa thấy email. Mã có hiệu lực 2 phút.</span></div></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="S.otpTo=document.getElementById('em').value||'email của bạn';go('otp')">Gửi mã OTP <i class="ti ti-send"></i></button></div></div>`},
+phone(){return `<div class="scr">${topbar('','<div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>')}<div class="pad"><h1>Nhập số<br>điện thoại</h1><p class="sm mut mt8">Chúng tôi sẽ gửi mã OTP xác minh đến số này.</p>
+ <label class="l">Số điện thoại</label><div class="row"><div class="field" style="width:84px;flex:none">🇻🇳 +84</div><input id="ph" class="field" inputmode="tel" placeholder="09x xxx xxxx" value="0909 123 456"></div>
+ <div class="card row mt16 sm"><i class="ti ti-lock" style="color:var(--g7)"></i><span class="mut">Số điện thoại được mã hóa, chỉ dùng để xác minh tài khoản.</span></div></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="S.otpTo='0909 123 456';go('otp')">Gửi mã OTP <i class="ti ti-send"></i></button></div></div>`},
+otp(){return `<div class="scr">${topbar('','<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>')}<div class="pad"><h1>Nhập mã OTP</h1><p class="sm mut mt8">Mã 6 chữ số đã gửi đến <b>${S.otpTo||'0909 123 456'}</b></p>
+ <div class="otp mt20">${[1,2,3,4,5,6].map(i=>`<input maxlength="1" value="${i}" inputmode="numeric">`).join('')}</div>
+ <p class="sm mut" style="text-align:center;margin-top:14px">Còn hiệu lực: <b class="timer" style="color:var(--g8)">01:56</b><br>Chưa nhận được? <b style="color:var(--g8)">Gửi lại</b></p></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="go('profile')">Xác nhận <i class="ti ti-check"></i></button></div></div>`},
+profile(){return `<div class="scr">${topbar('','<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>')}<div class="pad"><h1>Thông tin<br>cá nhân</h1><p class="sm mut mt8">Hoàn tất hồ sơ chỉ trong 30 giây.</p>
+ <label class="l">Họ và tên</label><input id="nm" class="field" value="Nguyễn Văn An"><label class="l">Email (tùy chọn)</label><input class="field" placeholder="email@example.com"><label class="l">Ngày sinh</label><input class="field" placeholder="DD / MM / YYYY">
+ <div class="card sm row mt12"><i class="ti ti-square-check-filled" style="color:var(--g7)"></i><span>Tôi đồng ý với <b style="color:var(--g8)">Điều khoản dịch vụ</b> và <b style="color:var(--g8)">Chính sách bảo mật</b>.</span></div></div>
+ <div class="pad mt16"><button class="btn" onclick="S.user={name:document.getElementById('nm').value||'Bạn',phone:'0909 123 456',addr:'234 Nguyễn Huệ, Q.1'};go('loc')">Tiếp tục <i class="ti ti-arrow-right"></i></button></div></div>`},
+loc(){return `<div class="scr">${topbar('','<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>')}<div class="pad"><h1>Xác nhận<br>vị trí</h1><p class="sm mut mt8">Gợi ý cửa hàng FoodSave gần nhất và ưu đãi khu vực.</p>
+ <div class="mapbox mt16" style="margin:16px 0 0;height:200px"><span class="pin" style="left:24%;top:30%">🥖</span><span class="pin" style="left:70%;top:25%">🍱</span><span class="pin" style="left:66%;top:70%">🛒</span><span class="me"></span></div>
+ <button class="sopt mt12"><span class="ico"><i class="ti ti-current-location"></i></span><span><b>Vị trí hiện tại</b><br><span class="xs mut">234 Nguyễn Huệ, Q.1, TP.HCM</span></span></button><button class="sopt"><span class="ico"><i class="ti ti-search"></i></span><span><b>Tìm kiếm địa chỉ</b><br><span class="xs mut">Nhập thủ công địa chỉ</span></span></button></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="go('notifperm')">Xác nhận vị trí <i class="ti ti-arrow-right"></i></button></div></div>`},
+notifperm(){return `<div class="scr" style="text-align:center;padding:0 22px">${topbar('')}<div style="width:120px;height:120px;border-radius:50%;background:var(--grbg);margin:20px auto;display:grid;place-items:center;position:relative"><i class="ti ti-bell" style="font-size:54px;color:var(--g8)"></i><span style="position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center">3</span></div>
+ <h1 style="font-size:22px">Bật thông báo<br>để không lỡ ưu đãi</h1><p class="sm mut mt8">FoodSave thông báo khi flash sale hoặc sản phẩm yêu thích sắp hết hạn.</p>
+ <div style="text-align:left" class="mt20">${[['ti-bolt','Flash Sale','Cảnh báo ngay khi có deal giảm sâu gần bạn'],['ti-clock','Nhắc đơn hàng','Trạng thái cập nhật thời gian thực, nhắc giờ nhận'],['ti-gift','Ưu đãi cá nhân hóa','Theo sở thích và khu vực']].map(x=>`<div class="card row" style="margin-bottom:8px;border-left:4px solid var(--g7)"><span class="ico" style="width:34px;height:34px;border-radius:10px;background:var(--grbg);display:grid;place-items:center"><i class="ti ${x[0]}" style="color:var(--g8)"></i></span><div><b class="sm">${x[1]}</b><div class="xs mut">${x[2]}</div></div></div>`).join('')}</div>
+ <button class="btn mt20" onclick="toast('Đã bật thông báo');tab('home')">Cho phép thông báo <i class="ti ti-bell"></i></button><button class="b sm mt16" style="text-decoration:underline;color:var(--mut)" onclick="tab('home')">Để sau</button></div>`},
+
+/* ---------- list ---------- */
+list(a){let L=P.filter(p=>(!a.l||p.l===a.l)&&(!a.cat||p.cat===a.cat));
+ return `<div class="scr">${topbar(a.t,`<span class="xs mut">${L.length} sản phẩm</span>`)}<div class="pad">${L.map(prodRow).join('')||'<div class="empty"><div class="e">🍽️</div>Chưa có sản phẩm</div>'}</div></div>`},
+
+/* ---------- product ---------- */
+detail(id){const p=pr(id),s=st(p.s),L=LAB[p.l];
+ return `<div class="scr" style="padding-bottom:110px"><div style="background:linear-gradient(180deg,${p.l==='red'?'#fbd6d2':p.l==='yellow'?'#fff0bf':'#d9f2e2'},var(--bg));padding:calc(14px + env(safe-area-inset-top)) 16px 10px;text-align:center;position:relative">
+  <div class="row between"><button class="ib" onclick="back()"><i class="ti ti-arrow-left"></i></button><div class="row"><button class="ib" onclick="fav('${p.id}')"><i class="ti ti-heart${S.fav.has(p.id)?'-filled':''}" style="color:${S.fav.has(p.id)?'var(--red)':'inherit'}"></i></button><button class="ib" onclick="toast('Đã sao chép liên kết')"><i class="ti ti-share"></i></button></div></div>
+  ${p.img?`<div style="margin:8px 0 4px;height:230px;border-radius:22px;overflow:hidden"><img src="${p.img}" alt="${p.n}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML='<div style=font-size:120px;padding-top:30px>${p.em}</div>'"></div>`:`<div style="font-size:120px;margin:6px 0 4px">${p.em}</div>`}<div class="row between"><span class="tag ${p.l}">Nhãn ${L.n}</span><span class="tag" style="background:#0007;color:#fff"><i class="ti ti-star-filled" style="font-size:11px;color:var(--y)"></i> ${s.rate}</span></div></div>
+ <div class="pad"><div class="card"><button class="xs mut row" style="gap:4px" onclick="go('store','${s.id}')"><i class="ti ti-map-pin" style="font-size:13px"></i>${s.name} · ${s.dist}km<i class="ti ti-chevron-right" style="font-size:13px"></i></button>
+  <h2 style="font-size:20px;margin:4px 0 6px">${p.n}</h2><div class="price" style="font-size:24px">${fmt(p.price)}<s style="font-size:14px">${fmt(p.old)}</s><span class="off" style="font-size:12px">-${pct(p)}%</span></div>
+  <div class="row mt8" style="flex-wrap:wrap;gap:5px"><span class="chip">Còn ${p.left} túi</span>${p.tags.map(t=>`<span class="chip y">${t}</span>`).join('')}</div></div>
+ <div class="card mt12"><h2 class="sm row" style="gap:6px"><i class="ti ti-clock" style="color:var(--g7)"></i>Thông tin hạn sử dụng</h2><div class="grid3 mt8" style="grid-template-columns:1fr 1fr"><div style="background:var(--grbg);border-radius:12px;padding:10px"><div class="xs mut">Ngày sản xuất</div><b class="sm">${p.mfg}</b></div><div style="background:var(--redbg);border-radius:12px;padding:10px"><div class="xs mut">Thời gian còn lại</div><b class="sm" style="color:var(--red)">Còn ${left(p.hrs)}</b></div></div>
+  <div class="row mt8 sm" style="background:${p.l==='red'?'var(--redbg)':'var(--ylbg)'};border-radius:12px;padding:10px"><i class="ti ti-alert-triangle" style="color:${p.l==='red'?'var(--red)':'#c48a00'}"></i><div><div class="xs mut">Hạn dùng</div><b>Dùng trước ${p.exp}</b></div></div>
+  <p class="xs mut mt8">Cửa hàng nhập NSX, HSD – hệ thống tự động cập nhật thời gian còn lại.</p></div>
+ <div class="card mt12"><h2 class="sm">Mô tả sản phẩm</h2><p class="sm mut mt8">${p.desc}</p><h2 class="sm mt12">Thành phần</h2><p class="sm mut mt8">${p.ing}</p></div>
+ <div class="card mt12"><h2 class="sm">Chính sách nhận hàng</h2><div class="sm mut mt8" style="line-height:1.55">• Thanh toán trong <b>${L.pay} phút</b>, nhận hàng trong <b>${L.pick} phút</b> sau khi thanh toán.<br>• Huỷ miễn phí trong 3 phút đầu, hoặc trước giờ nhận ${L.free} phút – hoàn 100%.<br>• Huỷ muộn / không đến nhận: không hoàn tiền, trừ điểm uy tín.</div></div>
+ <div class="card mt12 row" style="cursor:pointer" onclick="go('store','${s.id}')"><div style="font-size:30px">${s.em}</div><div class="grow"><b>${s.name}</b><div class="xs mut">${s.addr}</div></div><i class="ti ti-chevron-right mut"></i></div></div>
+ <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;position:fixed;max-width:var(--af);margin:0 auto"><div><div class="xs mut">Tổng cộng</div><b style="font-size:17px">${fmt(p.price)}</b></div><button class="btn ghost" style="width:54px;flex:none" onclick="addCart('${p.id}')"><i class="ti ti-shopping-cart-plus"></i></button><button class="btn" onclick="addCart('${p.id}',true)"><i class="ti ti-shopping-bag"></i>Đặt ngay</button></div></div>`},
+
+store(id){const s=st(id),L=P.filter(p=>p.s===id);
+ return `<div class="scr">${topbar(s.name)}<div class="pad"><div style="background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border-radius:22px;padding:22px;text-align:center"><div style="font-size:46px">${s.em}</div><b style="font-size:18px">${s.name}</b><div class="sm"><i class="ti ti-star-filled" style="font-size:13px;color:var(--y)"></i> ${s.rate} (3 đánh giá)</div></div>
+ <div class="card mt12"><h2 class="sm"><i class="ti ti-map-pin" style="color:var(--red)"></i> Thông tin liên hệ</h2><div class="sm mt8" style="line-height:1.9"><b>Địa chỉ:</b> <span class="mut">${s.addr}</span><br><b>Giờ mở cửa:</b> <span style="color:var(--g8)">${s.hours}</span><br><b>Điện thoại:</b> <span class="mut">${s.phone}</span></div><button class="btn ghost sm mt12" style="width:100%" onclick="toast('Mở Google Maps…')"><i class="ti ti-direction"></i>Chỉ đường Google Maps</button></div>
+ <div class="card mt12"><h2 class="sm"><i class="ti ti-trophy" style="color:#e0a512"></i> Thành tích ESG</h2><div class="grid3 mt8" style="grid-template-columns:1fr 1fr"><div style="background:var(--grbg);border-radius:12px;padding:10px;text-align:center"><b style="font-size:17px">${s.kg} tấn</b><div class="xs mut">Thực phẩm cứu</div></div><div style="background:var(--grbg);border-radius:12px;padding:10px;text-align:center"><b style="font-size:17px">${s.co2} tấn</b><div class="xs mut">CO₂ phát thải</div></div><div style="background:var(--grbg);border-radius:12px;padding:10px;text-align:center"><b style="font-size:17px">${s.meals}+</b><div class="xs mut">Suất ăn từ thiện</div></div><div style="background:var(--grbg);border-radius:12px;padding:10px;text-align:center"><b style="font-size:17px">A+</b><div class="xs mut">Xếp hạng ESG</div></div></div></div>
+ <div class="mt16"><h2 class="sm" style="margin-bottom:8px"><i class="ti ti-flame" style="color:var(--red)"></i> Sản phẩm đang bán</h2>${L.map(prodRow).join('')||'<p class="sm mut">Hiện chưa có sản phẩm.</p>'}</div>
+ <div class="card mt8"><h2 class="sm"><i class="ti ti-star" style="color:#e0a512"></i> Đánh giá & Nhận xét</h2>${[['Minh Anh',5,'Cửa hàng rất tốt, thực phẩm còn tươi!'],['Hải Nam',4,'Giá rẻ, chất lượng ổn. Sẽ quay lại.'],['Thu Hà',5,'Nhân viên thân thiện, đóng gói cẩn thận.']].map(r=>`<div class="mt12"><div class="row between"><b class="sm">${r[0]}</b><span style="color:#e0a512;font-size:12px">${'★'.repeat(r[1])}${'☆'.repeat(5-r[1])}</span></div><div class="sm mut">${r[2]}</div></div>`).join('')}</div></div></div>`},
+
+map(){return `<div class="scr">${topbar('Cửa hàng gần bạn')}<div class="pad"><input class="field" value="${S.user?S.user.addr:'TP.HCM, Việt Nam'}"></div>
+ <div class="mapbox mt12" style="height:290px"><span class="pin" style="left:14%;top:16%">🥖 12</span><span class="pin" style="left:58%;top:10%">🍱 5</span><span class="pin" style="left:72%;top:46%">🛒 8</span><span class="pin" style="left:16%;top:56%">🍰 3</span><span class="pin" style="left:40%;top:78%">🌿 4</span><span class="me"></span></div>
+ <div class="pad mt16"><h2 class="sm" style="margin-bottom:8px">Cửa hàng gần nhất</h2>${[...STORES].sort((a,b)=>a.dist-b.dist).map(s=>`<div class="card row" style="margin-bottom:8px;cursor:pointer" onclick="go('store','${s.id}')"><div style="font-size:30px">${s.em}</div><div class="grow"><b>${s.name}</b><div class="xs mut">${s.addr} · ${s.dist}km</div></div><span class="chip">${P.filter(p=>p.s===s.id).length} deal</span></div>`).join('')}</div></div>`},
+
+/* ---------- cart & checkout ---------- */
+cart(){if(!S.cart.length)return `<div class="scr">${topbar('Giỏ hàng (0)')}<div class="empty"><div class="e">🛒</div><b>Giỏ hàng trống</b><br><span class="sm">Hãy chọn vài món cận hạn giá tốt nhé</span><button class="btn mt20" onclick="tab('home')">Khám phá ngay</button></div></div>`;
+ const tot=S.cart.reduce((a,c)=>a+pr(c.p).price*c.q,0),sv=S.cart.reduce((a,c)=>a+(pr(c.p).old-pr(c.p).price)*c.q,0);
+ return `<div class="scr" style="padding-bottom:140px">${topbar('Giỏ hàng ('+cartN()+')')}<div class="pad">${S.cart.map(c=>{const p=pr(c.p);return `<div class="card row" style="margin-bottom:10px"><div class="pimg ${p.l}" style="width:64px;height:64px;font-size:34px">${pic(p,34)}</div><div class="grow"><b class="sm">${p.n}</b><div class="xs mut">${st(p.s).name}</div><div class="row between mt8"><div class="row" style="gap:8px"><button class="ib" style="width:28px;height:28px;border-radius:50%" onclick="qty('${p.id}',-1)"><i class="ti ti-minus" style="font-size:14px"></i></button><b>${c.q}</b><button class="ib" style="width:28px;height:28px;border-radius:50%;background:var(--grbg)" onclick="qty('${p.id}',1)"><i class="ti ti-plus" style="font-size:14px"></i></button></div><b style="color:var(--red)">${fmt(p.price*c.q)}</b></div></div></div>`}).join('')}
+ <div class="card row sm" style="background:var(--grbg);border:0"><i class="ti ti-trending-up" style="color:var(--g8)"></i><b style="color:var(--g8)">Bạn đã tiết kiệm ${fmt(sv)}!</b></div></div>
+ <div style="position:fixed;left:0;right:0;bottom:0;max-width:var(--af);margin:0 auto;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom))"><div class="row between sm" style="margin-bottom:8px"><span class="mut">Tổng cộng</span><b style="font-size:18px">${fmt(tot)}</b></div><button class="btn" onclick="go('confirm')"><i class="ti ti-credit-card"></i>Thanh toán – ${fmt(tot)}</button></div></div>`},
+
+confirm(){const first=pr(S.cart[0].p),L=LAB[first.l],tot=S.cart.reduce((a,c)=>a+pr(c.p).price*c.q,0);
+ if(!S.hold||S.hold.exp<now()){S.hold={exp:now()+L.pay*MIN,tot:L.pay*MIN}}
+ const v=S.voucher,disc=v?(v.pct?Math.min(Math.round(tot*v.pct/100),v.max):v.amt):0,fin=Math.max(0,tot-disc);S.final=fin;
+ return `<div class="scr" style="padding-bottom:150px">${topbar('Xác nhận đơn hàng')}<div class="pad">
+ <div class="card" style="text-align:center;border:2px dashed var(--g5);background:var(--grbg)"><div class="xs mut"><i class="ti ti-hourglass"></i> Hàng được giữ trong</div><div class="timer" style="font-size:38px;color:var(--g9);margin:2px 0" data-cd="${S.hold.exp}" data-bar="hb" data-tot="${S.hold.tot}"></div><div class="bar"><i id="hb" style="width:100%"></i></div><div class="xs mut mt8">Thanh toán trong <b>${L.pay} phút</b> (nhãn ${L.n}) để giữ hàng</div></div>
+ <div class="card row mt12" style="background:var(--grbg);border:0"><div style="font-size:26px">${st(first.s).em}</div><div><b>${st(first.s).name}</b><div class="xs mut">${st(first.s).addr}</div></div></div>
+ <div class="card mt12"><div class="xs b mut" style="text-transform:uppercase;margin-bottom:6px">Chi tiết đơn hàng</div>${S.cart.map(c=>`<div class="row between sm" style="padding:5px 0"><span>${pr(c.p).em} ${pr(c.p).n} <span class="mut">x${c.q}</span></span><b>${fmt(pr(c.p).price*c.q)}</b></div>`).join('')}</div>
+ <div class="row mt12"><input id="vc" class="field grow" placeholder="Nhập mã giảm giá" value="${v?v.c:''}"><button class="btn soft sm" style="height:48px" onclick="applyV(document.getElementById('vc').value)">Áp dụng</button></div>
+ ${S.vouchers.length?`<div class="hs" style="padding:8px 0 0">${S.vouchers.map(x=>`<button class="chip y" style="flex:none;padding:6px 10px" onclick="applyV('${x.c}')">🎟 ${x.c}</button>`).join('')}</div>`:''}
+ <div class="card mt12 sm"><div class="row between"><span class="mut">Tạm tính</span><span>${fmt(tot)}</span></div>${disc?`<div class="row between mt8"><span class="mut">Giảm giá (${v.c})</span><b style="color:var(--g7)">-${fmt(disc)}</b></div>`:''}<div class="row between mt8" style="font-size:17px"><b>Tổng cộng</b><b style="color:var(--g9)">${fmt(fin)}</b></div></div>
+ <div class="card mt12 sm" style="background:var(--ylbg);border:0;line-height:1.5"><b>Thanh toán trước, lấy hàng sau.</b> Nhận hàng trong ${L.pick} phút kể từ khi thanh toán. Huỷ miễn phí trong 3 phút đầu hoặc trước giờ nhận ${L.free} phút.</div></div>
+ <div style="position:fixed;left:0;right:0;bottom:0;max-width:var(--af);margin:0 auto;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom))"><button class="btn" onclick="go('pay')">Chọn thanh toán <i class="ti ti-arrow-right"></i></button></div></div>`},
+
+pay(){const tot=S.final;S.pm=S.pm||'MoMo';
+ const M=[['MoMo','M','#a50064','Ví điện tử MoMo','Phổ biến'],['ZaloPay','Z','#2a9df4','Ví ZaloPay'],['VNPay / NAPAS','V','#d6334b','Quét mã QR VNPay'],['ShopeePay','S','#ee4d2d','Ví ShopeePay'],['Liên kết ngân hàng','🏦','#7a7f9a','Thẻ ATM / Visa']];
+ return `<div class="scr">${topbar('Thanh toán')}<div class="pad" style="text-align:center"><div class="xs mut">Tổng thanh toán</div><div style="font-size:34px;font-weight:900;color:var(--g9)">${fmt(tot)}</div><div class="xs mut">Đơn #ORD-${Math.random().toString(36).slice(2,6).toUpperCase()}</div></div>
+ <div class="pad mt12"><label class="l" style="margin-top:0">Chọn phương thức</label>${M.map(m=>`<button class="sopt" style="${S.pm===m[0]?'border:2px solid var(--g5);background:var(--grbg)':''}" onclick="S.pm='${m[0]}';draw()"><span class="ico" style="background:${m[2]};color:#fff;font-weight:900">${m[1]}</span><span class="grow"><b>${m[0]}</b>${m[4]?` <span class="chip" style="font-size:9px">${m[4]}</span>`:''}<br><span class="xs mut">${m[3]}</span></span><i class="ti ${S.pm===m[0]?'ti-circle-check-filled':'ti-circle'}" style="color:${S.pm===m[0]?'var(--g7)':'#c3cbc5'}"></i></button>`).join('')}
+ <div class="chip mt8" style="margin:0 auto;display:flex;width:fit-content"><i class="ti ti-lock" style="font-size:13px"></i>Bảo mật PCI DSS</div></div>
+ <div style="position:fixed;left:0;right:0;bottom:0;max-width:var(--af);margin:0 auto;background:#fff;padding:12px 16px calc(14px + env(safe-area-inset-bottom))"><button class="btn" onclick="payNow()">Thanh toán ngay</button></div></div>`},
+paying(){return `<div class="scr" style="display:grid;place-items:center;text-align:center;min-height:100vh"><div><div style="width:64px;height:64px;border:5px solid var(--grbg);border-top-color:var(--g7);border-radius:50%;margin:0 auto 18px;animation:sp 1s linear infinite"></div><b style="font-size:17px">${S.payPhase||'Đang kết nối '+S.pm+'…'}</b><p class="sm mut mt8">Vui lòng xác nhận thanh toán trên ứng dụng ví điện tử</p><style>@keyframes sp{to{transform:rotate(360deg)}}</style></div></div>`},
+
+/* ---------- order detail ---------- */
+order(id){const o=S.orders.find(x=>x.id===id),s=st(o.store),p=pr(o.items[0].p),L=LAB[p.l];
+ const stage={awaiting:1,paid:3,done:4,cancelled:-1,noshow:-1}[o.st];
+ const steps=['Đặt hàng','Giữ hàng','Thanh toán','Chờ nhận','Hoàn thành'];
+ const winOpen=o.st==='done'&&(now()-o.doneAt)<(p.cat==='meal'?12:24)*3600000;
+ const comp=S.comps&&S.comps[o.id];
+ return `<div class="scr" style="padding-bottom:30px">${topbar('Chi tiết đơn hàng','<span class="xs mut">#'+o.id+'</span>')}<div class="pad">
+ ${o.st==='paid'?`<div class="card row sm b" style="background:var(--grbg);border:0;color:var(--g9)"><i class="ti ti-circle-filled" style="font-size:10px;color:var(--g5)"></i>${o.ready?'Cửa hàng đã chuẩn bị xong · ':''}Đang chờ lấy hàng · còn <span class="timer" data-cd="${o.pickBy}"></span></div>`:o.st==='awaiting'?`<div class="card row sm b" style="background:var(--redbg);border:0;color:var(--red)">Chờ thanh toán · còn <span class="timer" data-cd="${o.payBy}"></span></div>`:o.st==='done'?`<div class="card row sm b" style="background:var(--grbg);border:0"><i class="ti ti-circle-check" style="color:var(--g7)"></i>Đã nhận hàng thành công</div>`:`<div class="card row sm b" style="background:#eef1ee;border:0"><i class="ti ti-circle-x"></i>${o.st==='noshow'?'Không đến nhận hàng':'Đơn đã hủy'}${o.why?' · '+o.why:''}</div>`}
+ ${stage>0?`<div class="card mt12"><div class="stepper">${steps.map((x,i)=>`<div class="stp ${i<stage?'done':i===stage?'cur':''}"><b>${i<stage?'✓':i+1}</b>${x}</div>`).join('')}</div></div>`:''}
+ ${o.st==='paid'?`<div class="tree-card mt12" onclick="go('impact')"><div class="mini">💧🌱</div><div class="grow"><b class="sm">+25 giọt nước cho cây uy tín</b><div class="xs mut">Bạn đang có ${S.tree.reserve} giọt · bấm để tưới cây</div></div><i class="ti ti-chevron-right mut"></i></div><div class="qrbox mt12"><div class="xs mut" style="margin-bottom:8px">Đưa mã này cho nhân viên cửa hàng</div>${qr(o.id)}<div style="font-size:22px;font-weight:900;letter-spacing:.12em;margin-top:8px">${o.id}</div><div class="xs mut">Thanh toán qua ${o.pay}</div></div>
+ <div class="card row mt12" style="background:var(--grbg);border:0"><i class="ti ti-alarm" style="font-size:24px;color:var(--red)"></i><div><div class="xs mut">Hẹn lấy hàng</div><b>Trước ${new Date(o.pickBy).toTimeString().slice(0,5)} hôm nay</b></div></div>`:''}
+ <div class="card mt12 row"><div style="font-size:32px">${s.em}</div><div class="grow"><b>${s.name}</b><div class="xs mut">${s.addr}</div></div>${o.st==='paid'||o.st==='awaiting'?`<button class="btn soft sm" onclick="go('chat','${o.id}')"><i class="ti ti-message-circle"></i>Chat</button>`:''}</div>
+ <div class="card mt12"><div class="xs b mut" style="text-transform:uppercase;margin-bottom:6px">Mặt hàng đã đặt</div>${o.items.map(i=>`<div class="row" style="padding:6px 0"><div class="pimg ${pr(i.p).l}" style="width:48px;height:48px;font-size:26px;border-radius:12px">${pic(pr(i.p),26)}</div><div class="grow"><b class="sm">${pr(i.p).n}</b><div class="xs mut">x${i.q} · Nhãn ${LAB[pr(i.p).l].n}</div></div><b class="sm">${fmt(pr(i.p).price*i.q)}</b></div>`).join('')}<div style="border-top:1px dashed var(--line);margin-top:8px;padding-top:8px" class="row between sm"><span class="mut">Đã thanh toán</span><b style="font-size:16px">${fmt(o.total)}</b></div></div>
+ ${o.st==='done'?`<div class="card mt12 row sm" style="background:var(--grbg);border:0"><i class="ti ti-star-filled" style="color:#e0a512"></i><b>+5 điểm uy tín · Hạng Xanh Lá</b></div>`:''}
+ ${o.refund?`<div class="card mt12" style="background:var(--grbg);border:0"><div class="row"><i class="ti ti-cash" style="font-size:24px;color:var(--g8)"></i><div><b>Đã hoàn ${fmt(o.refund)}</b><div class="xs mut">Về ví hoàn tiền trong 1–3 phút</div></div></div></div>`:''}
+ ${comp?`<div class="card mt12"><div class="row between"><b class="sm"><i class="ti ti-flag" style="color:var(--red)"></i> Khiếu nại ${comp.id}</b><span class="chip y">${comp.st}</span></div><div class="xs mut mt8">Lý do: ${comp.r}</div><div class="stepper mt12">${['Đã gửi','Cửa hàng phản hồi','Admin xử lý','Kết quả'].map((x,i)=>`<div class="stp ${i===0?'done':i===1?'cur':''}"><b>${i===0?'✓':i+1}</b>${x}</div>`).join('')}</div><div class="xs mut mt8">Cửa hàng có 12 giờ để phản hồi. Quá hạn hoặc tranh chấp sẽ chuyển Admin xử lý.</div></div>`:''}
+ <div class="mt16">${o.st==='paid'?`<button class="btn red" onclick="cancelSheet('${o.id}')"><i class="ti ti-circle-x"></i>Huỷ đơn</button>`:''}
+ ${o.st==='awaiting'?`<button class="btn" onclick="S.orders.find(x=>x.id==='${o.id}').st='paid';draw()">Thanh toán ngay</button>`:''}
+ ${winOpen&&!comp?`<button class="btn ghost" onclick="complaintSheet('${o.id}')"><i class="ti ti-flag"></i>Khiếu nại đơn hàng</button><div class="xs mut" style="text-align:center;margin-top:6px">Còn thời hạn khiếu nại (${p.cat==='meal'?'12':'24'}h sau khi nhận hàng)</div>`:''}
+ ${o.st==='done'?`<button class="btn mt8" onclick="addCart('${p.id}',true)"><i class="ti ti-repeat"></i>Mua lại</button>`:''}</div></div></div>`},
+
+chat(id){const o=S.orders.find(x=>x.id===id),s=st(o.store);S.chat[id]=S.chat[id]||[{me:0,t:'Chào bạn! Đơn của bạn đã sẵn sàng, bạn ghé lấy trước giờ hẹn nhé 😊',at:'09:41'}];
+ return `<div class="scr" style="display:flex;flex-direction:column;height:100%">${topbar(s.name,`<span class="chip">#${o.id}</span>`)}
+ <div class="pad xs mut" style="text-align:center;margin-bottom:6px">Chat đóng khi đơn kết thúc. Nội dung được lưu để Admin xem khi có khiếu nại.</div>
+ <div id="msgs" class="pad grow" style="overflow-y:auto">${S.chat[id].map(m=>`<div class="bub ${m.me?'mine':'you'}">${m.t}<small>${m.at}</small></div>`).join('')}</div>
+ <div class="hs" style="padding:6px 16px">${['Tôi sắp đến','Cho tôi đổi giờ nhận?','Đơn của tôi đã sẵn sàng chưa?'].map(q=>`<button class="pill" style="font-size:12px" onclick="send('${id}','${q}')">${q}</button>`).join('')}</div>
+ <div class="row pad" style="padding-bottom:calc(14px + env(safe-area-inset-bottom))"><input id="cm" class="field grow" placeholder="Nhắn tin cho cửa hàng…" onkeydown="if(event.key==='Enter')send('${id}')"><button class="ib" style="background:var(--g8);border:0;width:48px;height:48px;color:#fff" onclick="send('${id}')"><i class="ti ti-send"></i></button></div></div>`},
+
+/* ---------- account extras ---------- */
+notifs(){return `<div class="scr">${topbar('Thông báo','<button class="b sm" style="color:var(--g8)" onclick="S.notifs.forEach(n=>n.u=0);draw()">Đọc tất cả</button>')}<div class="pad">${S.notifs.map((n,i)=>`<div class="card row" style="margin-bottom:8px;border-left:4px solid ${n.u?'var(--g7)':'var(--line)'};cursor:pointer" onclick="S.notifs[${i}].u=0;${n.go?`go('${n.go[0]}'${n.go[1]?`,'${n.go[1]}'`:''})`:'draw()'}"><div class="ib" style="background:var(--grbg);border:0"><i class="ti ${n.i}" style="color:var(--g8)"></i></div><div class="grow"><b class="sm">${n.t}</b><div class="xs mut">${n.d}</div><div class="xs mut" style="margin-top:2px">${n.a}</div></div>${n.u?'<i class="ti ti-circle-filled" style="font-size:9px;color:var(--g7)"></i>':''}</div>`).join('')}</div></div>`},
+vouchers(){return `<div class="scr">${topbar('Voucher của tôi')}<div class="pad">${S.vouchers.map(v=>`<div class="card row" style="margin-bottom:10px;border-left:5px solid var(--y)"><div class="ib" style="background:var(--ylbg);border:0"><i class="ti ti-ticket" style="color:#c48a00"></i></div><div class="grow"><b>${v.c}</b><div class="xs mut">${v.t}${v.min?' · đơn từ '+fmt(v.min):''}</div></div><button class="btn sm" onclick="S.voucher=S.vouchers[${S.vouchers.indexOf(v)}];toast('Đã chọn mã ${v.c}');S.cart.length?go('cart'):tab('home')">Dùng</button></div>`).join('')}
+ <div class="row mt12"><input id="nv" class="field grow" placeholder="Nhập mã mới"><button class="btn soft sm" style="height:48px" onclick="toast('Mã không hợp lệ hoặc đã hết hạn')">Lưu</button></div></div></div>`},
+wallet(){return `<div class="scr">${topbar('Ví hoàn tiền')}<div class="pad"><div style="background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border-radius:22px;padding:22px"><div class="xs" style="opacity:.8">Số dư ví</div><div style="font-size:34px;font-weight:900">${(S.wallet.toLocaleString('vi-VN')+'đ')}</div><div class="xs" style="opacity:.8;margin-top:4px">Tiền hoàn về ví trong 1–3 phút, dùng cho đơn tiếp theo</div></div>
+ <h2 class="sm mt16" style="margin-bottom:8px">Lịch sử hoàn tiền</h2>${S.orders.filter(o=>o.refund).map(o=>`<div class="card row" style="margin-bottom:8px"><i class="ti ti-arrow-back-up" style="color:var(--g7)"></i><div class="grow"><b class="sm">Hoàn đơn #${o.id}</b><div class="xs mut">${o.why}</div></div><b style="color:var(--g7)">+${fmt(o.refund)}</b></div>`).join('')||'<p class="sm mut">Chưa có giao dịch hoàn tiền.</p>'}</div></div>`},
+paymeth(){const M=[['momo','Momo','Đã liên kết với số 09xxxxxxxx'],['zalopay','ZaloPay','Đã liên kết thành công'],['vnpay','VNPay','Chưa liên kết'],['shopee','ShopeePay','Chưa liên kết'],['bank','Liên kết ngân hàng','Chưa liên kết']];
+ return `<div class="scr">${topbar('Phương thức thanh toán')}<div class="pad">${M.map(m=>`<div class="card row" style="margin-bottom:8px"><div class="grow"><b>${m[1]}</b><div class="xs mut">${S.pay[m[0]]?m[2]:'Chưa liên kết'}</div></div><button class="btn sm ${S.pay[m[0]]?'soft':'ghost'}" onclick="S.pay['${m[0]}']=!S.pay['${m[0]}'];draw()">${S.pay[m[0]]?'Hủy liên kết':'Liên kết'}</button></div>`).join('')}</div></div>`},
+impact(){const t=S.tree,k=stageKey(t.water),need=Math.ceil((T_FULL-t.water)/T_COST);const kg=S.orders.filter(o=>o.st==='done').length*.8+2.3;
+ return `<div class="scr">${topbar('Vườn cây uy tín')}<div class="pad">
+ <div class="garden">${sceneHTML()}
+  <div style="padding:16px"><span class="chip"><i class="ti ti-droplet" style="font-size:13px"></i> Trò chơi cây uy tín</span>
+  <h2 style="font-size:18px;margin:8px 0 4px;line-height:1.2">Giải cứu thực phẩm để lấy nước tưới cây</h2>
+  <p class="sm mut" style="line-height:1.55">Mỗi đơn hàng thành công tạo 25 giọt nước. Dùng nước để nuôi cây uy tín; cây trưởng thành 100% sẽ được ghi nhận vào quỹ cây xanh.</p>
+  <div class="row between mt12"><div><div class="xs mut b" style="text-transform:uppercase">Giai đoạn</div><b>${stageLbl(t.water)}</b></div><b style="color:#e07a00;font-size:20px">${t.water}%</b></div>
+  <div class="bar mt8" style="height:10px"><i style="width:${t.water}%;background:linear-gradient(90deg,#34b563,#f3c94f)"></i></div>
+  <p class="xs mut mt8">${treeNext()}</p>
+  <div class="grid3 mt12" style="grid-template-columns:repeat(4,1fr);gap:8px"><div class="pill2"><b>${t.reserve}</b><span>Giọt nước</span></div><div class="pill2"><b>${t.waterings}</b><span>Lần tưới</span></div><div class="pill2"><b>${t.donated}</b><span>Cây đã góp</span></div><div class="pill2"><b>+${t.pts}</b><span>Điểm xanh</span></div></div></div></div>
+ <div class="card mt12"><div class="mis"><span class="mi" style="background:var(--grbg);color:var(--g8)"><i class="ti ti-shopping-bag-check"></i></span><div><b class="sm">Cứu thực phẩm để nhận nước</b><div class="xs mut">${t.orders} đơn đã tạo nước · mỗi đơn +25 giọt</div></div></div>
+  <div class="mis"><span class="mi" style="background:#e0f2fe;color:#0369a1"><i class="ti ti-droplet-up"></i></span><div><b class="sm">Tưới cây mỗi khi có nước</b><div class="xs mut">${Math.floor(t.reserve/T_COST)} lượt tưới đang chờ · mỗi lần +25% và +5 điểm</div></div></div>
+  <div class="mis"><span class="mi" style="background:#fef3c7;color:#92400e"><i class="ti ti-award"></i></span><div><b class="sm">Phần thưởng trưởng thành</b><div class="xs mut">Tưới thêm ${need} lần để hoàn thành cây và nhận +25 điểm xanh.</div></div></div></div>
+ <div class="card mt12 row sm" style="background:var(--ylbg);border:0"><i class="ti ti-confetti" style="color:#c48a00;font-size:22px"></i><span><b>Sự kiện cuối tuần:</b> cứu 3 đơn nhận thêm 1 bình nước.</span></div>
+ <h2 class="sm mt20" style="margin-bottom:8px">🌍 Tác động của bạn</h2>
+ <div class="grid3" style="grid-template-columns:1fr 1fr">${[['🍽️',kg.toFixed(1)+' KG','Thực phẩm cứu'],['🌱',(kg*.7).toFixed(1)+' KG','CO₂ giảm phát'],['💧','1250 LÍT','Nước tiết kiệm'],['🤝','4','Suất ăn từ thiện']].map(x=>`<div class="card" style="text-align:center"><div style="font-size:26px">${x[0]}</div><b>${x[1]}</b><div class="xs mut">${x[2]}</div></div>`).join('')}</div></div></div>`},
+rep(){return `<div class="scr">${topbar('Điểm uy tín')}<div class="pad"><div class="card" style="text-align:center"><div style="font-size:46px;font-weight:900;color:var(--g8)">${S.rep}</div><div class="xs mut">Hạng Xanh Lá · khởi đầu 100 điểm</div><div class="bar mt12"><i style="width:${S.rep}%"></i></div></div>
+ <div class="card mt12"><h2 class="sm">Cách tính điểm</h2>${[['ti-circle-check','Nhận hàng thành công','+5','g'],['ti-circle-x','Huỷ muộn / không đến nhận','-15','r'],['ti-flag','Khiếu nại sai sự thật','-10','r']].map(r=>`<div class="row between sm" style="padding:10px 0;border-bottom:1px solid #f1f4f1"><span class="row"><i class="ti ${r[0]}" style="color:${r[3]==='g'?'var(--g7)':'var(--red)'}"></i>${r[1]}</span><b style="color:${r[3]==='g'?'var(--g7)':'var(--red)'}">${r[2]}</b></div>`).join('')}<div class="xs mut mt12" style="line-height:1.5">• Không đến nhận 3 lần trong 60 ngày: tạm khoá mua nhãn Đỏ 30 ngày.<br>• Dưới 40 điểm: tạm chặn đặt hàng.</div></div></div></div>`},
+help(){const t=S.filt.ht||'ai';
+ return `<div class="scr" style="display:flex;flex-direction:column;height:100%">${topbar('Trợ giúp & hỗ trợ')}<div class="seg">${[['ai','Chat AI','ti-message'],['req','Yêu cầu','ti-file-text'],['faq','FAQ','ti-help']].map(x=>`<button class="${t===x[0]?'on':''}" onclick="S.filt.ht='${x[0]}';draw()"><i class="ti ${x[2]}" style="font-size:14px"></i> ${x[1]}</button>`).join('')}</div>
+ ${t==='ai'?`<div id="msgs" class="pad grow mt12" style="overflow-y:auto">${(S.chat.ai=S.chat.ai||[{me:0,t:'Xin chào! Tôi là trợ lý AI của FoodSave. Hãy hỏi tôi bất cứ điều gì về đặt hàng, thanh toán hoặc cứu thực phẩm nhé! 👋',at:''}]).map(m=>`<div class="bub ${m.me?'mine':'you'}">${m.t}</div>`).join('')}</div><div class="row pad" style="padding-bottom:calc(14px + env(safe-area-inset-bottom))"><input id="cm" class="field grow" placeholder="Hỏi AI trợ lý…" onkeydown="if(event.key==='Enter')send('ai')"><button class="ib" style="background:var(--g8);border:0;width:48px;height:48px;color:#fff" onclick="send('ai')"><i class="ti ti-send"></i></button></div>`:''}
+ ${t==='req'?`<div class="pad mt12"><div class="row between"><h2 class="sm">Yêu cầu hỗ trợ</h2><button class="btn sm" onclick="ticketSheet()">+ Tạo mới</button></div><div class="mt12">${S.tickets.map(x=>`<div class="card row" style="margin-bottom:8px;border-left:4px solid ${x.st==='Đã xử lý'?'var(--g7)':'var(--y)'}"><div class="grow"><b class="sm">${x.t}</b><div class="xs mut">${x.id} · ${x.d}</div></div><span class="chip ${x.st==='Đã xử lý'?'':'y'}">${x.st}</span></div>`).join('')}</div></div>`:''}
+ ${t==='faq'?`<div class="pad mt12"><h2 class="sm" style="margin-bottom:8px">Câu hỏi thường gặp</h2>${[['FoodSave hoạt động như thế nào?','Cửa hàng đăng thực phẩm cận hạn với giá giảm. Bạn đặt, thanh toán trước và đến nhận bằng mã QR.'],['Làm sao để đặt hàng?','Chọn sản phẩm → Thêm vào giỏ → Thanh toán trong thời gian giữ hàng → Nhận mã QR.'],['Chính sách hoàn tiền?','Huỷ trong 3 phút đầu hoặc trước giờ nhận theo nhãn: hoàn 100%. Huỷ muộn/không đến nhận: không hoàn.'],['Điểm uy tín là gì?','Điểm đánh giá độ tin cậy của người mua, bắt đầu từ 100 điểm.'],['Túi cứu hộ COMBO là gì?','Túi tổng hợp nhiều món cận hạn với giá cực tốt.'],['Tôi có thể dùng tài khoản từ thiện không?','Có, chọn vai trò "Từ thiện" khi đăng ký.']].map(f=>`<div class="acc"><button onclick="this.parentNode.classList.toggle('on')">${f[0]}<i class="ti ti-chevron-down"></i></button><div>${f[1]}</div></div>`).join('')}</div>`:''}</div>`}
+};
+
+/* ====================== HÀNH ĐỘNG ====================== */
+function loginAs(w,ex){S.user={name:ex?'Nguyễn Văn An':'Nguyễn Văn An',email:'nguyen.van.a@gmail.com',addr:'234 Nguyễn Huệ, Q.1'};if(ex){tab('home')}else go('profile')}
+function qty(id,d){const c=S.cart.find(x=>x.p===id);c.q+=d;if(c.q<=0)S.cart=S.cart.filter(x=>x!==c);else if(c.q>pr(id).left){c.q=pr(id).left;toast('Chỉ còn '+pr(id).left+' túi')}draw()}
+function applyV(code){const v=S.vouchers.find(x=>x.c===code.trim().toUpperCase());if(!v){toast('Mã giảm giá không hợp lệ');return}S.voucher=v;toast('Đã áp dụng '+v.c);draw()}
+function payNow(){S.payPhase=null;go('paying');setTimeout(()=>{S.payPhase='Chờ xác nhận thanh toán…';draw()},1400);setTimeout(()=>{
+  const first=pr(S.cart[0].p),L=LAB[first.l],id='ORD-'+Math.random().toString(36).slice(2,6).toUpperCase();
+  S.orders.unshift({id,items:S.cart.map(c=>({p:c.p,q:c.q})),total:S.final,st:'paid',created:now(),paidAt:now(),pay:S.pm,pickBy:now()+L.pick*MIN,store:first.s});
+  S.cart.forEach(c=>pr(c.p).left=Math.max(0,pr(c.p).left-c.q));S.cart=[];earnWater();S.hold=null;S.voucher=null;
+  S.notifs.unshift({i:'ti-circle-check',t:'Thanh toán thành công!',d:'Đơn '+id+' – đưa mã QR cho cửa hàng để nhận hàng',a:'Vừa xong',u:1,go:['order',id]});
+  S.stack=[['tab','home'],['order',id]];draw();push('ti-circle-check','Thanh toán thành công!','Đơn '+id+' đã được ghi nhận. +25 giọt nước cho cây uy tín',['order',id]);
+  setTimeout(()=>{const o=S.orders.find(x=>x.id===id);if(!o||o.st!=='paid')return;o.ready=true;S.notifs.unshift({i:'ti-package',t:'Cửa hàng đã chuẩn bị xong đơn',d:'Đơn '+id+' tại '+st(o.store).name+' đã sẵn sàng – đến nhận bằng mã QR',a:'Vừa xong',u:1,go:['order',id]});push('ti-package','Cửa hàng đã chuẩn bị xong đơn!',st(o.store).name+' – đưa mã QR để nhận hàng',['order',id]);if(S.stack[S.stack.length-1][0]==='order')draw()},9000);
+  setTimeout(()=>{S.vouchers.unshift({c:'CUUDOI20',t:'Giảm 20% tối đa 25.000đ',min:30000,pct:20,max:25000});S.notifs.unshift({i:'ti-ticket',t:'Voucher mới dành cho bạn',d:'Mã CUUDOI20 – giảm 20% cho đơn tiếp theo',a:'Vừa xong',u:1,go:['vouchers']});push('ti-ticket','Có voucher mới!','Mã CUUDOI20 – giảm 20% cho đơn tiếp theo',['vouchers'])},20000)},3200)}
+function send(id,txt){const el=document.getElementById('cm');const t=txt||(el&&el.value.trim());if(!t)return;
+ const at=new Date().toTimeString().slice(0,5);S.chat[id]=S.chat[id]||[];S.chat[id].push({me:1,t,at});if(el)el.value='';draw();
+ setTimeout(()=>{S.chat[id].push({me:0,t:id==='ai'?'Cảm ơn bạn đã hỏi! Với đơn đã thanh toán, bạn có thể huỷ miễn phí trong 3 phút đầu hoặc trước giờ nhận theo nhãn sản phẩm. Bạn cần mình hỗ trợ thêm gì không?':'Cảm ơn bạn! Cửa hàng đã nhận tin nhắn nhé 👍',at});if(S.stack[S.stack.length-1][0]===(id==='ai'?'help':'chat'))draw();const m=document.getElementById('msgs');if(m)m.scrollTop=1e5},1100);
+ const m=document.getElementById('msgs');if(m)m.scrollTop=1e5}
+function cancelSheet(id){const o=S.orders.find(x=>x.id===id),L=LAB[pr(o.items[0].p).l];
+ const grace=now()-o.paidAt<3*MIN,early=now()<o.pickBy-L.free*MIN,full=grace||early;
+ sheet(`<h2 class="row" style="gap:8px"><i class="ti ti-alert-triangle" style="color:${full?'#c48a00':'var(--red)'}"></i>Xác nhận huỷ đơn</h2><p class="sm mut mt8">Bạn có chắc muốn huỷ đơn #${id}?</p>
+ <div class="card mt12" style="background:${full?'var(--grbg)':'var(--redbg)'};border:0"><div class="row between sm"><span><i class="ti ti-cash"></i> ${full?'Hoàn tiền dự kiến':'Hoàn tiền'}</span><b style="color:${full?'var(--g8)':'var(--red)'}">${full?fmt(o.total):'0đ'}</b></div><div class="row between sm mt8"><span><i class="ti ti-star"></i> Điểm uy tín</span><b style="color:${full?'var(--g8)':'var(--red)'}">${full?'0':'-15 điểm'}</b></div>
+ <div class="xs mut mt8">${grace?'Bạn huỷ trong 3 phút đầu sau khi thanh toán – hoàn 100%.':early?`Còn hơn ${L.free} phút trước giờ nhận – huỷ miễn phí, hoàn 100%.`:`Đã quá hạn huỷ miễn phí (${L.free} phút trước giờ nhận): không hoàn tiền, tiền chuyển cho cửa hàng.`}</div></div>
+ <button class="btn red mt16" onclick="doCancel('${id}',${full})">Xác nhận huỷ</button><button class="b sm mt12" style="width:100%;color:var(--mut)" onclick="closeSheet()">Giữ lại đơn hàng</button>`)}
+function doCancel(id,full){const o=S.orders.find(x=>x.id===id);o.st='cancelled';o.why=full?'Huỷ miễn phí':'Huỷ muộn – không hoàn tiền';if(full){o.refund=o.total;S.wallet+=o.total}else S.rep=Math.max(0,S.rep-15);
+ const p=pr(o.items[0].p);if(full)o.items.forEach(i=>pr(i.p).left+=i.q);closeSheet();S.filt.ot='cancel';S.stack=[['tab','orders']];S.tab='orders';draw();toast(full?'Đã huỷ – hoàn '+fmt(o.total)+' vào ví':'Đã huỷ đơn · -15 điểm uy tín')}
+function complaintSheet(id){S.cr='Hàng không đúng mô tả';sheet(`<h2>Khiếu nại đơn #${id}</h2><p class="xs mut mt8">Cửa hàng có 12 giờ để phản hồi. Cần ảnh minh chứng. Khiếu nại sai sự thật sẽ bị trừ 10 điểm.</p>
+ <label class="l">Lý do</label><div class="row" style="flex-wrap:wrap;gap:6px">${['Hàng không đúng mô tả','Thực phẩm hỏng / hết hạn','Thiếu hàng','Khác'].map((r,i)=>`<button class="pill ${i?'':'on'}" onclick="S.cr='${r}';this.parentNode.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));this.classList.add('on')">${r}</button>`).join('')}</div>
+ <label class="l">Mô tả chi tiết</label><textarea class="field" rows="3" placeholder="Mô tả vấn đề…"></textarea><label class="l">Ảnh minh chứng *</label><button class="sopt" onclick="this.innerHTML='<span class=ico><i class=\\'ti ti-photo-check\\'></i></span>photo_01.jpg đã đính kèm';S.photo=1"><span class="ico"><i class="ti ti-camera"></i></span>Chụp / chọn ảnh</button>
+ <button class="btn mt8" onclick="if(!S.photo){toast('Vui lòng đính kèm ảnh minh chứng');return}S.comps=S.comps||{};S.comps['${id}']={id:'KN'+Math.floor(Math.random()*900+100),r:S.cr,st:'Chờ cửa hàng (12h)'};S.photo=0;closeSheet();draw();toast('Đã gửi khiếu nại')">Gửi khiếu nại</button>`)}
+function ticketSheet(){sheet(`<h2>Tạo yêu cầu mới</h2><label class="l">Nội dung cần giải quyết *</label><textarea id="tk" class="field" rows="4" placeholder="Mô tả chi tiết vấn đề…"></textarea><div class="row mt16"><button class="btn ghost" onclick="closeSheet()">Hủy</button><button class="btn" onclick="S.tickets.unshift({id:'YS0'+(S.tickets.length+1),t:document.getElementById('tk').value||'Yêu cầu hỗ trợ',st:'Chờ phản hồi',d:'Hôm nay'});closeSheet();draw();toast('Đã gửi yêu cầu')">Gửi yêu cầu</button></div>`)}
+function qr(seed){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;const N=25,r=()=>(h=(h*1103515245+12345)>>>0,(h>>16)&1);let s='';
+ const fin=(x,y)=>x<8&&y<8||x>N-9&&y<8||x<8&&y>N-9;
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){let on;if(fin(x,y)){const lx=x<8?x:x-(N-8),ly=y<8?y:y-(N-8);on=(lx===0||lx===6||ly===0||ly===6||(lx>=2&&lx<=4&&ly>=2&&ly<=4))&&lx<7&&ly<7}else on=r();if(on)s+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}
+ return `<svg viewBox="0 0 ${N} ${N}" fill="#111512" shape-rendering="crispEdges">${s}</svg>`}
+
+/* start */
+if(/[?&]skip=1/.test(location.search)){S.user={name:'Nguyễn Văn An',email:'nguyen.van.a@gmail.com',addr:'234 Nguyễn Huệ, Q.1'};tab('home')}else root('welcome');
+</script>
+</body>
+</html>

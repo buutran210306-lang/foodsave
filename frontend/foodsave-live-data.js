@@ -305,6 +305,8 @@
     "label-red-reminder": { type: "urgent", icon: "ti-alarm" },
     "charity-offer": { type: "urgent", icon: "ti-heart-handshake" },
     "order-paid": { type: "new", icon: "ti-circle-check" },
+    "order-ready": { type: "new", icon: "ti-package" },
+    "voucher-new": { type: "new", icon: "ti-ticket" },
     "order-reminder-mid": { type: "urgent", icon: "ti-alarm" },
     "order-reminder-final": { type: "urgent", icon: "ti-alarm" },
     "order-no-show": { type: "urgent", icon: "ti-user-off" },

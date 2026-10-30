@@ -4,19 +4,27 @@
  * - KHÔNG BAO GIỜ cache /api/, Supabase hay bất kỳ nội dung khác nguồn gốc / có token.
  * - Nhận Web Push và mở đúng đơn / nhiệm vụ khi bấm thông báo.
  * Đổi CACHE_VERSION khi muốn xóa sạch cache cũ ở mọi máy. */
-var CACHE_VERSION = "fs-v1";
-var SHELL = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png", "/manifest-user.webmanifest", "/manifest-volunteer.webmanifest"];
+var CACHE_VERSION = "fs-v2";
+var CDN_CACHE = "fs-cdn-v1";   // thư viện bên thứ ba có phiên bản cố định (Leaflet, Supabase JS, biểu tượng, QR); không chứa dữ liệu người dùng
+var SHELL = [
+  "/offline.html", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png", "/icons/apple-touch-icon-180.png",
+  "/manifest-user.webmanifest", "/manifest-app.webmanifest", "/manifest-volunteer.webmanifest",
+  // vỏ app người mua: mã dùng chung (không có dữ liệu đơn hàng / thanh toán)
+  "/frontend/foodsave-auth-client.js", "/frontend/foodsave-live-data.js", "/frontend/foodsave-pwa.js", "/frontend/foodsave-map.js",
+  "/frontend/foodsave-legal-content.js", "/frontend/foodsave-install.js"
+];
+var CDN_ALLOW = [/^https:\/\/cdn\.jsdelivr\.net\/npm\/(leaflet@|@supabase\/supabase-js|@tabler\/icons-webfont@)/, /^https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/qrcode-generator\//];
 
 self.addEventListener("install", function (event) {
   event.waitUntil(
-    caches.open(CACHE_VERSION).then(function (cache) { return cache.addAll(SHELL); }).catch(function () {}).then(function () { return self.skipWaiting(); })
+    caches.open(CACHE_VERSION).then(function (cache) { return Promise.all(SHELL.map(function (u) { return cache.add(u).catch(function () {}); })); }).catch(function () {}).then(function () { return self.skipWaiting(); })
   );
 });
 
 self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (key) { return key !== CACHE_VERSION; }).map(function (key) { return caches.delete(key); }));
+      return Promise.all(keys.filter(function (key) { return key !== CACHE_VERSION && key !== CDN_CACHE; }).map(function (key) { return caches.delete(key); }));
     }).then(function () { return self.clients.claim(); })
   );
 });
@@ -29,6 +37,20 @@ self.addEventListener("fetch", function (event) {
   var request = event.request;
   if (request.method !== "GET") return;
   var url = new URL(request.url);
+  if (url.origin !== self.location.origin && CDN_ALLOW.some(function (re) { return re.test(request.url); })) {
+    event.respondWith(
+      caches.open(CDN_CACHE).then(function (cache) {
+        return cache.match(request).then(function (cached) {
+          var network = fetch(request).then(function (response) {
+            if (response && (response.ok || response.type === "opaque")) cache.put(request, response.clone());
+            return response;
+          }).catch(function () { return cached; });
+          return cached || network;
+        });
+      })
+    );
+    return;
+  }
   // Chỉ xử lý cùng nguồn gốc; không đụng /api/, Supabase, bản đồ, font ngoài...
   if (url.origin !== self.location.origin || url.pathname.indexOf("/api/") === 0 || url.pathname.indexOf("/.netlify/") === 0) return;
   if (url.pathname === "/sw.js") return;

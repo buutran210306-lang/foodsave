@@ -2,6 +2,7 @@ import type { NotificationListQuery } from "../schemas/notificationSchemas";
 import type { PaginatedResponse } from "../types/api";
 import type { Notification, UserRole } from "../types/domain";
 import { logger } from "../utils/logger";
+import { allowedUsers, groupOf } from "./notificationPrefs";
 import { pushService } from "./pushService";
 import { getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
 
@@ -18,9 +19,17 @@ export interface NewNotification {
 
 // Loại thông báo của NGƯỜI MUA được gửi kèm push (cửa hàng / tổ chức không có push)
 const PUSH_TYPES = new Set([
-  "order-paid", "order-update", "order-reminder-mid", "order-reminder-final", "order-no-show", "no-show-warning",
-  "red-label-banned", "order-chat", "complaint-update", "complaint-decision"
+  "order-paid", "order-update", "order-ready", "order-reminder-mid", "order-reminder-final", "order-no-show", "no-show-warning",
+  "red-label-banned", "order-chat", "complaint-update", "complaint-decision", "voucher-new"
 ]);
+
+/** Đường dẫn trong app người mua: chi tiết đơn, chat, khiếu nại, màn Voucher */
+export const appPushUrl = (input: Pick<NewNotification, "type" | "relatedType" | "relatedId">): string => {
+  if (input.type === "voucher-new") return "/FOODSAVE_APP.html#voucher";
+  if (input.relatedType === "order" && input.relatedId) return `/FOODSAVE_APP.html#${input.type === "order-chat" ? "chat" : "order"}=${input.relatedId}`;
+  if (input.relatedType === "complaint" && input.relatedId) return `/FOODSAVE_APP.html#complaint=${input.relatedId}`;
+  return "/FOODSAVE_APP.html";
+};
 
 const pushUrl = (input: NewNotification): string => {
   if (input.relatedType === "order" && input.relatedId) return `/FOODSAVE_USER.html#order=${input.relatedId}`;
@@ -30,10 +39,13 @@ const pushUrl = (input: NewNotification): string => {
 
 const sendPush = async (input: NewNotification): Promise<void> => {
   if (input.roleTarget !== "customer" || !input.recipientId || !PUSH_TYPES.has(input.type)) return;
+  const group = groupOf(input.type);
+  if (group && !(await allowedUsers([input.recipientId], group)).has(input.recipientId)) return;   // người dùng đã tắt nhóm này
   await pushService.sendToUser(input.recipientId, {
     title: input.title,
     body: input.body,
     url: pushUrl(input),
+    appUrl: appPushUrl(input),
     tag: `${input.type === "order-chat" ? "chat" : input.type}-${input.relatedId ?? ""}`,
     type: input.type
   });

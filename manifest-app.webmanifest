@@ -1,0 +1,20 @@
+{
+  "name": "FoodSave - Giải cứu thực phẩm",
+  "short_name": "FoodSave",
+  "description": "Ứng dụng người mua FoodSave: săn thực phẩm cận hạn giá tốt, thanh toán trước, nhận hàng bằng mã QR.",
+  "id": "/FOODSAVE_APP.html",
+  "start_url": "/FOODSAVE_APP.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "vi",
+  "theme_color": "#14613b",
+  "background_color": "#14613b",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/apple-touch-icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

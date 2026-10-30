@@ -9,7 +9,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#006C4D">
-  <link rel="manifest" href="/manifest-user.webmanifest">
+  <link rel="manifest" href="/manifest-app.webmanifest">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -3577,6 +3577,7 @@
           <div class="side-link" onclick="accTab('language',this)"><i class="ti ti-language"></i> Ngôn ngữ</div>
           <div class="side-link" onclick="accTab('help',this)"><i class="ti ti-help-circle"></i> Trung tâm hỗ trợ</div>
           <div class="side-link" onclick="accTab('about',this)"><i class="ti ti-info-circle"></i> Về FoodSave</div>
+          <div class="side-link" data-fs-install onclick="FSInstall.open()" style="display:none"><i class="ti ti-device-mobile-down"></i> Cài đặt app</div>
           <div class="divider"></div>
           <div class="side-link danger" onclick="logout()"><i class="ti ti-logout"></i> Đăng xuất</div>
         </aside>
@@ -4158,6 +4159,7 @@
           <a onclick="navTo('map')">Bản đồ cửa hàng</a>
           <a onclick="navTo('orders')">Tra cứu đơn hàng</a>
           <a onclick="navTo('impact')">Báo cáo tác động</a>
+          <a data-fs-install onclick="FSInstall.open()" style="display:none;cursor:pointer">📲 Cài đặt app</a>
         </div>
         <div class="footer-col">
           <h3>Hỗ trợ khách hàng</h3>
@@ -7505,7 +7507,8 @@ function updateReputationRules(){
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="frontend/foodsave-auth-client.js?v=20261003e"></script>
 <script src="frontend/foodsave-order-flow.js?v=20261029b"></script>
-<script src="frontend/foodsave-pwa.js?v=20261029a"></script>
+<script src="frontend/foodsave-pwa.js?v=20261030a"></script>
+<script src="frontend/foodsave-install.js?v=20261030a"></script>
 <script>
   // PWA: service worker, nút "Cài ứng dụng", nút "Bật thông báo" (chỉ hỏi quyền khi người dùng bấm)
   if (window.FSPwa) FSPwa.init({ role: 'customer', request: function (path, options) { return window.FS.sync.request(path, options || {}); } });
