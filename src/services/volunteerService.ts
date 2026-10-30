@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { env } from "../config/env";
 import { createVolunteerToken } from "../utils/volunteerToken";
 import { handleSupabaseError, requireRecord, supabaseAdmin } from "./supabaseService";
+import { createNotification } from "./notificationService";
 import { teamService } from "./teamService";
 
 const normalizePhone = (value: string): string => {
@@ -143,14 +144,14 @@ export const volunteerService = {
 
       // Báo tổ chức biết TNV vừa cập nhật thông tin (danh sách TNV của tổ chức cũng tự cập nhật theo)
       if (row.charity_profiles?.owner_id) {
-        await supabaseAdmin.from("notifications").insert({
-          recipient_id: row.charity_profiles.owner_id,
-          role_target: "charity",
+        await createNotification({
+          recipientId: row.charity_profiles.owner_id,
+          roleTarget: "charity",
           type: "volunteer-profile-updated",
           title: "TNV " + (update.full_name ?? row.full_name) + " đã cập nhật thông tin",
           body: "Thông tin tình nguyện viên trong danh sách của tổ chức đã được làm mới.",
-          related_type: "volunteer",
-          related_id: volunteerId
+          relatedType: "volunteer",
+          relatedId: volunteerId
         });
       }
     }
@@ -223,14 +224,14 @@ export const volunteerService = {
       .single();
     if (error) handleSupabaseError(error, "Failed to start task");
 
-    await supabaseAdmin.from("notifications").insert({
-      recipient_id: task.stores.owner_id,
-      role_target: "partner",
+    await createNotification({
+      recipientId: task.stores.owner_id,
+      roleTarget: "partner",
       type: "donation-volunteer-en-route",
       title: "TNV đang đến lấy lô " + task.donation_code,
       body: myName + " đã xuất phát đến cửa hàng.",
-      related_type: "donation",
-      related_id: donationId
+      relatedType: "donation",
+      relatedId: donationId
     });
     return data;
   }

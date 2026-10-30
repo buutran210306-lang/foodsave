@@ -358,6 +358,7 @@ tr.ag-on{background:var(--ac-l)}
 @media(max-width:1100px){.ag-split{grid-template-columns:1fr}.ag-prev{position:static}.ag-plats{grid-template-columns:1fr 1fr}}
 @media(max-width:820px){.ag-flow{grid-template-columns:1fr}.ag-arrow{transform:rotate(90deg);padding:4px}}
 </style>
+<link rel="stylesheet" href="frontend/admin-v2.css?v=20261029a">
 </head>
 <body class="admin-locked">
 
@@ -2083,6 +2084,68 @@ document.addEventListener('DOMContentLoaded',initAdminAuth);
 initAdminAuth();
 }
 
+// ═══════════ KHIẾU NẠI THẬT (Admin) ═══════════
+// Hiện trên đầu trang "Tranh chấp"; dữ liệu mẫu bên dưới giữ nguyên. Lấy từ API /orders/complaints/list,
+// admin cập nhật trạng thái qua PATCH /orders/complaints/:id (người mua nhận thông báo).
+const CPL={rows:[],loaded:false,loading:false,err:'',busy:false};
+const CPL_ST={open:['b-e','Đang mở'],in_review:['b-w','Đang xem xét'],resolved:['b-ok','Đã giải quyết'],rejected:['b-m','Từ chối']};
+const CPL_PR={high:'Cao',medium:'Trung bình',low:'Thấp'};
+async function cplApi(path,opt){
+  const {data}=await foodsaveAdminSupabase.auth.getSession();
+  const token=data&&data.session&&data.session.access_token;
+  if(!token)throw new Error('Phiên đăng nhập đã hết hạn.');
+  const res=await fetch(adminApiBaseUrl()+'/orders'+path,{method:(opt&&opt.method)||'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:opt&&opt.body?JSON.stringify(opt.body):undefined});
+  const payload=await res.json().catch(()=>null);
+  if(!res.ok||!payload||!payload.success)throw new Error((payload&&payload.error&&payload.error.message)||'Máy chủ báo lỗi.');
+  return payload.data;
+}
+function cplRefresh(){if(currentPage==='disputes')document.getElementById('ct').innerHTML=`<div class="page">${pg.disputes()}</div>`;}
+async function cplLoad(){
+  if(CPL.loading)return;
+  CPL.loading=true;CPL.err='';
+  try{CPL.rows=await cplApi('/complaints/list');}
+  catch(e){CPL.err=e.message||'Không tải được khiếu nại.';}
+  CPL.loading=false;CPL.loaded=true;cplRefresh();
+}
+function cplBlock(){
+  const head='<div class="P-h"><div class="P-t">Khiếu nại thật từ người mua</div><div class="P-a"><button class="bt bt-s" onclick="cplLoad()">Tải lại</button></div></div>';
+  if(CPL.loading&&!CPL.loaded)return `<div class="P">${head}<div class="W" style="padding:14px;color:var(--t3)">Đang tải khiếu nại...</div></div>`;
+  if(CPL.err)return `<div class="P">${head}<div class="W" style="padding:14px;color:var(--t3)">${safeText(CPL.err)}</div></div>`;
+  if(!CPL.rows.length)return `<div class="P">${head}<div class="W" style="padding:14px;color:var(--t3)">Chưa có khiếu nại thật nào.</div></div>`;
+  const rows=CPL.rows.map(c=>{
+    const st=CPL_ST[c.status]||['b-m',safeText(c.status)];
+    return `<tr><td>KN-${safeText(String(c.id).slice(0,6).toUpperCase())}</td><td>${safeText(c.orders&&c.orders.order_number?'#'+c.orders.order_number:'—')}</td><td>${safeText(c.customer_name||'—')}</td><td>${safeText(c.stores&&c.stores.name||'—')}</td><td>${B(st[0],st[1])}</td><td>${safeText(String(c.issue||'').slice(0,90))}</td><td>${CPL_PR[c.priority]||''}</td><td><button class="bt bt-s" onclick="cplOpen('${safeText(c.id)}')">Xử lý</button></td></tr>`;
+  }).join('');
+  return `<div class="P">${head}<div class="W"><table><thead><tr><th>Mã</th><th>Đơn</th><th>Người mua</th><th>Cửa hàng</th><th>Trạng thái</th><th>Vấn đề</th><th>Ưu tiên</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function cplOpen(id){
+  const c=CPL.rows.find(x=>x.id===id);if(!c)return;
+  const opts=Object.keys(CPL_ST).map(k=>`<option value="${k}"${k===c.status?' selected':''}>${CPL_ST[k][1]}</option>`).join('');
+  oD('Khiếu nại KN-'+safeText(String(c.id).slice(0,6).toUpperCase()),
+    `<p><b>Người mua:</b> ${safeText(c.customer_name||'—')}<br><b>Cửa hàng:</b> ${safeText(c.stores&&c.stores.name||'—')}<br><b>Sản phẩm:</b> ${safeText((c.product_names||[]).join(', '))}</p>
+    <p style="white-space:pre-wrap">${safeText(c.issue)}</p>
+    <label style="display:block;margin:10px 0 4px;font-weight:700">Trạng thái</label><select id="cplSt" style="width:100%;padding:8px">${opts}</select>
+    <label style="display:block;margin:10px 0 4px;font-weight:700">Nội dung xử lý (gửi cho người mua)</label><textarea id="cplRes" rows="4" style="width:100%;padding:8px">${safeText(c.resolution||'')}</textarea>
+    <button class="bt" style="margin-top:12px" onclick="cplSave('${safeText(c.id)}')">Lưu xử lý</button>`);
+}
+async function cplSave(id){
+  if(CPL.busy)return;
+  const status=document.getElementById('cplSt').value;
+  const resolution=document.getElementById('cplRes').value.trim();
+  if(resolution.length<3){alert('Vui lòng nhập nội dung xử lý (tối thiểu 3 ký tự).');return;}
+  CPL.busy=true;
+  try{
+    const updated=await cplApi('/complaints/'+encodeURIComponent(id),{method:'PATCH',body:{status,resolution}});
+    const i=CPL.rows.findIndex(x=>x.id===id);
+    if(i>=0)CPL.rows[i]={...CPL.rows[i],...updated};
+    xD();cplRefresh();
+  }catch(e){alert(e.message||'Không lưu được.');}
+  CPL.busy=false;
+}
+const cplMockDisputes=pg.disputes;
+pg.disputes=()=>{if(!CPL.loaded&&!CPL.loading)cplLoad();return cplBlock()+cplMockDisputes();};
+
 </script>
+<script src="frontend/admin-v2.js?v=20261030a"></script>
 </body>
 </html>

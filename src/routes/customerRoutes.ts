@@ -9,6 +9,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 export const customerRoutes = Router();
 
 customerRoutes.use(requireRoles("customer", "admin"));
+customerRoutes.get("/me/trust", asyncHandler(customerController.myTrust));
 customerRoutes.get("/favorites", asyncHandler(customerController.listFavorites));
 customerRoutes.post("/favorites/products", validateRequest({ body: favoriteProductBodySchema }), asyncHandler(customerController.addFavoriteProduct));
 customerRoutes.delete("/favorites/products/:id", validateRequest({ params: uuidParamSchema }), asyncHandler(customerController.removeFavoriteProduct));

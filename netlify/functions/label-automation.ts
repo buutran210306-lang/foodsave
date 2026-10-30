@@ -1,11 +1,12 @@
 import { labelAutomationService } from "../../src/services/labelAutomationService";
+import { automationRunService } from "../../src/services/automationRunService";
 import { logger } from "../../src/utils/logger";
 
 // Netlify Scheduled Function (lịch khai báo trong netlify.toml):
 // đổi nhãn/giá, gỡ hàng quá giờ, gửi thông báo vàng/đỏ, chia hàng đỏ cho từ thiện.
 export const handler = async (): Promise<{ statusCode: number; body: string }> => {
   try {
-    const result = await labelAutomationService.run();
+    const result = await automationRunService.track("label-automation", "schedule", () => labelAutomationService.run());
     logger.info("Label automation finished", result);
     return { statusCode: 200, body: JSON.stringify(result) };
   } catch (error) {

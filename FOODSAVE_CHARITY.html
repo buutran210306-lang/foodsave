@@ -2065,6 +2065,7 @@ function regBack(){
 const NAV=[
   {id:"dash",l:"Tổng quan",i:"ti-dashboard",cat:"core"},
   {id:"inbox",l:"Donation Inbox",i:"ti-inbox",cat:"core",bg:()=>DONATIONS.filter(d=>d.status==='new'&&!DISMISSED_DONATIONS.has(d.id)).length},
+  {id:"match",l:"Ghép đơn",i:"ti-arrows-join",cat:"core"},
   {id:"pickup",l:"Pickup đang chạy",i:"ti-truck-delivery",cat:"core",bg:()=>DONATIONS.filter(d=>['accepted','in-route'].includes(d.status)&&d.storeConfirmedAt).length},
   {id:"routes",l:"Bản đồ & Tuyến",i:"ti-map-2",cat:"core"},
   {id:"vol",l:"Tình nguyện viên",i:"ti-users",cat:"team",bg:()=>VOLUNTEERS.filter(v=>v.status==='new').length},
@@ -2109,10 +2110,10 @@ function R(){
   });
   document.getElementById('snav').innerHTML=nh;
 
-  const T={dash:"Tổng quan hoạt động",inbox:"Donation Inbox — Đề nghị tài trợ",pickup:"Pickup đang chạy",routes:"Bản đồ & Tuyến đường",vol:"Tình nguyện viên",bene:"Người hưởng lợi",reports:"Báo cáo ESG & Tác động",gallery:"Gallery ảnh phân phối",community:"Cộng đồng FoodSave Charity",impact:"Tác động & CO₂",settings:"Cài đặt tổ chức"};
+  const T={dash:"Tổng quan hoạt động",inbox:"Donation Inbox — Đề nghị tài trợ",match:"Ghép đơn — nhu cầu và phương án",pickup:"Pickup đang chạy",routes:"Bản đồ & Tuyến đường",vol:"Tình nguyện viên",bene:"Người hưởng lợi",reports:"Báo cáo ESG & Tác động",gallery:"Gallery ảnh phân phối",community:"Cộng đồng FoodSave Charity",impact:"Tác động & CO₂",settings:"Cài đặt tổ chức"};
   document.getElementById('pt').textContent=T[pg]||"Tổng quan";
   const C=document.getElementById('ct');
-  const P={dash:pDash,inbox:pInbox,pickup:pPickup,routes:pRoutes,vol:pVol,bene:pBene,reports:pReports,gallery:pGallery,community:pCommunity,impact:pImpact,settings:pSet};
+  const P={dash:pDash,inbox:pInbox,match:(window.pMatch||(()=>'<div class="card">Đang tải...</div>')),pickup:pPickup,routes:pRoutes,vol:pVol,bene:pBene,reports:pReports,gallery:pGallery,community:pCommunity,impact:pImpact,settings:pSet};
   try{C.innerHTML=(P[pg]||pDash)();}catch(renderError){console.error('[FoodSave] Lỗi hiển thị trang '+pg,renderError);C.innerHTML='<div class="card" style="text-align:center;padding:34px 20px"><div style="font-size:40px">⚠️</div><h3>Không hiển thị được trang này</h3><p style="color:var(--muted);font-size:13px">'+proofEscape((renderError&&renderError.message)||'Lỗi không xác định')+'</p><button class="btn btn-ghost" onclick="R()">Thử lại</button></div>';}
   C.scrollTop=0;
   renderCharityProfile(profile);
@@ -3633,6 +3634,7 @@ window.addEventListener('error',function(e){
 <!-- Bản đồ OpenStreetMap dùng chung (miễn phí, không cần API key) -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="frontend/foodsave-map.js?v=20261003e"></script>
+<script src="frontend/foodsave-matching.js?v=20261027"></script>
 <script src="frontend/foodsave-auth-client.js?v=20261003e"></script>
 </body>
 </html>

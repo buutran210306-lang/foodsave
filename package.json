@@ -10,7 +10,12 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
-    "dev": "tsc && node dist/server.js"
+    "dev": "tsc && node dist/server.js",
+    "test:order": "tsc && node scripts/test-order-policy.js && node scripts/test-order-flow.js",
+    "test:ledger-db": "node scripts/test-ledger-concurrency.js",
+    "gen:payout-key": "node scripts/generate-payout-key.js",
+    "migrate:bank-dry": "node scripts/migrate-bank-accounts.js",
+    "gen:vapid": "node scripts/generate-vapid-keys.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
@@ -22,6 +27,7 @@
     "pg": "^8.22.0",
     "serverless-http": "^3.2.0",
     "socket.io": "^4.8.3",
+    "web-push": "^3.6.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -29,6 +35,7 @@
     "@types/express": "^4.17.25",
     "@types/node": "^20.19.43",
     "@types/pg": "^8.20.3",
+    "@types/web-push": "^3.6.4",
     "typescript": "^5.9.3"
   }
 }

@@ -5,6 +5,7 @@ import type { UserRole } from "../types/domain";
 import { AppError } from "../utils/appError";
 import { logger } from "../utils/logger";
 import { handleSupabaseError, requireRecord, supabaseAdmin } from "./supabaseService";
+import { createNotification } from "./notificationService";
 
 // Marketing Studio: viết sẵn bài đăng, đẩy thông báo cho người mua, đăng Facebook (qua n8n, dự phòng đăng trực tiếp)
 // Quy tắc nội dung: KHÔNG ghi số lượng còn lại (bài đã đăng sẽ sai khi hàng bán hết).
@@ -509,16 +510,15 @@ export const marketingService = {
         const since = new Date(Date.now() - PROMOTE_COOLDOWN_MINUTES * 60_000).toISOString();
         const { data: recent } = await supabaseAdmin.from("marketing_posts").select("id").eq("product_id", productId).eq("channel", "buyers").gte("created_at", since).limit(1);
         if ((recent ?? []).length > 0) { results.buyers = { status: "skipped", reason: "Bạn vừa nhắc người mua về sản phẩm này. Hãy chờ " + PROMOTE_COOLDOWN_MINUTES + " phút." }; continue; }
-        const { error } = await supabaseAdmin.from("notifications").insert({
-          recipient_id: null,
-          role_target: "customer",
+        await createNotification({
+          recipientId: null,
+          roleTarget: "customer",
           type: "promo-push",
           title: `${product.label === "red" ? "🔥" : "⏰"} ${product.name} giảm ${content.discount_percent}%`,
           body: `${product.stores.name} · giá ${money(product.price_cents)}. Lấy trước ${content.deadline_text}. Số lượng có hạn.`,
-          related_type: "product",
-          related_id: product.id
-        });
-        if (error) handleSupabaseError(error, "Failed to push notification");
+          relatedType: "product",
+          relatedId: product.id
+        }, { strict: true });
         await logPost({ store_id: product.store_id, product_id: product.id, channel: "buyers", kind: "manual", content: content.headline, status: "sent" });
         results.buyers = { status: "sent" };
         continue;

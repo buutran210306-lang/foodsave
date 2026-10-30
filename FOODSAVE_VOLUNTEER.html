@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#006C4D">
+<link rel="manifest" href="/manifest-volunteer.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FoodSave">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>FoodSave - Tình nguyện viên</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1225,6 +1231,11 @@ setInterval(poll, 10000);
   } else render();
 })();
 })();
+</script>
+<script src="frontend/foodsave-pwa.js?v=20261029a"></script>
+<script>
+  // PWA: service worker, nút "Cài ứng dụng", nút "Bật thông báo" (token tình nguyện viên lấy từ phiên đăng nhập của trang)
+  if (window.FSPwa) FSPwa.init({ role: 'volunteer', request: function (path, options) { return api(path, options); } });
 </script>
 </body>
 </html>

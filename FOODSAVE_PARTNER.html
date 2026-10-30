@@ -870,6 +870,7 @@ textarea.inp{resize:none;font-family:inherit}
 <link rel="stylesheet" href="frontend/foodsave-cookie-consent.css?v=20261003">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="frontend/foodsave-map.css?v=20261003e">
+<link rel="stylesheet" href="frontend/partner-v2.css?v=20261029a">
 </head>
 <body class="role-partner">
 
@@ -2361,8 +2362,9 @@ function pDash(){
 }
 
 // ════════ ĐƠN HÀNG THẬT (nối backend) ════════
-const ORDER_STATUS_UI={pending:'new',confirmed:'confirmed',ready:'ready',completed:'done',cancelled:'cancelled'};
-const ORDER_STATUS_API={new:'pending',confirmed:'confirmed',ready:'ready',done:'completed',cancelled:'cancelled'};
+const ORDER_STATUS_UI={awaiting_payment:'awaiting_payment',pending:'new',confirmed:'confirmed',ready:'ready',completed:'done',cancelled:'cancelled',no_show:'no_show'};
+const ORDER_STATUS_API={awaiting_payment:'awaiting_payment',new:'pending',confirmed:'confirmed',ready:'ready',done:'completed',cancelled:'cancelled',no_show:'no_show'};
+const ORDER_CANCEL_TEXT={payment_timeout:'Khách không thanh toán kịp',customer_free_cancel:'Khách hủy trong thời gian miễn phí · đã hoàn 100%',late_cancel:'Khách hủy muộn · không hoàn tiền',customer_cancelled_unpaid:'Khách hủy khi chưa thanh toán',store_cancelled:'Cửa hàng đã hủy đơn · hoàn 100% cho khách',admin_cancelled:'FoodSave đã hủy đơn · hoàn 100% cho khách',no_show:'Khách không đến trong hạn lấy hàng'};
 const ORDER_PAY_TEXT={momo:'MoMo',zalopay:'ZaloPay',vnpay:'VNPay',card:'Thẻ',vietqr:'VietQR',cash:'Tiền mặt'};
 let orderActionPending=false;
 
@@ -2371,6 +2373,8 @@ function toUiOrder(o){
   const rank={green:1,yellow:2,red:3};
   let l='green';
   items.forEach(i=>{const lb=i.product_metadata&&i.product_metadata.label;if(rank[lb]>rank[l])l=lb;});
+  if(o.policy_label&&rank[o.policy_label])l=o.policy_label;
+  const toMs=v=>{const t=v?new Date(v).getTime():0;return Number.isFinite(t)?t:0;};
   const customer=o.customer||{};
   const created=o.created_at?new Date(o.created_at):null;
   return{
@@ -2381,13 +2385,14 @@ function toUiOrder(o){
     c:o.receiver_name||customer.full_name||'Khách hàng',ph:o.receiver_phone||customer.phone||'—',
     email:o.receiver_email||'',accountName:customer.full_name||'',note:o.customer_note||'',voucher:o.voucher_code||'',
     subtotal:Number(o.subtotal_cents)||0,discount:Number(o.discount_cents)||0,fee:Number(o.platform_fee_cents)||0,donation:Number(o.donation_cents)||0,
-    slot:o.pickup_window||'',payLabel:ORDER_PAY_TEXT[o.payment_method]||o.payment_method||'',createdIso:o.created_at||'',
-    mt:(ORDER_PAY_TEXT[o.payment_method]||o.payment_method||'')+(o.pickup_window?' · Nhận '+o.pickup_window:''),
+    slot:o.pickup_deadline?'trước '+new Date(o.pickup_deadline).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):(o.pickup_window||''),
+    payDeadline:toMs(o.pay_deadline),paidAt:toMs(o.paid_at),pickupDeadline:toMs(o.pickup_deadline),cancelFreeUntil:toMs(o.cancel_free_until),completedAt:toMs(o.completed_at),settlement:o.settlement_status||'none',payLabel:ORDER_PAY_TEXT[o.payment_method]||o.payment_method||'',createdIso:o.created_at||'',
+    mt:(ORDER_PAY_TEXT[o.payment_method]||o.payment_method||'')+(o.pickup_deadline?' · Nhận trước '+new Date(o.pickup_deadline).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):(o.pickup_window?' · Nhận '+o.pickup_window:'')),
     time:created&&Number.isFinite(created.getTime())?created.toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'',
     p:Number(o.total_cents)||0,
     pay:o.payment_status==='refunded'?'Đã hoàn tiền':o.payment_status==='paid'?'Đã thanh toán':'Chưa thanh toán',
     code:o.qr_code||'',rating:null,
-    cancelReason:o.status==='cancelled'?'Đơn đã bị hủy':''
+    cancelReason:o.status==='cancelled'?(ORDER_CANCEL_TEXT[o.cancel_reason]||'Đơn đã bị hủy'):(o.status==='no_show'?ORDER_CANCEL_TEXT.no_show:'')
   };
 }
 
@@ -3524,19 +3529,32 @@ function submitStoreAddress(){
 
 function editFinance(){
   const f=currentPartnerStoreProfile().finance||{};
-  modal('Sửa thông tin tài chính',
+  modal('Tài khoản nhận tiền',
     '<div class="field"><label>Ngân hàng</label><input class="inp" id="pe-bank" list="pe-banks" maxlength="80" placeholder="VD: Vietcombank" value="'+escHtml(f.bank_name||'')+'"><datalist id="pe-banks">'+PARTNER_BANKS.map(b=>'<option value="'+b+'">').join('')+'</datalist></div>'+
-    '<div class="field"><label>Số tài khoản</label><input class="inp" id="pe-acc" inputmode="numeric" maxlength="30" placeholder="Chỉ gồm chữ số" value="'+escHtml(f.bank_account_number||'')+'"></div>'+
+    '<div class="field"><label>Số tài khoản mới</label><input class="inp" id="pe-acc" inputmode="numeric" maxlength="30" autocomplete="off" placeholder="Chỉ gồm chữ số" value=""></div>'+
     '<div class="field"><label>Chủ tài khoản</label><input class="inp" id="pe-holder" maxlength="120" placeholder="VD: NGUYEN VAN A" value="'+escHtml(f.bank_account_holder||'')+'"></div>'+
-    '<p style="font-size:11.5px;color:var(--muted);margin:0 0 12px">Thông tin này dùng để FoodSave chuyển tiền đối soát cho cửa hàng. Chỉ bạn và Admin xem được.</p>'+
-    '<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="submitFinance()"><i class="ti ti-check"></i> Lưu</button>');
+    '<p style="font-size:11.5px;color:var(--muted);margin:0 0 12px">Số tài khoản được <b>mã hóa</b> và không hiển thị lại (chỉ thấy 4 số cuối). Tên chủ tài khoản phải khớp tên đăng ký kinh doanh. <b>Đổi tài khoản cần admin xác minh lại</b>; trong lúc chờ bạn chưa tạo được lệnh rút mới.</p>'+
+    '<button id="pe-fin-send" class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="submitFinance()"><i class="ti ti-check"></i> Gửi để xác minh</button>');
 }
-function submitFinance(){
-  const bank_name=partnerEditValue('pe-bank'),bank_account_number=partnerEditValue('pe-acc').replace(/\s+/g,''),bank_account_holder=partnerEditValue('pe-holder').toUpperCase();
+async function submitFinance(){
+  const bank_name=partnerEditValue('pe-bank'),account_number=partnerEditValue('pe-acc').replace(/\s+/g,''),account_holder_name=partnerEditValue('pe-holder').toUpperCase();
   if(bank_name.length<2){tst('Thiếu thông tin','Hãy nhập tên ngân hàng','expiry');return;}
-  if(!/^[0-9]{6,30}$/.test(bank_account_number)){tst('Số tài khoản chưa đúng','Chỉ gồm chữ số, từ 6 đến 30 số','expiry');return;}
-  if(bank_account_holder.length<2){tst('Thiếu thông tin','Hãy nhập tên chủ tài khoản','expiry');return;}
-  savePartnerProfile({bank_name,bank_account_number,bank_account_holder},'Thông tin tài chính đã được cập nhật. Admin sẽ thấy ngay.');
+  if(!/^[0-9]{6,30}$/.test(account_number)){tst('Số tài khoản chưa đúng','Chỉ gồm chữ số, từ 6 đến 30 số','expiry');return;}
+  if(account_holder_name.length<2){tst('Thiếu thông tin','Hãy nhập tên chủ tài khoản','expiry');return;}
+  if(!(window.FS&&window.FS.sync&&window.FS.sync.request)){tst('Chưa kết nối','Không gọi được máy chủ FoodSave','expiry');return;}
+  const btn=document.getElementById('pe-fin-send');if(btn)btn.disabled=true;
+  try{
+    await window.FS.sync.request('/partner/payout-account',{method:'POST',body:{bank_name,account_holder_name,account_number}});
+    const cur=currentPartnerStoreProfile();
+    const next={...cur,finance:{...(cur.finance||{}),bank_name,bank_account_holder:account_holder_name,bank_account_number:'••••'+account_number.slice(-4)}};
+    partnerStoreProfile=normalizePartnerStoreProfile(next);window.partnerStoreProfile=partnerStoreProfile;
+    closeM();
+    if(typeof go==='function')go('settings');
+    tst('Đã gửi tài khoản để xác minh','Admin sẽ kiểm tra tên chủ tài khoản. Khi được xác minh bạn mới rút tiền được.','info');
+  }catch(err){
+    if(btn)btn.disabled=false;
+    tst('Chưa gửi được',(err&&err.message)||'Máy chủ báo lỗi','expiry');
+  }
 }
 
 function pSet(){
@@ -3970,36 +3988,46 @@ function pComplaints() {
 
   ${open.length ? `<div class="card m12" style="border-left:4px solid var(--red);background:linear-gradient(135deg,var(--red-50,#fef2f2),#fff)"><div class="st" style="color:var(--red-600)"><i class="ti ti-alert-triangle"></i> Khiếu nại đang chờ xử lý <span class="tg tg-r" style="margin-left:auto">${open.length} đơn</span></div>
   ${open.map(c=>`<div style="padding:16px;background:#fff;border-radius:13px;margin-bottom:10px;border-left:3px solid ${c.priority==='high'?'var(--red)':'var(--yellow)'}">
-    <div class="f ac jb m10"><div class="f ac g12"><span style="font-size:30px">${c.img}</span><div><div class="f ac g6"><span style="font-family:'Plus Jakarta Sans';font-size:14px;font-weight:900;color:var(--green-950)">${c.id}</span><span class="tg ${c.priority==='high'?'tg-r':c.priority==='medium'?'tg-y':'tg-o'}">${c.priority==='high'?'Khẩn cấp':c.priority==='medium'?'Bình thường':'Thấp'}</span></div><div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:2px">${c.user} · Đơn ${c.order} · ${c.time}</div></div></div></div>
+    <div class="f ac jb m10"><div class="f ac g12"><span style="font-size:30px">${c.img}</span><div><div class="f ac g6"><span style="font-family:'Plus Jakarta Sans';font-size:14px;font-weight:900;color:var(--green-950)">${c.code||c.id}</span><span class="tg ${c.priority==='high'?'tg-r':c.priority==='medium'?'tg-y':'tg-o'}">${c.priority==='high'?'Khẩn cấp':c.priority==='medium'?'Bình thường':'Thấp'}</span></div><div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:2px">${c.user} · Đơn ${c.order} · ${c.time}</div></div></div></div>
     <div style="padding:11px 13px;background:var(--soft);border-radius:10px;font-size:12.5px;color:var(--ink-soft);font-weight:500;line-height:1.6;margin-bottom:10px"><strong>Sản phẩm:</strong> ${c.product}<br><strong>Vấn đề:</strong> ${c.issue}</div>
     <div class="f g8"><button class="btn btn-green btn-sm" onclick="resolveComplaint('${c.id}','refund')"><i class="ti ti-receipt-refund"></i> Hoàn tiền</button><button class="btn btn-bl btn-sm" onclick="resolveComplaint('${c.id}','voucher')"><i class="ti ti-gift"></i> Voucher bồi thường</button><button class="btn btn-o btn-sm" onclick="resolveComplaint('${c.id}','explain')"><i class="ti ti-message"></i> Giải thích</button><button class="btn btn-o btn-sm" onclick="resolveComplaint('${c.id}','escalate')" style="color:var(--red)"><i class="ti ti-arrow-up"></i> Chuyển FoodSave</button></div>
   </div>`).join('')}</div>` : `<div class="card m12 empty-state"><div class="empty-state-ic"><i class="ti ti-shield-check"></i></div><div class="empty-state-title">Không có khiếu nại nào</div><div class="empty-state-desc">Tuyệt vời! Cửa hàng đang được khách hàng yêu thích.</div></div>`}
 
   ${inReview.length ? `<div class="card m12"><div class="st"><i class="ti ti-eye"></i> Đang xem xét</div>
-  ${inReview.map(c=>`<div class="oc"><div class="pi" style="background:var(--yellow-100);color:var(--yellow-600);font-size:24px">${c.img}</div><div class="f1"><div style="font-size:13px;font-weight:900;color:var(--green-950);font-family:'Plus Jakarta Sans'">${c.id} · ${c.user}</div><div style="font-size:11.5px;color:var(--muted);font-weight:500">${c.product} · ${c.time}</div><div style="font-size:11px;color:var(--ink-soft);font-weight:500;margin-top:4px;line-height:1.5">${c.issue}</div></div><span class="tg tg-y">Đang xem xét</span></div>`).join('')}
+  ${inReview.map(c=>`<div class="oc"><div class="pi" style="background:var(--yellow-100);color:var(--yellow-600);font-size:24px">${c.img}</div><div class="f1"><div style="font-size:13px;font-weight:900;color:var(--green-950);font-family:'Plus Jakarta Sans'">${c.code||c.id} · ${c.user}</div><div style="font-size:11.5px;color:var(--muted);font-weight:500">${c.product} · ${c.time}</div><div style="font-size:11px;color:var(--ink-soft);font-weight:500;margin-top:4px;line-height:1.5">${c.issue}</div></div><span class="tg tg-y">Đang xem xét</span></div>`).join('')}
   </div>` : ''}
 
   ${resolved.length ? `<div class="card"><div class="st"><i class="ti ti-circle-check"></i> Đã giải quyết</div>
-  ${resolved.map(c=>`<div style="padding:14px;background:var(--green-100);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--green-700)"><div class="f ac jb m6"><div class="f ac g8"><span style="font-size:22px">${c.img}</span><span style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--green-950)">${c.id} · ${c.user}</span></div><span class="tg tg-g"><i class="ti ti-check"></i> ${c.time}</span></div><div style="font-size:11.5px;color:var(--muted);font-weight:500">${c.issue}</div><div style="font-size:11.5px;color:var(--green-800);font-weight:700;margin-top:6px"><i class="ti ti-bulb"></i> Cách giải quyết: ${c.resolution}</div></div>`).join('')}
+  ${resolved.map(c=>`<div style="padding:14px;background:var(--green-100);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--green-700)"><div class="f ac jb m6"><div class="f ac g8"><span style="font-size:22px">${c.img}</span><span style="font-family:'Plus Jakarta Sans';font-size:13px;font-weight:900;color:var(--green-950)">${c.code||c.id} · ${c.user}</span></div><span class="tg tg-g"><i class="ti ti-check"></i> ${c.time}</span></div><div style="font-size:11.5px;color:var(--muted);font-weight:500">${c.issue}</div><div style="font-size:11.5px;color:var(--green-800);font-weight:700;margin-top:6px"><i class="ti ti-bulb"></i> Cách giải quyết: ${c.resolution}</div></div>`).join('')}
   </div>` : ''}
   `;
 }
 
-function resolveComplaint(id, action) {
+let complaintBusy = false;
+async function resolveComplaint(id, action) {
   const c = COMPLAINTS.find(x=>x.id===id);
-  if(!c) return;
+  if(!c || complaintBusy) return;
   const labels = {refund:'Hoàn tiền',voucher:'Tặng voucher',explain:'Giải thích',escalate:'Chuyển FoodSave'};
-  if (action === 'refund') {
-    c.st='resolved'; c.resolution='Đã hoàn tiền 100% + voucher 30K xin lỗi';
-  } else if (action === 'voucher') {
-    c.st='resolved'; c.resolution='Đã tặng voucher 50K bồi thường';
-  } else if (action === 'explain') {
-    c.st='in-review'; c.resolution='Đã giải thích với khách';
-  } else if (action === 'escalate') {
-    c.st='in-review'; c.resolution='Đã chuyển FoodSave can thiệp';
+  // Lưu thật qua Backend; người mua nhận thông báo kèm nội dung xử lý
+  const plan = {
+    refund:   {status:'resolved',  text:'Cửa hàng đồng ý hoàn tiền cho đơn này và gửi lời xin lỗi.'},
+    voucher:  {status:'resolved',  text:'Cửa hàng đã bồi thường bằng voucher cho bạn.'},
+    explain:  {status:'in_review', text:'Cửa hàng đã tiếp nhận và đang liên hệ để giải thích với bạn.'},
+    escalate: {status:'in_review', text:'Cửa hàng đã chuyển khiếu nại cho FoodSave can thiệp.'}
+  }[action];
+  complaintBusy = true;
+  try {
+    await partnerApiRequest('/orders/complaints/'+encodeURIComponent(c.uuid||c.id),{method:'PATCH',body:{status:plan.status,resolution:plan.text}});
+    c.st = plan.status === 'in_review' ? 'in-review' : 'resolved';
+    c.apiStatus = plan.status;
+    c.resolution = plan.text;
+    R();
+    tst('Đã xử lý ' + (c.code||c.id), labels[action] + ' thành công', action==='refund'||action==='voucher'?'payout':'info');
+  } catch (error) {
+    tst('Chưa xử lý được khiếu nại', (error && error.message) || 'Vui lòng thử lại', 'info');
+  } finally {
+    complaintBusy = false;
   }
-  R();
-  tst('Đã xử lý ' + c.id, labels[action] + ' thành công', action==='refund'||action==='voucher'?'payout':'info');
 }
 
 
@@ -4368,10 +4396,11 @@ window.addEventListener('error',function(e){
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="frontend/foodsave-map.js?v=20261003e"></script>
 
-<script src="frontend/foodsave-live-data.js?v=20261022a"></script>
+<script src="frontend/foodsave-live-data.js?v=20261029a"></script>
 <script>window.FS = window.FS || {}; /* Backend data sync is loaded from frontend/foodsave-live-data.js. */</script>
 
 <script src="frontend/foodsave-auth-client.js?v=20261003e"></script>
 
+<script src="frontend/partner-v2.js?v=20261030a"></script>
 </body>
 </html>

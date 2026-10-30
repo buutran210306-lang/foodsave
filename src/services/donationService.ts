@@ -7,6 +7,7 @@ import type { Donation, UserRole } from "../types/domain";
 import type { PaginatedResponse } from "../types/api";
 import { AppError } from "../utils/appError";
 import { generateCode, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
+import { createNotification } from "./notificationService";
 import { ecoImpactService } from "./ecoImpactService";
 import { logger } from "../utils/logger";
 import { distanceKmBetween, formatDistanceText, isValidCoordinates } from "../utils/geoDistance";
@@ -104,14 +105,14 @@ const notifyUser = async (
   notification: { type: string; title: string; body: string; donationId: string }
 ): Promise<void> => {
   if (!recipientId) return;
-  await supabaseAdmin.from("notifications").insert({
-    recipient_id: recipientId,
-    role_target: role,
+  await createNotification({
+    recipientId: recipientId,
+    roleTarget: role,
     type: notification.type,
     title: notification.title,
     body: notification.body,
-    related_type: "donation",
-    related_id: notification.donationId
+    relatedType: "donation",
+    relatedId: notification.donationId
   });
 };
 
@@ -284,14 +285,14 @@ export const donationService = {
     }
     const donation = data as Donation;
 
-    await supabaseAdmin.from("notifications").insert({
-      recipient_id: null,
-      role_target: "charity",
+    await createNotification({
+      recipientId: null,
+      roleTarget: "charity",
       type: "new-donation",
       title: `Có ${body.quantity} phần tặng: ${product.name}`,
       body: `Nhận lời trước ${offerExpiresAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" })}. Ai nhận trước được.`,
-      related_type: "donation",
-      related_id: donation.id
+      relatedType: "donation",
+      relatedId: donation.id
     });
 
     return donation;
@@ -313,14 +314,14 @@ export const donationService = {
     if (error) handleSupabaseError(error, "Failed to create donation");
     const donation = data as Donation;
 
-    await supabaseAdmin.from("notifications").insert({
-      recipient_id: null,
-      role_target: "charity",
+    await createNotification({
+      recipientId: null,
+      roleTarget: "charity",
       type: "new-donation",
       title: "Donation mới từ cửa hàng",
       body: `${body.items} · ${body.amount_text}`,
-      related_type: "donation",
-      related_id: donation.id
+      relatedType: "donation",
+      relatedId: donation.id
     });
 
     return donation;
@@ -379,14 +380,14 @@ export const donationService = {
     }
     const donation = data as Donation;
 
-    await supabaseAdmin.from("notifications").insert({
-      recipient_id: existing.stores.owner_id,
-      role_target: "partner",
+    await createNotification({
+      recipientId: existing.stores.owner_id,
+      roleTarget: "partner",
       type: "donation-claimed",
       title: "Có tổ chức muốn nhận lô tặng",
       body: `Lô ${donation.donation_code} đã được một tổ chức từ thiện chọn. Vào mục Tặng thực phẩm để chấp nhận hoặc từ chối.`,
-      related_type: "donation",
-      related_id: donation.id
+      relatedType: "donation",
+      relatedId: donation.id
     });
 
     return donation;
