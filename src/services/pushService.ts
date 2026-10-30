@@ -10,6 +10,7 @@ import { ERROR_CODES } from "../constants/errors";
 import { HTTP_STATUS } from "../constants/http";
 import { AppError } from "../utils/appError";
 import { logger } from "../utils/logger";
+import { allowedUsers, type NotifGroup } from "./notificationPrefs";
 import { handleSupabaseError, supabaseAdmin } from "./supabaseService";
 
 export interface PushPayload {
@@ -17,6 +18,8 @@ export interface PushPayload {
   body: string;
   /** Đường dẫn trong chính FoodSave, ví dụ /FOODSAVE_USER.html#order=<id> */
   url: string;
+  /** Đường dẫn trong app người mua (FOODSAVE_APP.html); thiết bị đã đăng ký từ app dùng đường dẫn này */
+  appUrl?: string | undefined;
   tag?: string | undefined;
   type?: string | undefined;
 }
@@ -25,6 +28,7 @@ export interface SubscriptionInput {
   endpoint: string;
   keys: { p256dh: string; auth: string };
   userAgent?: string | undefined;
+  client?: "web" | "app" | undefined;
 }
 
 type Owner = { kind: "user"; id: string } | { kind: "volunteer"; id: string };
@@ -56,13 +60,20 @@ const truncate = (text: string, max: number): string => (text.length > max ? `${
 
 const ownerColumn = (owner: Owner): string => (owner.kind === "user" ? "user_id" : "volunteer_id");
 
-interface SubscriptionRow { id: string; endpoint: string; p256dh: string; auth: string }
+interface SubscriptionRow { id: string; endpoint: string; p256dh: string; auth: string; client?: string | null }
 
 const sendToOwner = async (owner: Owner, payload: PushPayload): Promise<{ sent: number; removed: number }> => {
   const transport = transportOverride ?? (isConfigured() ? defaultTransport : null);
   if (!transport) return { sent: 0, removed: 0 };
 
-  const { data, error } = await supabaseAdmin.from("push_subscriptions").select("id,endpoint,p256dh,auth").eq(ownerColumn(owner), owner.id).limit(20);
+  let data: SubscriptionRow[] | null = null;
+  let error: unknown = null;
+  const first = await supabaseAdmin.from("push_subscriptions").select("id,endpoint,p256dh,auth,client").eq(ownerColumn(owner), owner.id).limit(20);
+  data = first.data as SubscriptionRow[] | null; error = first.error;
+  if (error) {   // chưa chạy SQL 037 (chưa có cột client): đọc bản cũ, mọi thiết bị coi là web
+    const retry = await supabaseAdmin.from("push_subscriptions").select("id,endpoint,p256dh,auth").eq(ownerColumn(owner), owner.id).limit(20);
+    data = retry.data as SubscriptionRow[] | null; error = retry.error;
+  }
   if (error) {
     logger.warn("Không đọc được push_subscriptions (đã chạy SQL 032 chưa?)", error);
     return { sent: 0, removed: 0 };
@@ -70,13 +81,16 @@ const sendToOwner = async (owner: Owner, payload: PushPayload): Promise<{ sent: 
   const rows = (data ?? []) as SubscriptionRow[];
   if (rows.length === 0) return { sent: 0, removed: 0 };
 
-  const body = JSON.stringify({ title: truncate(payload.title, 80), body: truncate(payload.body, 180), url: payload.url, tag: payload.tag, type: payload.type });
+  const bodyFor = (row: SubscriptionRow): string => JSON.stringify({
+    title: truncate(payload.title, 80), body: truncate(payload.body, 180),
+    url: row.client === "app" && payload.appUrl ? payload.appUrl : payload.url, tag: payload.tag, type: payload.type
+  });
   let sent = 0;
   const gone: string[] = [];
   const okIds: string[] = [];
   await Promise.all(rows.map(async (row) => {
     try {
-      await withTimeout(transport({ endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }, body), SEND_TIMEOUT_MS + 1000);
+      await withTimeout(transport({ endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }, bodyFor(row)), SEND_TIMEOUT_MS + 1000);
       sent += 1;
       okIds.push(row.id);
     } catch (sendError) {
@@ -101,18 +115,17 @@ export const pushService = {
     if (!/^https:\/\//i.test(input.endpoint)) {
       throw new AppError("Địa chỉ đăng ký thông báo không hợp lệ", HTTP_STATUS.BAD_REQUEST, ERROR_CODES.VALIDATION_ERROR);
     }
-    const { error } = await supabaseAdmin.from("push_subscriptions").upsert(
-      {
-        endpoint: input.endpoint,
-        p256dh: input.keys.p256dh,
-        auth: input.keys.auth,
-        user_id: owner.kind === "user" ? owner.id : null,
-        volunteer_id: owner.kind === "volunteer" ? owner.id : null,
-        role: owner.kind === "user" ? "customer" : "volunteer",
-        user_agent: input.userAgent ? input.userAgent.slice(0, 300) : null
-      },
-      { onConflict: "endpoint" }
-    );
+    const row = {
+      endpoint: input.endpoint,
+      p256dh: input.keys.p256dh,
+      auth: input.keys.auth,
+      user_id: owner.kind === "user" ? owner.id : null,
+      volunteer_id: owner.kind === "volunteer" ? owner.id : null,
+      role: owner.kind === "user" ? "customer" : "volunteer",
+      user_agent: input.userAgent ? input.userAgent.slice(0, 300) : null
+    };
+    let { error } = await supabaseAdmin.from("push_subscriptions").upsert({ ...row, client: input.client ?? "web" }, { onConflict: "endpoint" });
+    if (error) ({ error } = await supabaseAdmin.from("push_subscriptions").upsert(row, { onConflict: "endpoint" }));   // chưa chạy SQL 037
     if (error) handleSupabaseError(error, "Failed to save push subscription");
     return { subscribed: true };
   },
@@ -130,6 +143,25 @@ export const pushService = {
     } catch (error) {
       logger.warn("Push tới người mua thất bại", error instanceof Error ? error.message : error);
       return { sent: 0, removed: 0 };
+    }
+  },
+
+  /** Gửi cho mọi người mua đã bật thông báo (trừ ai đã tắt nhóm này). Mỗi người một lần. */
+  async sendToAllCustomers(payload: PushPayload, group: NotifGroup): Promise<{ users: number; sent: number }> {
+    try {
+      const { data, error } = await supabaseAdmin.from("push_subscriptions").select("user_id").eq("role", "customer").not("user_id", "is", null).limit(5000);
+      if (error) { logger.warn("Không đọc được push_subscriptions", error); return { users: 0, sent: 0 }; }
+      const ids = [...new Set(((data ?? []) as Array<{ user_id: string }>).map((row) => row.user_id))];
+      const allowed = [...(await allowedUsers(ids, group))];
+      let sent = 0;
+      for (let i = 0; i < allowed.length; i += 10) {
+        const results = await Promise.all(allowed.slice(i, i + 10).map((id) => sendToOwner({ kind: "user", id }, payload).catch(() => ({ sent: 0, removed: 0 }))));
+        sent += results.reduce((a, r) => a + r.sent, 0);
+      }
+      return { users: allowed.length, sent };
+    } catch (error) {
+      logger.warn("Push hàng loạt thất bại", error instanceof Error ? error.message : error);
+      return { users: 0, sent: 0 };
     }
   },
 

@@ -99,6 +99,12 @@ export const orderController = {
     sendSuccess(res, await orderService.cancelByCustomer(actor.userId, params.id, body));
   },
 
+  async previewCancel(req: Request, res: Response): Promise<void> {
+    const actor = getActor(req);
+    const params = req.validated?.params as UuidParams;
+    sendSuccess(res, await orderService.previewCancel(actor.userId, params.id));
+  },
+
   async listMessages(req: Request, res: Response): Promise<void> {
     const actor = getActor(req);
     const params = req.validated?.params as UuidParams;

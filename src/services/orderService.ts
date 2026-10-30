@@ -298,6 +298,13 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   ready: ["completed", "cancelled", "no_show"]
 };
 
+/** Hủy miễn phí hay không: chưa thanh toán, hoặc còn trong cancel_free_until. Dùng chung cho xem trước và hủy thật. */
+const cancelOutcome = (order: Order): { paid: boolean; free: boolean } => {
+  const paid = order.payment_status === "paid";
+  const free = !paid || !order.cancel_free_until || Date.now() <= new Date(order.cancel_free_until).getTime();
+  return { paid, free };
+};
+
 const statusConflict = (message: string, code: string = ERROR_CODES.RESOURCE_CONFLICT): AppError =>
   new AppError(message, HTTP_STATUS.CONFLICT, code);
 
@@ -736,7 +743,14 @@ export const orderService = {
     if (body.status === "confirmed") {
       await notifyCustomer(order, "order-update", `Cửa hàng đã nhận đơn ${order.order_number}`, "Cửa hàng đang chuẩn bị hàng cho bạn.");
     } else {
-      await notifyCustomer(order, "order-update", `Đơn ${order.order_number} đã sẵn sàng`, "Hãy mang mã QR đến cửa hàng để nhận hàng trước hạn lấy.");
+      const owner = await loadStoreOwner(order.store_id);
+      const until = (data as Order).pickup_deadline ?? order.pickup_deadline;
+      await notifyCustomer(
+        order,
+        "order-ready",
+        `Cửa hàng ${owner?.name ?? ""} đã chuẩn bị xong đơn`.replace("  ", " "),
+        until ? `Đơn ${order.order_number}: đến nhận trước ${formatVnTime(new Date(until))}. Mang mã QR cho cửa hàng.` : `Đơn ${order.order_number}: hãy mang mã QR đến cửa hàng để nhận hàng.`
+      );
       await orderChatService.postSystem(order.id, "Đơn đã sẵn sàng, mời bạn đến nhận hàng.");
     }
     return data as Order;
@@ -845,6 +859,32 @@ export const orderService = {
    * Người mua hủy đơn. awaiting_payment: hủy, không có tiền. Đã trả: trong hạn miễn phí hoàn 100%;
    * sau đó không hoàn (tiền thuộc cửa hàng), người mua -5 điểm. Hàng luôn được xem xét trả về kho.
    */
+  /** Xem trước kết quả hủy (không ghi gì): cùng quy tắc với cancelByCustomer, số liệu do máy chủ tính */
+  async previewCancel(customerId: string, orderId: string): Promise<{
+    can_cancel: boolean; paid: boolean; free: boolean; refund_cents: number; penalty_points: number;
+    cancel_free_until: string | null; message: string;
+  }> {
+    await policyConfigService.ensureFresh();
+    const { data, error } = await supabaseAdmin.from("orders").select("*").eq("id", orderId).single();
+    if (error) handleSupabaseError(error, "Failed to load order");
+    const order = requireRecord(data as Order | null, "Order was not found");
+    if (order.customer_id !== customerId) {
+      throw new AppError("Only the order owner can cancel this order", HTTP_STATUS.FORBIDDEN, ERROR_CODES.AUTH_FORBIDDEN);
+    }
+    if (!["awaiting_payment", "pending", "confirmed", "ready"].includes(order.status)) {
+      return { can_cancel: false, paid: order.payment_status === "paid", free: false, refund_cents: 0, penalty_points: 0, cancel_free_until: order.cancel_free_until ?? null, message: "Đơn này không còn hủy được" };
+    }
+    const { paid, free } = cancelOutcome(order);
+    const refund = paid && free ? Number(order.total_cents) : 0;
+    const penalty = paid && !free ? Math.abs(CUSTOMER_REPUTATION.lateCancelDelta) : 0;
+    const message = !paid
+      ? "Đơn chưa thanh toán, hủy không mất phí."
+      : free
+        ? "Còn trong thời gian hủy miễn phí: hoàn 100% tiền đơn."
+        : "Đã quá thời gian hủy miễn phí: không hoàn tiền và bị trừ điểm uy tín.";
+    return { can_cancel: true, paid, free, refund_cents: refund, penalty_points: penalty, cancel_free_until: order.cancel_free_until ?? null, message };
+  },
+
   async cancelByCustomer(customerId: string, orderId: string, body: CancelOrderBody): Promise<{ order: Order; refunded: boolean; refund_cents: number }> {
     await policyConfigService.ensureFresh();
     const { data, error } = await supabaseAdmin.from("orders").select("*").eq("id", orderId).single();
@@ -858,8 +898,7 @@ export const orderService = {
     }
 
     const nowIso = new Date().toISOString();
-    const paid = order.payment_status === "paid";
-    const free = !paid || !order.cancel_free_until || Date.now() <= new Date(order.cancel_free_until).getTime();
+    const { paid, free } = cancelOutcome(order);
     const patch: Record<string, unknown> = { status: "cancelled", cancelled_at: nowIso, cancelled_by: "customer" };
     if (!paid) {
       patch.cancel_reason = "customer_cancelled_unpaid";

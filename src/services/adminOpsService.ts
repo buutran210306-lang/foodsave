@@ -9,6 +9,7 @@ import { AppError } from "../utils/appError";
 import { adminAuditService, type AuditActor } from "./adminAuditService";
 import { adminService } from "./adminService";
 import { createNotification } from "./notificationService";
+import { voucherAnnounceService } from "./voucherAnnounceService";
 import { handleSupabaseError, supabaseAdmin } from "./supabaseService";
 
 type Row = Record<string, any>;
@@ -134,6 +135,7 @@ const createVoucher = async (storeId: string | null, input: VoucherInput, actor:
   }).select(VOUCHER_COLUMNS).single();
   if (error) handleSupabaseError(error, "Failed to create voucher");
   if (actor) await adminAuditService.log(actor, "voucher.create", "voucher", String((data as Row).id), { code, store_id: storeId });
+  await voucherAnnounceService.announce(data as Row as Parameters<typeof voucherAnnounceService.announce>[0]);
   return data as Row;
 };
 

@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14613b">
+<title>FoodSave</title>
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="manifest" href="/manifest-app.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FoodSave">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--g9:#0f4a2e;--g8:#14613b;--g7:#1c7c45;--g5:#22a55b;--mint:#eaf6ef;--mint2:#d9efe2;--y:#f3c94f;--ink:#111512;--mut:#6b756d;--line:#e2e9e3;--red:#dc3b2f;--redbg:#fde8e6;--ylbg:#fff4d1;--grbg:#dff3e7;--bg:#f3f8f4;--af:430px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:#dfe6e0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);max-width:var(--af);margin:0 auto;height:100vh;height:100dvh;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.15)}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea{font-family:inherit;font-size:15px;color:inherit}
+i.ti{font-size:20px;line-height:1}
+#view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+#view::-webkit-scrollbar{display:none}
+.scr{min-height:100%;padding-bottom:20px;animation:in .22s ease-out}
+.scr.tabbed{padding-bottom:96px}
+@keyframes in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+h1{font-size:26px;font-weight:900;line-height:1.1;letter-spacing:-.01em;text-transform:uppercase}
+h2{font-size:17px;font-weight:800}
+.mut{color:var(--mut)}.sm{font-size:12.5px}.xs{font-size:11px}.b{font-weight:800}
+.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.grow{flex:1;min-width:0}
+.pad{padding:0 16px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}
+.card{background:#fff;border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(15,74,46,.06);border:1px solid #edf2ee}
+.btn{height:50px;border-radius:15px;background:var(--g8);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-shadow:0 6px 16px rgba(20,97,59,.25)}
+.btn.ghost{background:#fff;color:var(--g8);border:1.5px solid var(--g8);box-shadow:none}
+.btn.red{background:var(--red);box-shadow:none}
+.btn.soft{background:var(--mint2);color:var(--g8);box-shadow:none}
+.btn.sm{height:38px;font-size:13px;border-radius:12px;width:auto;padding:0 14px}
+.btn[disabled]{opacity:.45}
+.top{display:flex;align-items:center;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;background:var(--bg);z-index:20}
+.top h3{font-size:16px;font-weight:900;text-transform:uppercase;flex:1}
+.ib{width:40px;height:40px;border-radius:13px;background:#fff;display:grid;place-items:center;border:1px solid var(--line);position:relative;flex:none}
+.ib .dot{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;border-radius:7px;padding:3px 7px;text-transform:uppercase;letter-spacing:.02em}
+.tag.green{background:var(--g7);color:#fff}.tag.yellow{background:#e0a512;color:#fff}.tag.red{background:var(--red);color:#fff}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:8px;padding:3px 8px;background:var(--grbg);color:var(--g8)}
+.chip.y{background:var(--ylbg);color:#8a5a00}.chip.r{background:var(--redbg);color:#b3261e}.chip.g{background:#eef1ee;color:#586159}
+.hs{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 6px;scrollbar-width:none;scroll-padding-left:16px}.hs::-webkit-scrollbar{display:none}
+.pill{flex:none;padding:9px 15px;border-radius:99px;background:#fff;border:1px solid var(--line);font-weight:700;font-size:13px}
+.pill.on{background:var(--g8);color:#fff;border-color:var(--g8)}
+/* tab bar */
+#tabs{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:none;grid-template-columns:repeat(5,1fr);padding:6px 4px calc(8px + env(safe-area-inset-bottom));z-index:50}
+#tabs.on{display:grid}
+#tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:800;color:#8b958d;padding:5px 0;text-transform:uppercase;position:relative}
+#tabs button i{font-size:23px}
+#tabs button.on{color:var(--g8)}
+#tabs button.on:after{content:"";width:5px;height:5px;border-radius:50%;background:var(--g7);margin-top:1px}
+#tabs .bd{position:absolute;top:2px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9.5px;display:grid;place-items:center;padding:0 4px}
+/* product row */
+.prod{display:flex;gap:12px;padding:12px;background:#fff;border-radius:18px;border:1px solid #edf2ee;box-shadow:0 2px 10px rgba(15,74,46,.05);position:relative;margin-bottom:10px;cursor:pointer}
+.pimg{width:84px;height:84px;border-radius:16px;display:grid;place-items:center;font-size:44px;flex:none;position:relative}
+.pimg{overflow:visible}.pimg img{width:100%;height:100%;object-fit:cover;border-radius:16px;display:block}.pimg.green{background:linear-gradient(135deg,#d9f2e2,#f1fbf4)}.pimg.yellow{background:linear-gradient(135deg,#fff0bf,#fffaea)}.pimg.red{background:linear-gradient(135deg,#fbd6d2,#fff1ef)}
+.pname{font-weight:800;font-size:15px;line-height:1.2}
+.price{font-weight:900;font-size:17px;color:var(--red)}.price s{font-size:11.5px;font-weight:600;color:#9aa39c;margin-left:4px}
+.off{background:var(--red);color:#fff;font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 6px;margin-left:6px}
+.heart{position:absolute;top:10px;right:10px;font-size:19px;color:#9aa39c}.heart.on{color:var(--red)}
+/* hero */
+.hero{margin:6px 16px 0;border-radius:22px;background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;padding:18px;position:relative;overflow:hidden;min-height:150px}
+.hero h2{font-size:23px;line-height:1.1;font-weight:900}.hero p{font-size:12.5px;opacity:.9;margin:6px 0 12px}
+.hero .big{position:absolute;right:10px;bottom:0;font-size:92px;opacity:.95}
+.hero .b2{background:#fff;color:var(--g8);border-radius:11px;padding:9px 14px;font-weight:800;font-size:12.5px;display:inline-flex;gap:6px;align-items:center}
+.lab{border-radius:18px;padding:13px;display:flex;flex-direction:column;gap:3px;text-align:left}
+.lab.green{background:var(--grbg)}.lab.yellow{background:var(--ylbg)}.lab.red{background:var(--redbg)}
+.lab .ic{width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center;margin-bottom:5px}
+.lab b{font-size:13.5px}.lab small{font-size:10.5px;color:var(--mut)}.lab em{font-style:normal;font-weight:900;font-size:13px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mapbox{margin:0 16px;height:150px;border-radius:18px;background:#cfe6dc;position:relative;overflow:hidden;border:1px solid var(--line)}
+.mapbox:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 48%,#fff 48% 52%,transparent 52%),linear-gradient(0deg,transparent 48%,#fff 48% 52%,transparent 52%),repeating-linear-gradient(60deg,transparent 0 40px,rgba(255,255,255,.5) 40px 43px);opacity:.9}
+.pin{position:absolute;background:#fff;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;box-shadow:0 3px 8px rgba(0,0,0,.18);display:flex;gap:3px;align-items:center;z-index:2}
+.me{position:absolute;left:50%;top:55%;width:18px;height:18px;border-radius:50%;background:#2f6bf0;border:3px solid #fff;box-shadow:0 0 0 8px rgba(47,107,240,.2);z-index:2}
+/* forms */
+.field{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:13px 14px;width:100%;outline:none}
+.field:focus{border-color:var(--g7)}
+label.l{display:block;font-size:11px;font-weight:800;text-transform:uppercase;color:#3d4a41;margin:14px 0 6px;letter-spacing:.03em}
+.steps{display:flex;gap:5px;margin-left:auto}.steps i{width:22px;height:4px;border-radius:3px;background:#cfe0d5}.steps i.on{background:var(--g8)}
+.otp{display:flex;gap:8px;justify-content:space-between}.otp input{width:100%;aspect-ratio:1/1.15;text-align:center;font-size:22px;font-weight:800;border:1.5px solid var(--g5);background:var(--grbg);border-radius:12px;outline:none;min-width:0}
+.sw{display:flex;background:var(--mint2);border-radius:13px;padding:4px}.sw button{flex:1;padding:10px 0;border-radius:10px;font-weight:800;font-size:13px;color:var(--mut)}.sw button.on{background:#fff;color:var(--g8);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.sopt{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;width:100%;text-align:left;font-weight:700}
+.sopt .ico{width:36px;height:36px;border-radius:11px;background:var(--grbg);color:var(--g8);display:grid;place-items:center;flex:none}
+/* sheet & toast */
+#sheetbg{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:90;display:none}
+#sheetbg.on{display:block}
+#sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;z-index:100;padding:10px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:88%;overflow-y:auto}
+#sheet.on{transform:none}
+#sheet:before{content:"";display:block;width:38px;height:4px;border-radius:3px;background:#d5ddd6;margin:0 auto 12px}
+#pushb{position:absolute;left:10px;right:10px;top:10px;z-index:300;background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border-radius:18px;padding:12px 14px;display:flex;gap:11px;align-items:center;box-shadow:0 14px 36px rgba(0,0,0,.35);transform:translateY(-140%);transition:transform .4s cubic-bezier(.2,1.2,.4,1);cursor:pointer}#pushb.on{transform:none}#pushb .ic{width:40px;height:40px;border-radius:13px;background:#fff3;display:grid;place-items:center;flex:none}#pushb b{font-size:13.5px;display:block}#pushb span{font-size:12px;opacity:.9}#pushb em{font-style:normal;font-size:10px;opacity:.7;margin-left:auto;align-self:flex-start}
+#toast{position:absolute;left:16px;right:16px;bottom:96px;background:#111512;color:#fff;padding:12px 16px;border-radius:14px;font-weight:700;font-size:13.5px;z-index:200;opacity:0;pointer-events:none;transform:translateY(10px);transition:.25s}
+#toast.on{opacity:1;transform:none}
+.timer{font-variant-numeric:tabular-nums;font-weight:900}
+.bar{height:6px;border-radius:4px;background:#d3e6da;overflow:hidden}.bar i{display:block;height:100%;background:var(--g7);border-radius:4px}
+.stepper{display:flex;align-items:flex-start;justify-content:space-between;margin:6px 0}
+.stp{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:9.5px;font-weight:800;color:#8b958d;text-transform:uppercase;flex:1;position:relative}
+.stp b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#e4ece6;color:#9aa39c;font-size:12px;position:relative;z-index:1}
+.stp.done b,.stp.cur b{background:var(--g7);color:#fff}.stp.cur b{box-shadow:0 0 0 4px rgba(34,165,91,.25)}.stp.done,.stp.cur{color:var(--g8)}
+.stp:not(:last-child):after{content:"";position:absolute;top:12px;left:calc(50% + 14px);right:calc(-50% + 14px);height:2px;background:#d3e2d8}
+.stp.done:not(:last-child):after{background:var(--g7)}
+.qrbox{background:#fff;border:2px solid var(--g7);border-radius:22px;padding:16px;text-align:center}
+.qrbox svg{width:190px;height:190px;border:1px solid var(--line);border-radius:14px;padding:8px}
+.bub{max-width:78%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.35;margin-bottom:8px}
+.bub.mine{background:var(--g8);color:#fff;margin-left:auto;border-bottom-right-radius:5px}
+.bub.you{background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub small{display:block;font-size:10px;opacity:.65;margin-top:3px}
+.menu{background:#fff;border-radius:18px;border:1px solid #edf2ee;overflow:hidden}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;padding:14px;font-weight:700;font-size:14.5px;text-align:left;border-bottom:1px solid #f1f4f1}
+.menu button:last-child{border:0}.menu i.ti:first-child{color:var(--g7)}.menu .chev{margin-left:auto;color:#a2aba4;font-size:17px}
+.splash{background:linear-gradient(170deg,rgba(15,74,46,.55),rgba(20,97,59,.9)),url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=68') center/cover,var(--g9);color:#fff;min-height:100%}
+.empty{text-align:center;padding:50px 24px;color:var(--mut)}.empty .e{font-size:50px}
+.seg{display:flex;border-bottom:1px solid var(--line);margin:0 16px}.seg button{flex:1;padding:12px 0;font-weight:800;font-size:12.5px;color:#8b958d;text-transform:uppercase;border-bottom:3px solid transparent}.seg button.on{color:var(--g8);border-color:var(--g8)}
+.acc{background:#fff;border-radius:14px;border:1px solid #edf2ee;margin-bottom:8px;overflow:hidden}.acc button{width:100%;padding:14px;text-align:left;font-weight:700;display:flex;justify-content:space-between;gap:8px}.acc div{display:none;padding:0 14px 14px;font-size:13.5px;color:#4a554d;line-height:1.5}.acc.on div{display:block}
+
+/* ===== game cây ===== */
+.garden{border-radius:24px;overflow:hidden;background:#fff;border:1px solid #edf2ee;box-shadow:0 4px 18px rgba(15,74,46,.1)}
+.scene{position:relative;height:370px;background:linear-gradient(180deg,#bfe6ff 0%,#e6f7ff 55%,#dff3e7 100%);overflow:hidden}
+.scene[data-stage=young],.scene[data-stage=ready]{background:linear-gradient(180deg,#a9ddff 0%,#e6f7ff 55%,#d9f2e2 100%)}
+.scene svg.tree{position:absolute;left:0;right:0;bottom:66px;width:100%;height:270px;overflow:visible}
+.sun{position:absolute;right:22px;top:20px;width:46px;height:46px;border-radius:50%;background:#ffe066;box-shadow:0 0 0 10px #ffe06655,0 0 0 22px #ffe06622}
+.cloud{position:absolute;height:18px;width:60px;background:#fff;border-radius:99px;opacity:.9;animation:drift 22s linear infinite}
+.cloud:before,.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud:before{width:26px;height:26px;left:10px;top:-12px}.cloud:after{width:20px;height:20px;left:30px;top:-8px}
+@keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(480px)}}
+.scene .sign{position:absolute;left:14px;bottom:78px;background:#8a5a2b;color:#fff;font-size:10.5px;font-weight:800;border-radius:8px;padding:5px 9px;line-height:1.2;box-shadow:0 3px 0 #5e3b19}
+.scene .sign span{display:block;font-size:15px;color:#ffe9a8}
+.tools{position:absolute;left:12px;top:12px;display:grid;gap:8px}
+.tools button{width:50px;border-radius:14px;background:#fff;color:var(--g8);font-size:9.5px;font-weight:800;padding:7px 0 5px;display:flex;flex-direction:column;align-items:center;gap:1px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.tools button:nth-child(2){background:linear-gradient(135deg,#ffd54a,#ff9f43);color:#7a3a00}
+.boost{position:absolute;right:12px;top:84px;background:#fff;border-radius:14px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--mut);box-shadow:0 3px 10px rgba(0,0,0,.1);line-height:1.2;text-align:center}
+.boost b{display:block;font-size:17px;color:#e07a00}
+.dock{position:absolute;left:10px;right:10px;bottom:8px;display:flex;gap:8px;align-items:center;background:#fffffff2;border-radius:18px;padding:8px;box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.dock .res{display:flex;align-items:center;gap:6px;padding:0 6px;min-width:70px}
+.dock .res i{color:#2a9df4;font-size:24px}.dock .res b{font-size:17px;display:block;line-height:1}.dock .res span{font-size:9.5px;color:var(--mut);font-weight:700}
+.dock .wbtn{flex:1;height:44px;border-radius:13px;background:linear-gradient(135deg,#2a9df4,#1b6fd1);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.dock .wbtn[disabled]{background:#c9d3cc;color:#fff}
+.dock .wbtn.alt{flex:none;background:var(--grbg);color:var(--g8);padding:0 12px;font-size:12.5px}
+.drops{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+.drops i{position:absolute;top:-20px;font-style:normal;font-size:22px;opacity:0}
+.scene.water .drops i{animation:fall .9s ease-in forwards}
+.drops i:nth-child(1){left:44%}.drops i:nth-child(2){left:52%;animation-delay:.12s!important}.drops i:nth-child(3){left:48%;animation-delay:.25s!important}.drops i:nth-child(4){left:56%;animation-delay:.18s!important}.drops i:nth-child(5){left:40%;animation-delay:.3s!important}
+@keyframes fall{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(190px)}}
+.scene.water svg.tree{animation:pop .7s .55s ease-out}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+.scene.harvest:after{content:"🎉 🌟 🎊 ✨ 🎉";position:absolute;left:0;right:0;top:40px;text-align:center;font-size:28px;animation:conf 1.6s ease-out forwards;letter-spacing:8px}
+@keyframes conf{0%{opacity:0;transform:translateY(40px) scale(.6)}30%{opacity:1}100%{opacity:0;transform:translateY(-30px) scale(1.2)}}
+.can{position:absolute;left:30%;top:30px;font-size:46px;opacity:0;transform:rotate(0)}
+.scene.water .can{animation:cantilt 1.1s ease-in-out}
+@keyframes cantilt{0%{opacity:0;transform:translate(-30px,-10px) rotate(0)}25%{opacity:1;transform:translate(0,0) rotate(0)}55%{opacity:1;transform:translate(10px,0) rotate(-28deg)}100%{opacity:0;transform:translate(10px,0) rotate(-28deg)}}
+.pill2{background:#f3f8f4;border-radius:14px;padding:10px 4px;text-align:center}.pill2 b{display:block;font-size:17px}.pill2 span{font-size:10px;color:var(--mut);font-weight:700}
+.mis{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #f1f4f1}.mis:last-child{border:0}
+.mis .mi{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+.tree-card{background:linear-gradient(120deg,#e8f8ff,var(--grbg));border-radius:18px;padding:12px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid #cfe8f2}
+.tree-card .mini{font-size:40px;line-height:1}
+/* trạng thái tải / lỗi / bài pháp lý */
+@keyframes sp{to{transform:rotate(360deg)}}
+.sk{background:linear-gradient(90deg,#e9efea 25%,#f5f8f5 50%,#e9efea 75%);background-size:200% 100%;animation:shim 1.2s infinite;border-radius:10px}
+@keyframes shim{to{background-position:-200% 0}}
+.pimg.sk{border-radius:16px}
+.legalbox .legal-section{padding:6px 0!important;max-width:none!important}
+.legalbox{font-size:13.5px;line-height:1.6;color:#2b362e}
+.legalbox h2,.legalbox h3{margin:14px 0 6px}
+.timer{font-variant-numeric:tabular-nums}
+@media(min-width:500px){body{height:min(100vh,900px);margin-top:max(0px,calc((100vh - 900px)/2));border-radius:34px;border:8px solid #111512}}
+.fs-pin{background:transparent;border:0}
+.pinc{display:flex;align-items:center;gap:5px;background:#fff;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:800;box-shadow:0 3px 8px rgba(0,0,0,.25);white-space:nowrap;width:max-content;transform:translateX(-50%);margin-left:32px}
+.pinc i{width:9px;height:9px;border-radius:50%;display:block}
+.mapfb{display:grid;place-items:center;height:100%;padding:16px;text-align:center;font-size:12.5px;font-weight:700;color:var(--mut)}
+.mapbox .leaflet-container{width:100%;height:100%;font:inherit}
+.mapbox:has(.leaflet-container):before{display:none}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<div id="view"></div>
+<nav id="tabs"></nav>
+<div id="sheetbg" onclick="closeSheet()"></div>
+<div id="sheet"></div>
+<div id="pushb" onclick="pushGo()"></div>
+<div id="toast"></div>
+
+
+<script>
+/* ====================================================================
+   FoodSave App (người mua). Dùng chung frontend/foodsave-live-data.js (FS.sync) và foodsave-auth-client.js (FoodSaveAuth).
+   Mọi dữ liệu và luật nghiệp vụ lấy từ API; client chỉ hiển thị.
+   Các mảng toàn cục dưới đây do foodsave-live-data.js tự điền (replaceArray) sau mỗi lần tải/làm mới.
+   ==================================================================== */
+const PRODUCTS = [], STORES = [], VOUCHERS = [], ORD = [], NOTIFS = [], COMPLAINTS = [];
+
+/* ---------- tiện ích ---------- */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const q1 = s => esc(String(s == null ? '' : s).replace(/[^\w\-]/g, ''));      // dùng trong onclick="f('...')" (id/mã chỉ gồm chữ, số, - _)
+const fmt = n => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
+const now = () => Date.now(), MIN = 60000;
+const tms = v => { const t = v ? new Date(v).getTime() : 0; return Number.isFinite(t) ? t : 0; };
+const hhmm = v => v ? new Date(v).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '';
+const dmy = v => v ? new Date(v).toLocaleDateString('vi-VN') : '';
+const dmyhm = v => v ? new Date(v).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '';
+const noAccent = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+const left = h => h < 1 ? Math.max(1, Math.round(h * 60)) + ' phút' : h < 24 ? h.toFixed(1).replace('.0', '') + ' giờ' : Math.round(h / 24) + ' ngày';
+const errMsg = e => {
+  if (!e) return 'Có lỗi xảy ra, vui lòng thử lại';
+  if (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(e.message || '')) return 'Mất kết nối mạng. Kiểm tra mạng rồi thử lại.';
+  return e.message || 'Có lỗi xảy ra, vui lòng thử lại';
+};
+const API = (path, opt) => (window.FS && FS.sync) ? FS.sync.request(path, opt) : Promise.reject(new Error('Chưa kết nối được máy chủ'));
+
+/* Nhãn: màu, tên. Số phút/điểm KHÔNG ghi cứng: lấy từ GET /catalog/policy (S.policy) */
+const LAB = {
+  green: { n: 'Xanh', sub: 'Tươi mới · >5 ngày', ic: 'ti-circle-check' },
+  yellow: { n: 'Vàng', sub: 'Cận date · 3-5 ngày', ic: 'ti-clock' },
+  red: { n: 'Đỏ', sub: 'Cứu trợ khẩn cấp · <24h', ic: 'ti-alert-triangle' }
+};
+/* Emoji CHỈ là ảnh dự phòng theo danh mục khi cửa hàng chưa tải ảnh hoặc ảnh lỗi */
+const CAT_EM = { meal: '🍱', bakery: '🥖', dairy: '🥛', fruit: '🍎', sweet: '🍰', drink: '☕', veggie: '🥬', meat: '🥩', other: '🍽️' };
+const catEm = p => CAT_EM[p && p.cat] || '🍽️';
+
+/* ---------- trạng thái ---------- */
+const S = {
+  user: null, trust: null, policy: null, cart: [], stack: [], tab: 'home', filt: {}, fav: new Set(),
+  loaded: false, netErr: '', raw: {}, chat: {}, pm: 'momo', voucher: null, otp: {}, busy: false,
+  loc: null, authChecked: false
+};
+const CART_KEY = 'foodsave.app.cart.v1';
+try { const c = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); if (Array.isArray(c)) S.cart = c.filter(x => x && x.p && x.q > 0); } catch (e) { /* bỏ qua */ }
+const saveCart = () => { try { localStorage.setItem(CART_KEY, JSON.stringify(S.cart)); } catch (e) { /* bỏ qua */ } };
+
+const buyable = () => PRODUCTS.filter(p => !p.donation);
+const prod = id => PRODUCTS.find(x => x.id === id);
+const store = id => STORES.find(x => x.id === id);
+const orderOf = id => ORD.find(x => x.id === id);
+const pct = p => p.original > p.price && p.original > 0 ? Math.round((1 - p.price / p.original) * 100) : 0;
+
+/* Ảnh thật từ Storage (image_url/image_urls); lỗi/thiếu thì emoji theo danh mục */
+function pic(p, fs) {
+  const em = catEm(p), size = fs || 44;
+  const url = p && (p.image || (p.images && p.images[0]));
+  if (!url) return `<span style="font-size:${size}px">${em}</span>`;
+  return `<img src="${esc(url)}" alt="${esc(p.name)}" loading="lazy" decoding="async" onerror="this.outerHTML='<span style=&quot;font-size:${size}px&quot;>${em}</span>'">`;
+}
+function storeAv(s, size) {
+  const px = size || 30;
+  if (s && s.logoUrl) return `<img src="${esc(s.logoUrl)}" alt="" loading="lazy" style="width:${px + 12}px;height:${px + 12}px;border-radius:12px;object-fit:cover" onerror="this.outerHTML='<span style=&quot;font-size:${px}px&quot;>${esc((s && s.logo) || '🏪')}</span>'">`;
+  return `<span style="font-size:${px}px">${esc((s && s.logo) || '🏪')}</span>`;
+}
+
+/* ---------- router ---------- */
+const V = document.getElementById('view'), T = document.getElementById('tabs');
+const TABS = [['home', 'ti-home-2', 'Khám phá'], ['search', 'ti-search', 'Tìm kiếm'], ['fav', 'ti-heart', 'Yêu thích'], ['orders', 'ti-receipt-2', 'Đơn hàng'], ['me', 'ti-user', 'Cá nhân']];
+const timers = {};
+function clearTimers() { Object.keys(timers).forEach(k => { clearInterval(timers[k]); delete timers[k]; }); }
+function go(name, arg) { S.stack.push([name, arg]); draw(); }
+function back() { S.stack.pop(); if (!S.stack.length) S.stack.push(['tab', S.tab]); draw(); }
+function tab(t) { S.tab = t; S.stack = [['tab', t]]; draw(); }
+function root(name, arg) { S.stack = [[name, arg]]; draw(); }
+const curScreen = () => (S.stack[S.stack.length - 1] || ['welcome'])[0];
+function draw() {
+  clearTimers();
+  const [n, a] = S.stack[S.stack.length - 1] || ['welcome'];
+  const f = n === 'tab' ? TABV[a] : SCR[n];
+  if (!f) { root('welcome'); return; }
+  V.innerHTML = f(a); V.scrollTop = 0;
+  const showTabs = n === 'tab';
+  T.className = showTabs ? 'on' : '';
+  if (showTabs) {
+    const act = ORD.filter(isActive).length;
+    T.innerHTML = TABS.map(x => `<button class="${x[0] === a ? 'on' : ''}" onclick="tab('${x[0]}')"><i class="ti ${x[1]}"></i>${x[2]}${x[0] === 'orders' && act ? `<span class="bd">${act}</span>` : ''}</button>`).join('');
+  }
+  const sc = V.firstElementChild; if (sc && showTabs) sc.classList.add('tabbed');
+  tick();
+  const h = SCRH[n]; if (h) h(a);
+}
+/* làm mới nhẹ khi dữ liệu nền cập nhật: không vẽ lại khi đang gõ hoặc đang mở bảng */
+const SOFT = new Set(['tab', 'list', 'detail', 'store', 'order', 'notifs', 'map', 'cart', 'vouchers', 'wallet', 'rep', 'impact']);
+function softRefresh() {
+  const ae = document.activeElement;
+  if (ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName)) return;
+  if (document.getElementById('sheet').classList.contains('on')) return;
+  const n = curScreen(); if (!SOFT.has(n)) return;
+  if (n === 'tab' && S.tab === 'search') return;
+  const y = V.scrollTop; draw(); V.scrollTop = y;
+}
+function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.className = 'on'; clearTimeout(toast.t); toast.t = setTimeout(() => t.className = '', 2600); }
+function sheet(h) { const s = document.getElementById('sheet'); s.innerHTML = h; s.classList.add('on'); document.getElementById('sheetbg').classList.add('on'); }
+function closeSheet() { document.getElementById('sheet').classList.remove('on'); document.getElementById('sheetbg').classList.remove('on'); }
+let _pg = null;
+function push(ic, t, d, g) { const e = document.getElementById('pushb'); e.innerHTML = `<div class="ic"><i class="ti ${esc(ic)}" style="font-size:22px"></i></div><div><b>${esc(t)}</b><span>${esc(d)}</span></div><em>Bây giờ</em>`; _pg = g || null; e.classList.add('on'); clearTimeout(push.t); push.t = setTimeout(() => e.classList.remove('on'), 5200); }
+function pushGo() { document.getElementById('pushb').classList.remove('on'); if (_pg) { const g = _pg; _pg = null; go(g[0], g[1]); } }
+const topbar = (t, right = '') => `<div class="top"><button class="ib" onclick="back()"><i class="ti ti-arrow-left"></i></button><h3>${t}</h3>${right}</div>`;
+const cartN = () => S.cart.reduce((a, c) => a + c.q, 0);
+const unread = () => NOTIFS.filter(n => n.unread).length;
+
+/* skeleton / rỗng / lỗi (có nút thử lại) */
+const skel = (n = 4) => `<div class="pad">${Array.from({ length: n }, () => '<div class="prod"><div class="pimg sk"></div><div class="grow"><div class="sk" style="height:12px;width:60%"></div><div class="sk" style="height:16px;width:85%;margin-top:8px"></div><div class="sk" style="height:12px;width:40%;margin-top:10px"></div></div></div>').join('')}</div>`;
+const errBox = (m, fn) => `<div class="empty"><div class="e">📡</div><b>${esc(m)}</b><br><button class="btn sm mt16" style="margin:16px auto 0" onclick="${fn || 'reloadAll()'}"><i class="ti ti-refresh"></i>Thử lại</button></div>`;
+const emptyBox = (e, t, s = '') => `<div class="empty"><div class="e">${e}</div><b>${t}</b>${s ? `<br><span class="sm">${s}</span>` : ''}</div>`;
+const listOrState = (arr, render, emptyHtml) => {
+  if (!S.loaded) return skel();
+  if (S.netErr && !PRODUCTS.length) return errBox(S.netErr);
+  return arr.length ? arr.map(render).join('') : emptyHtml;
+};
+
+/* đồng hồ đếm ngược: mốc thời gian lấy từ server (data-cd = mili giây tuyệt đối) */
+function fmtT(ms) { ms = Math.max(0, ms); const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0'); }
+const cdSpan = (iso, extra = '') => `<span class="timer" data-cd="${tms(iso)}" ${extra}></span>`;
+function tick() {
+  document.querySelectorAll('[data-cd]').forEach(e => {
+    const t = +e.dataset.cd - now(); e.textContent = t <= 0 ? 'Hết hạn' : fmtT(t);
+    if (e.dataset.bar) { const tot = +e.dataset.tot, el = document.getElementById(e.dataset.bar); if (el && tot) el.style.width = Math.max(0, Math.min(100, t / tot * 100)) + '%'; }
+  });
+}
+setInterval(tick, 1000);
+
+/* ---------- vòng đời dữ liệu (foodsave-live-data.js gọi các hàm này sau khi thay mảng) ---------- */
+window.foodsaveAfterProductsReplace = function () {
+  S.loaded = true;
+  if (PRODUCTS.length) S.netErr = '';
+  else probeNet();
+  softRefresh();
+};
+window.foodsaveAfterOrdersReplace = function () { S.authedData = true; softRefresh(); };
+window.foodsaveAfterNotifsReplace = function () { onNotifs(); softRefresh(); };
+let _probing = false;
+function probeNet() {   // Danh sách rỗng: do chưa có hàng hay do lỗi mạng? Hỏi nhanh để phân biệt.
+  if (_probing) return; _probing = true;
+  API('/catalog/products?limit=1').then(() => { S.netErr = ''; }).catch(e => { S.netErr = errMsg(e); })
+    .then(() => { _probing = false; softRefresh(); });
+}
+function reloadAll() { S.loaded = false; S.netErr = ''; draw(); return (window.FS && FS.sync ? FS.sync.hydratePage() : Promise.resolve()).catch(() => { }).then(() => { S.loaded = true; probeNet(); loadFav(); softRefresh(); }); }
+let _lastNotifIds = null;
+function onNotifs() {   // thông báo mới đến khi app đang mở -> banner đầu màn hình
+  const ids = new Set(NOTIFS.map(n => n.id));
+  if (_lastNotifIds) NOTIFS.filter(n => !_lastNotifIds.has(n.id) && n.unread).slice(0, 2).forEach(n => push(n.icon, n.title, n.desc, notifTarget(n)));
+  _lastNotifIds = ids;
+}
+function notifTarget(n) {
+  if (n.sourceType === 'order-chat' && n.relatedId) return ['chat', n.relatedId];
+  if (n.relatedType === 'complaint' && n.relatedId) { const c = COMPLAINTS.find(x => x.id === n.relatedId); if (c && orderOf(c.orderId)) return ['order', c.orderId]; }
+  if (n.relatedType === 'order' && n.relatedId && orderOf(n.relatedId)) return ['order', n.relatedId];
+  if (n.relatedType === 'product' && n.relatedId && prod(n.relatedId)) return ['detail', n.relatedId];
+  if (/voucher/i.test(n.sourceType || '')) return ['vouchers'];
+  return null;
+}
+window.addEventListener('online', () => { toast('Đã có mạng trở lại'); reloadAll(); });
+window.addEventListener('offline', () => toast('Bạn đang mất kết nối mạng'));
+
+async function loadPolicy() { try { S.policy = await API('/catalog/policy'); } catch (e) { /* không có thì ẩn số cụ thể */ } }
+async function loadTrust() { try { S.trust = await API('/customers/me/trust'); } catch (e) { S.trust = null; } }
+async function loadFav() {
+  if (!S.user) return;
+  try { const r = await API('/customers/favorites'); S.fav = new Set((r.products || []).map(x => x.product_id)); softRefresh(); } catch (e) { /* giữ nguyên */ }
+}
+const pol = lb => S.policy && S.policy.labels && S.policy.labels[lb];
+
+/* ====================== ĐĂNG NHẬP / ĐĂNG KÝ ====================== */
+const AUTH = () => window.FoodSaveAuth;
+const sb = () => AUTH().getSupabaseClient();
+const LOC_KEY = 'foodsave.nearby.location';   // cùng khóa với web (foodsave-live-data.js đọc khóa này để sắp xếp theo khoảng cách)
+
+let _loginP = null;
+function afterLogin() { if (!_loginP) _loginP = _afterLogin().finally(() => { _loginP = null; }); return _loginP; }
+async function _afterLogin() {
+  // 1) Lấy hồ sơ thật. Tài khoản không phải người mua thì chặn trước khi ghi bất cứ thứ gì.
+  let profile;
+  try { profile = await API('/profile/me'); }
+  catch (e) {
+    if (e && e.status === 401) { await doLogout(true); S.authChecked = true; root('welcome'); toast('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại'); }
+    else { S.authChecked = true; root('welcome'); toast(errMsg(e)); }
+    return;
+  }
+  if (profile && profile.role && profile.role !== 'customer') { await wrongRole(profile.role); return; }
+  S.user = profile; S.authChecked = true;
+  S.otp = {};
+  const meta = (profile && profile.metadata) || {};
+  const complete = profile && profile.full_name && (profile.terms_accepted_at || meta.profile_completed_at);
+  if (!complete) { go('profile'); return; }
+  await enterApp();
+}
+async function wrongRole(role) {
+  const name = { charity: 'tổ chức từ thiện', partner: 'cửa hàng', admin: 'quản trị' }[role] || role;
+  await doLogout(true);
+  root('welcome');
+  sheet(`<h2><i class="ti ti-info-circle" style="color:#c48a00"></i> Tài khoản ${esc(name)}</h2><p class="sm mut mt8">Ứng dụng này chỉ dành cho <b>người mua</b>. Tài khoản của bạn là tài khoản ${esc(name)}, vui lòng đăng nhập ở cổng ${esc(name)} riêng của FoodSave.</p><button class="btn mt16" onclick="closeSheet()">Đã hiểu</button>`);
+}
+async function enterApp() {
+  S.loaded = false;
+  tab('home');
+  loadPolicy(); loadTrust(); loadFav();
+  if (!S.authedData) { try { await FS.sync.hydratePage(); } catch (e) { /* hydratePage bắt lỗi từng phần */ } }
+  S.loaded = true; if (!PRODUCTS.length) probeNet();
+  softRefresh();
+  if (window.FSPwa) FSPwa.sync();   // đã bật thông báo từ trước: gửi lại thiết bị lên máy chủ (không trùng)
+  startNotifPolling();
+  openDeep();
+}
+/* Thông báo mới khi app đang mở: kiểm tra mỗi 20 giây (như web) -> banner đầu màn hình */
+function startNotifPolling() {
+  if (S._notifPoll) return;
+  S._notifPoll = setInterval(() => { if (!document.hidden && S.user) FS.sync.refreshNotifications().catch(() => { }); }, 20000);
+}
+/* Mở đúng màn khi bấm thông báo đẩy: #order=<id> | #chat=<id> | #complaint=<id> | #voucher */
+async function openDeep() {
+  const h = location.hash || ''; if (!S.user || !/^#(order|chat|complaint|voucher)/.test(h)) return;
+  const clear = () => { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* bỏ qua */ } };
+  let m;
+  if (h === '#voucher') { clear(); S.stack = [['tab', 'home'], ['vouchers']]; draw(); return; }
+  let id = null, chat = false;
+  if (m = h.match(/^#(order|chat)=([\w-]+)/)) { id = m[2]; chat = m[1] === 'chat'; }
+  else if (m = h.match(/^#complaint=([\w-]+)/)) { const c = COMPLAINTS.find(x => x.id === m[1]); id = c ? c.orderId : null; }
+  clear();
+  if (!id) { tab('home'); return; }
+  try { if (!orderOf(id)) await refreshOrder(id); } catch (e) { toast('Không mở được đơn hàng này'); return; }
+  S.stack = [['tab', 'home'], ['order', id]]; if (chat) S.stack.push(['chat', id]); draw();
+}
+window.addEventListener('hashchange', openDeep);
+
+/* ---------- cài đặt thông báo (nhóm lưu ở profiles.metadata.notification_prefs, máy chủ đọc khi gửi push) ---------- */
+const NGROUPS = [['orders', 'ti-package', 'Đơn hàng', 'Thanh toán thành công, cửa hàng chuẩn bị xong, nhắc giờ nhận, hủy / hoàn tiền'], ['chat', 'ti-messages', 'Tin nhắn & khiếu nại', 'Cửa hàng nhắn tin, phản hồi và kết quả khiếu nại'], ['promo', 'ti-ticket', 'Khuyến mãi & voucher', 'Voucher mới, deal gần bạn']];
+const prefOn = g => !(S.user && S.user.metadata && S.user.metadata.notification_prefs && S.user.metadata.notification_prefs[g] === false);
+async function setPref(g, on) {
+  const meta = { ...((S.user && S.user.metadata) || {}) }; const prev = meta.notification_prefs || {};
+  meta.notification_prefs = { ...prev, [g]: !!on };
+  const old = S.user.metadata; S.user.metadata = meta; draw();
+  try { S.user = await API('/profile/me', { method: 'PATCH', body: { metadata: meta } }); }
+  catch (e) { S.user.metadata = old; draw(); toast(errMsg(e)); }
+}
+async function togglePush() {
+  if (!window.FSPwa) return; const i = FSPwa.info();
+  if (S.busy) return; S.busy = true;
+  try {
+    if (i.subscribed) { await FSPwa.pushDisable(); toast('Đã tắt thông báo đẩy cho thiết bị này'); }
+    else {
+      if (i.permission === 'denied') { toast('Thông báo đang bị chặn. Hãy cho phép trong cài đặt trình duyệt / ứng dụng.'); return; }
+      if (!i.supported) { toast(i.ios ? 'iPhone cần iOS 16.4 trở lên và đã thêm FoodSave vào Màn hình chính.' : 'Thiết bị này chưa hỗ trợ thông báo đẩy.'); return; }
+      if (!i.serverEnabled) { toast('Thông báo đẩy chưa được bật trên máy chủ. Thông báo vẫn hiện trong app.'); return; }
+      const ok = await FSPwa.pushEnable(); toast(ok ? 'Đã bật thông báo đẩy' : 'Bạn chưa cho phép thông báo');
+    }
+  } catch (e) { toast(errMsg(e)); } finally { S.busy = false; if (curScreen() === 'notifset') draw(); }
+}
+/* nội dung pháp lý dùng chung với web (frontend/foodsave-legal-content.js); "Liên hệ" chuyển sang gửi yêu cầu hỗ trợ trong app */
+window.openLegal = k => { if (k === 'contact') { S.filt.ht = 'req'; go('help'); } else go('legaldoc', k); };
+window.closeLegal = () => back();
+
+// Phiên mới được lưu (Google/Facebook quay lại, hoặc Email OTP) -> kiểm tra vai trò rồi vào app
+window.addEventListener('foodsave:session-saved', () => { if (!S.user) afterLogin(); });
+
+function startOAuth(provider) {
+  if (!navigator.onLine) { toast('Cần có mạng để đăng nhập'); return; }
+  try { sessionStorage.setItem('foodsave.app.oauth', '1'); } catch (e) { /* bỏ qua */ }
+  (provider === 'google' ? AUTH().startGoogleLogin : AUTH().startFacebookLogin)();
+}
+
+/* Gmail + OTP (Supabase signInWithOtp / verifyOtp type:'email') */
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+async function sendEmailOtp() {
+  const el = document.getElementById('em'); const email = (el && el.value || '').trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) { toast('Email chưa đúng định dạng'); return; }
+  if (S.busy) return; S.busy = true;
+  try {
+    const { error } = await sb().auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    if (error) throw error;
+    S.otp = { kind: 'email', to: email, resendAt: now() + 60000 };
+    go('otp');
+  } catch (e) { toast('Không gửi được mã: ' + errMsg(e)); }
+  finally { S.busy = false; }
+}
+/* SĐT + OTP (backend /auth/phone/otp và /auth/phone/verify, như web) */
+async function sendPhoneOtp(resend) {
+  const el = document.getElementById('ph'); const phone = resend ? S.otp.to : (el && el.value || '').trim();
+  if (!phone || phone.replace(/\D/g, '').length < 9) { toast('Số điện thoại chưa đúng'); return; }
+  if (S.busy) return; S.busy = true;
+  try {
+    const r = await API('/auth/phone/otp', { method: 'POST', body: { phone, expected_role: 'customer' } });
+    S.otp = { kind: 'phone', to: r.phone || phone, raw: phone, resendAt: now() + 60000, expiresAt: now() + (Number(r.expires_in_seconds) || 120) * 1000 };
+    if (resend) { toast('Đã gửi lại mã'); if (curScreen() === 'otp') draw(); } else go('otp');
+  } catch (e) { toast(errMsg(e)); }
+  finally { S.busy = false; }
+}
+async function resendOtp() {
+  if (now() < (S.otp.resendAt || 0)) return;
+  if (S.otp.kind === 'email') {
+    try { const { error } = await sb().auth.signInWithOtp({ email: S.otp.to, options: { shouldCreateUser: true } }); if (error) throw error; S.otp.resendAt = now() + 60000; toast('Đã gửi lại mã'); draw(); }
+    catch (e) { toast('Không gửi lại được: ' + errMsg(e)); }
+  } else sendPhoneOtp(true);
+}
+const otpVal = () => [...document.querySelectorAll('.otp input')].map(i => i.value.replace(/\D/g, '')).join('');
+function otpKey(i, ev) {
+  const ins = [...document.querySelectorAll('.otp input')], el = ins[i];
+  if (ev.key === 'Backspace' && !el.value && i > 0) ins[i - 1].focus();
+}
+function otpIn(i, el) {
+  const ins = [...document.querySelectorAll('.otp input')];
+  const v = el.value.replace(/\D/g, '');
+  if (v.length > 1) { v.slice(0, 6).split('').forEach((d, k) => { if (ins[k]) ins[k].value = d; }); (ins[Math.min(v.length, 6) - 1] || el).focus(); return; }
+  el.value = v; if (v && ins[i + 1]) ins[i + 1].focus();
+}
+async function verifyOtp() {
+  const token = otpVal();
+  if (!/^\d{6}$/.test(token)) { toast('Nhập đủ 6 số'); return; }
+  if (S.busy) return; S.busy = true;
+  try {
+    if (S.otp.kind === 'email') {
+      const { data, error } = await sb().auth.verifyOtp({ email: S.otp.to, token, type: 'email' });
+      if (error) throw error;
+      if (!data || !data.session) throw new Error('Không nhận được phiên đăng nhập');
+      AUTH().syncSupabaseCustomerSession(data.session);   // lưu phiên + phát sự kiện foodsave:session-saved
+    } else {
+      const data = await API('/auth/phone/verify', { method: 'POST', body: { phone: S.otp.raw || S.otp.to, otp: token, expected_role: 'customer' } });
+      AUTH().saveSession(data, 'customer');
+    }
+  } catch (e) { toast(S.otp.kind === 'email' ? 'Mã sai hoặc đã hết hạn' : errMsg(e)); }
+  finally { S.busy = false; }
+}
+async function saveProfile() {
+  const name = (document.getElementById('nm').value || '').trim();
+  if (name.length < 2) { toast('Vui lòng nhập họ tên'); return; }
+  if (!document.getElementById('tc').checked) { toast('Bạn cần đồng ý Điều khoản và Chính sách bảo mật'); return; }
+  const email = (document.getElementById('pe').value || '').trim(), dob = (document.getElementById('bd').value || '').trim();
+  if (email && !EMAIL_RE.test(email)) { toast('Email chưa đúng định dạng'); return; }
+  if (S.busy) return; S.busy = true;
+  try {
+    const old = (S.user && S.user.metadata) || {};
+    const meta = { ...old, terms_accepted: true, profile_completed_at: new Date().toISOString() };
+    if (email) meta.contact_email = email; if (dob) meta.birthday = dob;
+    // Chỉ cập nhật họ tên + metadata của hồ sơ có sẵn (không đổi role, cùng bảng profiles như web)
+    S.user = await API('/profile/me', { method: 'PATCH', body: { full_name: name, metadata: meta } });
+    go('loc');
+  } catch (e) { toast(errMsg(e)); }
+  finally { S.busy = false; }
+}
+
+/* Vị trí: GPS thật (navigator.geolocation), lưu cùng khóa với web để API xếp theo khoảng cách. Bản đồ thật ở Đợt 2. */
+function saveLoc(loc) { S.loc = loc; try { localStorage.setItem(LOC_KEY, JSON.stringify({ latitude: loc.latitude, longitude: loc.longitude, radiusKm: 5 })); localStorage.setItem('foodsave.app.locLabel', loc.label || ''); } catch (e) { /* bỏ qua */ } }
+function readLoc() { try { const v = JSON.parse(localStorage.getItem(LOC_KEY) || 'null'); if (v && v.latitude != null) return { latitude: +v.latitude, longitude: +v.longitude, label: localStorage.getItem('foodsave.app.locLabel') || 'Vị trí hiện tại (GPS)' }; } catch (e) { /* bỏ qua */ } return null; }
+async function useGps() {
+  const btn = document.getElementById('gpsb'); if (btn) btn.disabled = true;
+  try {
+    const c = window.FoodSaveMap ? await FoodSaveMap.currentPosition() : await new Promise((ok, no) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(p => ok(p.coords), () => no(new Error('Không lấy được vị trí. Hãy cho phép truy cập vị trí hoặc nhập địa chỉ.')), { timeout: 10000 }) : no(new Error('Thiết bị chưa hỗ trợ GPS')));
+    let label = 'Vị trí hiện tại (GPS)';
+    try { const pl = window.FoodSaveMap && await FoodSaveMap.reverseGeocode(c.latitude, c.longitude); if (pl && pl.formattedAddress) label = pl.formattedAddress; } catch (e) { /* giữ nhãn mặc định */ }
+    saveLoc({ latitude: c.latitude, longitude: c.longitude, label });
+    toast('Đã lấy vị trí của bạn');
+    if (S.user) FS.sync.hydratePage().then(() => softRefresh()).catch(() => { });
+    draw();
+  } catch (e) { toast(errMsg(e)); }
+  finally { if (btn) btn.disabled = false; }
+}
+/* Tìm địa chỉ (Photon) ở màn Bản đồ để đổi vị trí xem cửa hàng */
+async function mapSearch() {
+  const el = document.getElementById('maddr'), out = document.getElementById('mres'); const qv = (el && el.value || '').trim();
+  if (qv.length < 4) { toast('Nhập địa chỉ cụ thể hơn (số nhà, đường, phường…)'); return; }
+  if (!window.FoodSaveMap) { toast('Chưa tải được bản đồ'); return; }
+  out.innerHTML = '<div class="xs mut">Đang tìm…</div>';
+  try {
+    S.mres = await FoodSaveMap.searchAddress(qv, 5);
+    out.innerHTML = S.mres.length ? S.mres.map((p, i) => '<button class="sopt" style="padding:10px 12px;margin-bottom:6px" onclick="mapPick(' + i + ')"><span class="ico"><i class="ti ti-map-pin"></i></span><span class="sm">' + esc(p.formattedAddress) + '</span></button>').join('') : '<div class="xs mut">Không tìm thấy địa chỉ này.</div>';
+  } catch (e) { out.innerHTML = '<div class="xs mut">Không kết nối được máy chủ bản đồ. Kiểm tra mạng rồi thử lại.</div>'; }
+}
+function mapPick(i) {
+  const p = (S.mres || [])[i]; if (!p) return;
+  saveLoc({ latitude: p.lat, longitude: p.lng, label: p.formattedAddress });
+  if (S.user) FS.sync.hydratePage().then(() => softRefresh()).catch(() => { });
+  toast('Đã đổi vị trí'); draw();
+}
+/* Vẽ bản đồ Leaflet + OpenStreetMap (cùng frontend/foodsave-map.js với web). Cửa hàng không có tọa độ thì không ghim. */
+const validLL = (la, ln) => window.FoodSaveMap ? FoodSaveMap.validCoordinate(la, ln) : (Number.isFinite(+la) && Number.isFinite(+ln) && la != null && ln != null);
+const urgentOf = sid => { const ls = buyable().filter(p => p.storeId === sid).map(p => p.label); return ls.includes('red') ? 'red' : ls.includes('yellow') ? 'yellow' : 'green'; };
+const PIN_COL = { red: '#dc3b2f', yellow: '#e0a512', green: '#1c7c45' };
+function mountMap(id, o) {
+  const el = document.getElementById(id); if (!el) return null;
+  const note = m => { el.innerHTML = '<div class="mapfb">' + m + '</div>'; return null; };
+  if (!window.L || !window.FoodSaveMap) return note('Chưa tải được bản đồ (có thể đang mất mạng). Danh sách cửa hàng ở bên dưới.');
+  const list = (o.stores || []).filter(s => validLL(s.latitude, s.longitude));
+  const me = S.loc && validLL(S.loc.latitude, S.loc.longitude) ? [Number(S.loc.latitude), Number(S.loc.longitude)] : null;
+  if (!list.length && !me) return note('Chưa có vị trí để hiển thị. Bật vị trí hoặc nhập địa chỉ.');
+  const map = FoodSaveMap.createMap(el, { zoom: 14 }); if (!map) return note('Chưa tải được bản đồ.');
+  if (!o.interactive) {
+    ['dragging', 'touchZoom', 'doubleClickZoom', 'boxZoom', 'keyboard', 'scrollWheelZoom'].forEach(k => map[k] && map[k].disable());
+    if (map.tap) map.tap.disable(); if (map.zoomControl) map.zoomControl.remove();
+    if (o.onTap) map.on('click', o.onTap);
+  } else if (map.zoomControl) map.zoomControl.setPosition('bottomright');
+  const pts = [];
+  list.forEach(s => {
+    const n = buyable().filter(p => p.storeId === s.id).length, col = PIN_COL[urgentOf(s.id)];
+    const html = o.count ? '<div class="pinc"><i style="background:' + col + '"></i>' + n + ' sp</div>' : '<div class="pinc"><i style="background:' + col + '"></i>' + esc(s.name).slice(0, 14) + '</div>';
+    const mk = L.marker([Number(s.latitude), Number(s.longitude)], { icon: L.divIcon({ className: 'fs-pin', html, iconSize: [64, 26], iconAnchor: [32, 13] }), title: s.name, interactive: !!o.onPin }).addTo(map);
+    if (o.onPin) mk.on('click', () => o.onPin(s));
+    pts.push([Number(s.latitude), Number(s.longitude)]);
+  });
+  if (me) { L.circleMarker(me, { radius: 9, color: '#fff', weight: 3, fillColor: '#2f6bf0', fillOpacity: 1, interactive: false }).addTo(map); pts.push(me); }
+  const fit = () => { map.invalidateSize(); if (pts.length > 1) map.fitBounds(L.latLngBounds(pts).pad(0.25), { maxZoom: 16 }); else map.setView(pts[0], 15); };
+  fit(); setTimeout(fit, 250);
+  return map;
+}
+async function finishLoc() {
+  const t = S.tmpLoc;
+  if (t && validLL(t.latitude, t.longitude)) saveLoc({ latitude: t.latitude, longitude: t.longitude, label: t.label || 'Vị trí đã ghim' });
+  S.tmpLoc = null; if (S.picker) { try { S.picker.destroy(); } catch (e) { /* bỏ qua */ } S.picker = null; }
+  loadPolicy(); loadTrust(); loadFav();
+  try { await FS.sync.hydratePage(); } catch (e) { /* bỏ qua */ }
+  go('notifperm');
+}
+async function doLogout(silent) {
+  try { await sb().auth.signOut(); } catch (e) { /* bỏ qua */ }
+  try { await AUTH().logout('customer'); } catch (e) { /* bỏ qua */ }
+  try { AUTH().clearSession(); } catch (e) { /* bỏ qua */ }
+  S.user = null; S.authedData = false; S.trust = null; S.fav = new Set(); S.cart = []; saveCart(); ORD.length = 0; NOTIFS.length = 0; COMPLAINTS.length = 0;
+  if (!silent) root('welcome');
+}
+
+/* ====================== GAME CÂY (cùng logic + cùng khóa localStorage với web) ====================== */
+const TREE_KEY = 'foodsave.treeGame.v1', TREE_CREDITED = 'foodsave.treeGame.creditedOrders.v1';
+const T_FULL = 100, T_COST = 25, T_PT = 5, T_DONATE = 25, T_PER_ORDER = 25;
+const stageKey = w => w >= 75 ? 'ready' : w >= 50 ? 'young' : w >= 25 ? 'bud' : 'sprout';
+const stageLbl = w => ({ ready: 'Sắp ra quả', young: 'Cây non khỏe mạnh', bud: 'Chồi xanh', sprout: 'Mầm xanh' })[stageKey(w)];
+const tnum = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
+function treeRead() {
+  let s = {}; try { s = JSON.parse(localStorage.getItem(TREE_KEY) || 'null') || {}; } catch (e) { /* bỏ qua */ }
+  return { currentTree: Math.max(1, Math.floor(tnum(s.currentTree, 1))), water: Math.max(0, Math.min(T_FULL, tnum(s.water))), waterReserve: Math.max(0, Math.floor(tnum(s.waterReserve))),
+    donatedTrees: Math.max(0, Math.floor(tnum(s.donatedTrees))), totalWaterings: Math.max(0, Math.floor(tnum(s.totalWaterings))), totalOrdersCredited: Math.max(0, Math.floor(tnum(s.totalOrdersCredited))), totalReputation: Math.max(0, Math.floor(tnum(s.totalReputation))), lastOrderId: s.lastOrderId || '', lastWaterEarnedAt: s.lastWaterEarnedAt || '', lastWateredAt: s.lastWateredAt || '', lastDonatedAt: s.lastDonatedAt || '' };
+}
+const treeSave = s => { try { localStorage.setItem(TREE_KEY, JSON.stringify(s)); } catch (e) { /* bỏ qua */ } };
+function creditedRead() { try { const v = JSON.parse(localStorage.getItem(TREE_CREDITED) || '[]'); return Array.isArray(v) ? v.map(String) : []; } catch (e) { return []; } }
+/* Cộng nước khi đơn đã THANH TOÁN THẬT (payment_status === 'paid' từ server), mỗi đơn một lần.
+   Khóa chống trùng dùng "#<order_number>" giống mapUserOrder của web. */
+function creditPaidOrders() {
+  const done = creditedRead(); let changed = false; const s = treeRead();
+  ORD.filter(o => o.payment_status === 'paid' && tms(o.paid_at) > now() - 2 * 3600000).forEach(o => {
+    const key = '#' + o.order_number;
+    if (done.includes(key)) return;
+    s.waterReserve += T_PER_ORDER; s.totalOrdersCredited += 1; s.lastOrderId = key; s.lastWaterEarnedAt = new Date().toISOString();
+    done.push(key); changed = true;
+  });
+  if (changed) { treeSave(s); try { localStorage.setItem(TREE_CREDITED, JSON.stringify(done)); } catch (e) { /* bỏ qua */ } }
+  return changed;
+}
+function waterTree() {
+  const t = treeRead();
+  if (t.waterReserve < T_COST) { toast('Bạn chưa có nước. Hãy cứu thêm thực phẩm để nhận 25 giọt nước.'); return; }
+  t.waterReserve -= T_COST; let w = t.water + T_COST, don = 0; while (w >= T_FULL) { don++; w -= T_FULL; }
+  const pts = T_PT + don * T_DONATE; t.water = w; t.currentTree += don; t.donatedTrees += don; t.totalWaterings++; t.totalReputation += pts; t.lastWateredAt = new Date().toISOString(); if (don) t.lastDonatedAt = t.lastWateredAt;
+  treeSave(t);
+  const sc = document.getElementById('scene'); if (sc) { sc.classList.add('water'); if (don) sc.classList.add('harvest'); }
+  setTimeout(() => { if (curScreen() === 'impact') draw(); toast(don ? '🎉 Cây đã trưởng thành và được góp vào quỹ xanh! +' + pts + ' điểm' : 'Đã tưới cây +25% · +' + pts + ' điểm xanh'); }, 1250);
+}
+function treeSVG(w) {
+  const k = stageKey(w), sc = (.62 + w / T_FULL * .38).toFixed(2);
+  const leaf = (x, y, r, c) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * .55}" fill="${c}" transform="rotate(${x > 0 ? -28 : 28} ${x} ${y})"/>`;
+  let can = '';
+  if (k === 'sprout') can = leaf(-16, -70, 16, '#3fbf6a') + leaf(16, -74, 16, '#2fa85a');
+  else if (k === 'bud') can = leaf(-26, -78, 20, '#3fbf6a') + leaf(26, -82, 20, '#2fa85a') + leaf(-12, -104, 18, '#56d27f') + leaf(14, -108, 18, '#3fbf6a');
+  else can = `<circle cx="0" cy="-112" r="52" fill="#2fa85a"/><circle cx="-40" cy="-92" r="34" fill="#34b563"/><circle cx="40" cy="-92" r="34" fill="#34b563"/><circle cx="0" cy="-142" r="34" fill="#46c474"/><circle cx="-16" cy="-122" r="14" fill="#6fdc97" opacity=".6"/><circle cx="26" cy="-104" r="10" fill="#6fdc97" opacity=".5"/>`;
+  const fruit = k === 'ready' ? `<circle cx="-24" cy="-96" r="8" fill="#ff5a4f"/><circle cx="30" cy="-120" r="8" fill="#ff8a3d"/><circle cx="6" cy="-82" r="8" fill="#ff5a4f"/><circle cx="-34" cy="-124" r="7" fill="#ffd23f"/><circle cx="44" cy="-86" r="7" fill="#ffd23f"/>` : '';
+  const th = k === 'sprout' ? 60 : k === 'bud' ? 84 : 100;
+  return `<svg class="tree" viewBox="0 0 300 250"><ellipse cx="150" cy="222" rx="118" ry="22" fill="#79c46d"/><ellipse cx="150" cy="232" rx="104" ry="18" fill="#8a5a2b"/><ellipse cx="150" cy="218" rx="46" ry="9" fill="#6a431d"/><g transform="translate(150,214) scale(${sc})"><path d="M-9 0 C-7 -${th * .5} -5 -${th * .8} -5 -${th} L5 -${th} C5 -${th * .8} 7 -${th * .5} 9 0Z" fill="#9a6a38"/>${can}${fruit}</g></svg>`;
+}
+function sceneHTML() {
+  const t = treeRead(), k = stageKey(t.water), can = t.waterReserve >= T_COST;
+  return `<div class="scene" id="scene" data-stage="${k}"><div class="sun"></div><span class="cloud" style="top:30px;animation-delay:-6s"></span><span class="cloud" style="top:74px;animation-duration:30s;animation-delay:-18s;transform:scale(.7)"></span>
+ ${treeSVG(t.water)}<div class="can">🚿</div><div class="drops"><i>💧</i><i>💧</i><i>💧</i><i>💧</i><i>💧</i></div>
+ <div class="sign">Quỹ cây xanh<span>#${t.currentTree}</span></div>
+ <div class="dock"><div class="res"><i class="ti ti-droplet-filled"></i><div><b>${t.waterReserve}</b><span>giọt nước</span></div></div>
+ <button class="wbtn" ${can ? '' : 'disabled'} onclick="waterTree()"><i class="ti ti-droplet-up"></i>${can ? 'Tưới ngay' : 'Thiếu nước'}</button><button class="wbtn alt" onclick="tab('search')"><i class="ti ti-shopping-bag-plus"></i>Cứu thêm</button></div></div>`;
+}
+function treeNext() { const t = treeRead(), need = Math.ceil((T_FULL - t.water) / T_COST); return t.waterReserve >= T_COST ? `Đang có ${Math.floor(t.waterReserve / T_COST)} lượt tưới sẵn sàng. Bấm Tưới ngay để cây lớn thêm.` : `Cần thêm ${need} lượt tưới để cây trưởng thành. Cứu thêm đơn hàng để nhận nước.`; }
+
+/* ====================== THÀNH PHẦN DÙNG CHUNG ====================== */
+function prodRow(p) {
+  const s = store(p.storeId) || {}, lb = p.label;
+  const dist = p.distanceText || (s.distanceText) || '';
+  return `<div class="prod" onclick="go('detail','${q1(p.id)}')">
+  <div class="pimg ${lb}">${pic(p, 44)}<span class="tag ${lb}" style="position:absolute;left:-4px;top:-4px">Nhãn ${LAB[lb] ? LAB[lb].n : ''}</span></div>
+  <div class="grow"><div class="xs mut row" style="gap:4px"><i class="ti ti-map-pin" style="font-size:12px"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px">${esc(p.store)}</span>${dist ? ' · ' + esc(dist) : ''} ${p.rating ? `<span style="margin-left:auto;margin-right:22px" class="b"><i class="ti ti-star-filled" style="font-size:11px;color:#e0a512"></i> ${p.rating.toFixed(1)}</span>` : ''}</div>
+  <div class="pname" style="margin-top:3px">${esc(p.name)}</div>
+  <div class="row" style="gap:5px;margin:5px 0;flex-wrap:wrap"><span class="chip">Còn ${p.stock} suất</span></div>
+  <div class="row between"><div class="price">${fmt(p.price)}${p.original > p.price ? `<s>${fmt(p.original)}</s><span class="off">-${pct(p)}%</span>` : ''}</div></div>
+  <div class="mt8"><span class="chip ${p.expiresHrs < 6 ? 'r' : ''}"><i class="ti ti-clock" style="font-size:12px"></i>Còn ${left(p.expiresHrs)}</span></div></div>
+  <button class="heart ${S.fav.has(p.id) ? 'on' : ''}" onclick="event.stopPropagation();fav('${q1(p.id)}')"><i class="ti ti-heart${S.fav.has(p.id) ? '-filled' : ''}"></i></button></div>`;
+}
+async function fav(id) {
+  const on = S.fav.has(id);
+  on ? S.fav.delete(id) : S.fav.add(id); softRefresh();
+  try {
+    if (on) await API('/customers/favorites/products/' + encodeURIComponent(id), { method: 'DELETE' });
+    else await API('/customers/favorites/products', { method: 'POST', body: { product_id: id } });
+  } catch (e) { on ? S.fav.add(id) : S.fav.delete(id); softRefresh(); toast(errMsg(e)); }
+}
+function addCart(id, go2) {
+  const p = prod(id); if (!p) { toast('Sản phẩm không còn bán'); return; }
+  if (p.stock <= 0) { toast('Sản phẩm đã hết hàng'); return; }
+  if (S.trust && S.trust.red_banned && p.label === 'red') { toast('Bạn đang bị khóa mua nhãn đỏ đến ' + dmy(S.trust.red_ban_until) + '. Vẫn mua được nhãn xanh và vàng.'); return; }
+  const first = S.cart.length ? prod(S.cart[0].p) : null;
+  if (first && first.storeId !== p.storeId) {
+    sheet(`<h2>Giỏ hàng có cửa hàng khác</h2><p class="mut sm mt8">Mỗi đơn chỉ nhận hàng tại 1 cửa hàng. Bạn muốn xóa giỏ cũ và thêm món này?</p><div class="row mt16"><button class="btn ghost" onclick="closeSheet()">Giữ giỏ cũ</button><button class="btn" onclick="S.cart=[];saveCart();closeSheet();addCart('${q1(id)}',${!!go2})">Đổi giỏ</button></div>`); return;
+  }
+  const c = S.cart.find(x => x.p === id);
+  if (c) { if (c.q < p.stock && c.q < 99) c.q++; else { toast('Đã đạt số lượng tối đa còn lại'); return; } } else S.cart.push({ p: id, q: 1 });
+  saveCart(); toast('Đã thêm vào giỏ hàng'); if (go2) go('cart'); else softRefresh();
+}
+function qty(id, d) {
+  const c = S.cart.find(x => x.p === id), p = prod(id); if (!c) return;
+  c.q += d;
+  if (c.q <= 0) S.cart = S.cart.filter(x => x !== c);
+  else if (p && c.q > p.stock) { c.q = p.stock; toast('Chỉ còn ' + p.stock + ' suất') }
+  saveCart(); draw();
+}
+
+/* ====================== ĐƠN HÀNG: tiện ích ====================== */
+const ACTIVE = ['awaiting_payment', 'pending', 'confirmed', 'ready'];
+const isActive = o => ACTIVE.includes(o.status);
+const isPaid = o => o.payment_status === 'paid';
+const STATUS_TXT = { awaiting_payment: 'Chờ thanh toán', pending: 'Đang chuẩn bị', confirmed: 'Đang chuẩn bị', ready: 'Sẵn sàng nhận', completed: 'Đã lấy', cancelled: 'Đã hủy', no_show: 'Không đến nhận' };
+const STATUS_CHIP = { awaiting_payment: 'r', pending: 'y', confirmed: 'y', ready: '', completed: '', cancelled: 'g', no_show: 'r' };
+const CANCEL_TXT = {
+  payment_timeout: 'Quá hạn thanh toán, hàng đã trả về kho (bạn không bị tính lỗi)',
+  customer_cancelled_unpaid: 'Bạn đã hủy khi chưa thanh toán',
+  customer_free_cancel: 'Hủy trong thời gian miễn phí, đã hoàn tiền 100%',
+  late_cancel: 'Hủy sau thời gian miễn phí, không hoàn tiền',
+  store_cancelled: 'Cửa hàng đã hủy, bạn được hoàn tiền 100%',
+  admin_cancelled: 'FoodSave đã hủy, bạn được hoàn tiền 100%',
+  no_show: 'Không đến nhận đúng hạn, không hoàn tiền'
+};
+const orderItems = o => Array.isArray(o.order_items) ? o.order_items : [];
+const orderStore = o => store(o.store_id) || { name: (o.stores && o.stores.name) || 'Cửa hàng', logo: (o.stores && o.stores.emoji) || '🏪', addr: '' };
+const orderLabel = o => o.policy_label || (prod((orderItems(o)[0] || {}).product_id) || {}).label || 'green';
+
+let orderChanged = false;
+async function refreshOrder(id) {
+  const data = await API('/orders/' + encodeURIComponent(id));
+  const i = ORD.findIndex(x => x.id === id);
+  const sig = o => [o.status, o.payment_status, o.pickup_deadline, o.pay_deadline, o.updated_at, (o.complaints || []).length].join('|');
+  if (i >= 0) { const before = sig(ORD[i]); ORD[i] = { ...ORD[i], ...data }; orderChanged = before !== sig(ORD[i]); } else { ORD.unshift(data); orderChanged = true; }
+  creditPaidOrders();
+  return orderOf(id);
+}
+const complaintOf = o => COMPLAINTS.find(c => c.orderId === o.id);
+
+/* mã QR thật (qrcode-generator, tải từ cdnjs); thiếu thư viện/mất mạng thì chỉ hiện mã chữ để đọc cho cửa hàng */
+function qrSvg(text) {
+  try { if (!window.qrcode) return ''; const q = window.qrcode(0, 'M'); q.addData(String(text)); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } catch (e) { return ''; }
+}
+
+/* ====================== MÀN HÌNH CHÍNH (TAB) ====================== */
+const TABV = {
+  home() {
+    const all = buyable(), red = all.filter(p => p.label === 'red').slice(0, 3);
+    const act = ORD.find(o => isPaid(o) && ['pending', 'confirmed', 'ready'].includes(o.status));
+    const nearStores = [...STORES].filter(s => PRODUCTS.some(p => p.storeId === s.id && !p.donation)).sort((a, b) => (a.distance || 999) - (b.distance || 999)).slice(0, 3);
+    const t = treeRead();
+    const locLabel = S.loc && S.loc.label ? S.loc.label : 'Chưa bật vị trí';
+    return `<div class="scr">
+ <div class="top" style="padding-bottom:6px"><div class="grow"><div class="xs mut">Vị trí của bạn</div><button class="b row" style="gap:4px;font-size:14px;max-width:230px" onclick="go('map')"><i class="ti ti-map-pin" style="color:var(--g7)"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(locLabel)}</span><i class="ti ti-chevron-down" style="font-size:14px"></i></button></div>
+  <button class="ib" onclick="go('notifs')"><i class="ti ti-bell"></i>${unread() ? `<span class="dot">${unread()}</span>` : ''}</button><button class="ib" onclick="go('cart')"><i class="ti ti-shopping-bag"></i>${cartN() ? `<span class="dot">${cartN()}</span>` : ''}</button></div>
+ ${act ? `<div class="pad mt8"><div class="card row" style="background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border:0;cursor:pointer" onclick="go('order','${q1(act.id)}')"><i class="ti ti-qrcode" style="font-size:30px"></i><div class="grow"><div class="b" style="font-size:13.5px">Đơn #${esc(act.order_number)} ${act.status === 'ready' ? 'đã sẵn sàng' : 'đang chờ bạn nhận'}</div><div class="xs" style="opacity:.85">Còn ${cdSpan(act.pickup_deadline)} để nhận hàng · Xem mã QR</div></div><i class="ti ti-chevron-right"></i></div></div>` : ''}
+ <div class="hs mt8">${[['Tất cả', ''], ['Bữa ăn', 'meal'], ['Bánh mì', 'bakery'], ['Thực phẩm tươi', 'fresh'], ['Đồ uống', 'drink']].map((c, i) => `<button class="pill ${i ? '' : 'on'}" onclick="go('list',{t:'${c[0]}',${c[1] === 'fresh' ? "fg:'fresh'" : `cat:'${c[1]}'`}})">${c[0]}</button>`).join('')}</div>
+ <div class="hero mt8"><h2>Ăn ngon –<br>Tiết kiệm</h2><p>Giảm giá cuối ngày, thanh toán trước – lấy hàng sau</p><button class="b2" onclick="go('list',{t:'Flash Deal',l:'red'})">Săn deal ngay <i class="ti ti-arrow-right" style="font-size:14px"></i></button><div class="big">🥗</div></div>
+ <div class="pad mt16"><h2>Danh mục theo nhãn</h2></div>
+ <div class="pad mt8 grid3">${Object.entries(LAB).map(([k, L]) => `<button class="lab ${k}" onclick="go('list',{t:'Nhãn ${L.n}',l:'${k}'})"><div class="ic"><i class="ti ${L.ic}" style="color:${k === 'green' ? 'var(--g7)' : k === 'yellow' ? '#c48a00' : 'var(--red)'}"></i></div><b>Nhãn ${L.n}</b><small>${L.sub}</small><em>${S.loaded ? all.filter(p => p.label === k).length + ' sp ›' : '…'}</em></button>`).join('')}</div>
+ <div class="pad mt16"><h2>Bộ lọc nhanh</h2></div>
+ <div class="hs mt8">${[['ti-leaf', 'Rau củ', 'veggie'], ['ti-meat', 'Thịt & hải sản', 'meat'], ['ti-bread', 'Bánh mì cuối ngày', 'bakery'], ['ti-package', 'Bữa ăn sẵn', 'meal']].map(f => `<button style="flex:none;width:84px;text-align:center;font-size:11px;font-weight:700" onclick="go('list',{t:'${f[1].replace('&', '&amp;')}',cat:'${f[2]}'})"><div class="ib" style="width:58px;height:58px;margin:0 auto 5px;border-radius:50%"><i class="ti ${f[0]}" style="color:var(--g7);font-size:24px"></i></div>${f[1].replace('&', '&amp;')}</button>`).join('')}</div>
+ <div class="pad mt16"><div class="tree-card" onclick="go('impact')"><div class="mini">${t.water >= 75 ? '🌳' : t.water >= 50 ? '🌿' : '🌱'}</div><div class="grow"><b class="sm">Vườn cây uy tín #${t.currentTree} · ${t.water}%</b><div class="bar mt8"><i style="width:${t.water}%"></i></div><div class="xs mut mt8">${t.waterReserve >= 25 ? '💧 Có ' + t.waterReserve + ' giọt nước – tưới ngay!' : 'Cứu thêm đơn để nhận nước'}</div></div><i class="ti ti-chevron-right mut"></i></div></div>
+ <div class="pad mt16 row between"><h2><i class="ti ti-map-2" style="color:var(--g7)"></i> Gần bạn</h2><button class="b sm" style="color:var(--g8)" onclick="go('map')">Xem tất cả ›</button></div>
+ <div class="mapbox mt8" id="hmap" style="height:160px"></div>
+ <div class="pad mt8">${!S.loaded ? skel(1) : nearStores.length ? nearStores.map(storeRow).join('') : `<div class="card sm mut">Chưa có cửa hàng nào đang bán${S.loc && S.loc.latitude != null ? ' quanh bạn' : '. Bật vị trí để thấy cửa hàng gần bạn'}.</div>`}</div>
+ <div class="pad mt16 row between"><h2><i class="ti ti-bolt" style="color:#e0a512"></i> Flash Deal <span class="tag red" style="margin-left:4px">Nhãn đỏ</span></h2><button class="b sm" style="color:var(--g8)" onclick="go('list',{t:'Flash Deal',l:'red'})">Xem tất cả ›</button></div>
+ <div class="pad mt8">${listOrState(red, prodRow, emptyBox('⚡', 'Chưa có deal nhãn đỏ', 'Hãy quay lại sau nhé'))}</div>
+ ${VOUCHERS.length ? `<div class="pad mt8"><div class="card row" style="background:var(--g9);color:#fff;border:0;cursor:pointer" onclick="go('vouchers')"><div class="ib" style="background:var(--y);border:0"><i class="ti ti-ticket" style="color:var(--g9)"></i></div><div class="grow"><div class="b">${VOUCHERS.length} mã giảm giá đang có</div><div class="xs" style="opacity:.8">Áp dụng khi thanh toán</div></div><i class="ti ti-chevron-right"></i></div></div>` : ''}
+ </div>`;
+  },
+
+  search() {
+    const qv = S.filt.q || '', hasLoc = S.loc && S.loc.latitude != null, sort = S.filt.sort || (hasLoc ? 'near' : 'exp');
+    const L = searchList();
+    return `<div class="scr"><div class="top"><h3 style="font-size:20px">Tìm kiếm</h3></div>
+ <div class="pad"><div class="row card" style="padding:6px 8px 6px 14px"><i class="ti ti-search mut"></i><input id="q" class="grow" style="border:0;outline:0;padding:8px 0;background:none" placeholder="Tìm món ăn, cửa hàng…" value="${esc(qv)}" oninput="S.filt.q=this.value;sres()"><button class="ib" style="width:36px;height:36px;background:var(--grbg);border:0" onclick="filterSheet()"><i class="ti ti-adjustments-horizontal" style="color:var(--g8)"></i></button></div></div>
+ <div class="hs mt12">${[hasLoc ? ['near', 'Gần bạn'] : null, ['price', 'Giá tăng dần'], ['exp', 'Sắp hết hạn']].filter(Boolean).map(s => `<button class="pill ${sort === s[0] ? 'on' : ''}" onclick="S.filt.sort='${s[0]}';draw()">${s[1]}</button>`).join('')}${['green', 'yellow', 'red'].map(k => `<button class="pill ${S.filt.l === k ? 'on' : ''}" onclick="S.filt.l=S.filt.l==='${k}'?null:'${k}';draw()">Nhãn ${LAB[k].n}</button>`).join('')}</div>
+ <div class="pad mt12" id="sres">${searchHtml(L)}</div></div>`;
+  },
+
+  fav() {
+    const L = buyable().filter(p => S.fav.has(p.id));
+    return `<div class="scr"><div class="top"><h3 style="font-size:20px">Yêu thích (${L.length})</h3></div><div class="pad">${listOrState(L, prodRow, emptyBox('💚', 'Chưa có sản phẩm yêu thích', 'Bấm vào biểu tượng tim để lưu món bạn thích'))}</div>
+ ${S.fav.size ? `<div class="pad"><div class="card sm row" style="background:var(--grbg);border:0"><i class="ti ti-bell-ringing" style="color:var(--g8)"></i><span>Chúng tôi sẽ báo khi món yêu thích <b>sắp hết hạn</b> hoặc giảm giá sâu.</span></div></div>` : ''}</div>`;
+  },
+
+  orders() {
+    const t = S.filt.ot || 'now';
+    const grp = { now: o => ACTIVE.includes(o.status), done: o => o.status === 'completed', cancel: o => o.status === 'cancelled' || o.status === 'no_show' };
+    const L = ORD.filter(grp[t]);
+    return `<div class="scr"><div class="top"><h3 style="font-size:20px">Đơn hàng</h3></div>
+ <div class="seg">${[['now', 'Đang xử lý'], ['done', 'Đã lấy'], ['cancel', 'Đã hủy']].map(x => `<button class="${t === x[0] ? 'on' : ''}" onclick="S.filt.ot='${x[0]}';draw()">${x[1]}</button>`).join('')}</div>
+ <div class="pad mt12">${!S.loaded ? skel(2) : L.length ? L.map(orderCard).join('') : (S.netErr && !ORD.length ? errBox(S.netErr) : emptyBox('🧾', 'Chưa có đơn hàng'))}</div></div>`;
+  },
+
+  me() {
+    const u = S.user || {}, tr = S.trust, eco = window.ECO_IMPACT && window.ECO_IMPACT.me && window.ECO_IMPACT.me.totals;
+    const refunded = refundTotal();
+    const done = ORD.filter(o => o.status === 'completed').length;
+    return `<div class="scr"><div style="background:linear-gradient(170deg,var(--g9),var(--g7));color:#fff;padding:calc(28px + env(safe-area-inset-top)) 16px 54px;text-align:center;border-radius:0 0 28px 28px">
+  <div style="width:70px;height:70px;border-radius:50%;background:#fff3;margin:0 auto 8px;display:grid;place-items:center;font-size:30px;font-weight:900;border:3px solid #fff6;overflow:hidden">${u.avatar_url ? `<img src="${esc(u.avatar_url)}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">` : esc((u.full_name || '?').trim().split(/\s+/).map(w => w[0]).slice(-2).join('').toUpperCase())}</div>
+  <div class="b" style="font-size:18px">${esc(u.full_name || 'Bạn')}</div><div class="xs" style="opacity:.8">${esc(u.email || u.phone || '')}</div>
+  ${tr ? `<button class="chip mt12" style="background:#fff2;color:#fff;padding:6px 12px" onclick="go('rep')"><i class="ti ti-star"></i> Điểm uy tín: ${tr.points}</button>` : ''}</div>
+ <div class="pad" style="margin-top:-34px"><div class="card grid3" style="text-align:center;gap:0"><div><b style="font-size:19px">${done}</b><div class="xs mut">Đơn đã lấy</div></div><div><b style="font-size:19px">${eco ? Math.round((eco.money_saved_cents || 0) / 1000) + 'K' : '–'}</b><div class="xs mut">Tiết kiệm</div></div><div><b style="font-size:19px">${tr ? tr.points : '–'}</b><div class="xs mut">Điểm uy tín</div></div></div></div>
+ <div class="pad mt16"><div class="menu">
+  <button onclick="tab('orders')"><i class="ti ti-package"></i>Đơn hàng của tôi<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="go('wallet')"><i class="ti ti-wallet"></i>Ví hoàn tiền<span class="chip" style="margin-left:auto">${fmt(refunded)}</span><i class="ti ti-chevron-right chev" style="margin-left:6px"></i></button>
+  <button onclick="go('vouchers')"><i class="ti ti-ticket"></i>Voucher<span class="chip y" style="margin-left:auto">${VOUCHERS.length}</span><i class="ti ti-chevron-right chev" style="margin-left:6px"></i></button>
+  <button onclick="go('notifset')"><i class="ti ti-bell-cog"></i>Cài đặt thông báo<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="go('notifs')"><i class="ti ti-bell"></i>Thông báo${unread() ? `<span class="chip r" style="margin-left:auto">${unread()}</span>` : ''}<i class="ti ti-chevron-right chev" style="margin-left:${unread() ? 6 : 'auto'}px"></i></button>
+  <button onclick="go('impact')"><i class="ti ti-plant-2"></i>Vườn cây & tác động<span class="chip" style="margin-left:auto">${treeRead().waterReserve} 💧</span><i class="ti ti-chevron-right chev" style="margin-left:6px"></i></button>
+  <button onclick="go('help')"><i class="ti ti-help-circle"></i>Trợ giúp & hỗ trợ<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="go('legal')"><i class="ti ti-file-text"></i>Chính sách & điều khoản<i class="ti ti-chevron-right chev"></i></button>
+  <button onclick="doLogout()" style="color:var(--red)"><i class="ti ti-logout" style="color:var(--red)"></i>Đăng xuất</button></div></div></div>`;
+  }
+};
+function searchList() {
+  const qv = noAccent(S.filt.q || ''), hasLoc = S.loc && S.loc.latitude != null, sort = S.filt.sort || (hasLoc ? 'near' : 'exp');
+  let L = buyable().filter(p => !qv || noAccent(p.name + ' ' + p.store + ' ' + p.cat + ' ' + p.desc).includes(qv));
+  if (S.filt.l) L = L.filter(p => p.label === S.filt.l);
+  if (S.filt.cat) L = L.filter(p => p.cat === S.filt.cat);
+  return [...L].sort((a, b) => sort === 'price' ? a.price - b.price : sort === 'exp' ? a.expiresHrs - b.expiresHrs : (a.distance || 999) - (b.distance || 999));
+}
+const searchHtml = L => !S.loaded ? skel(3) : `<div class="xs mut" style="margin-bottom:8px">${L.length} sản phẩm</div>` + (L.map(prodRow).join('') || emptyBox('🔍', 'Không tìm thấy sản phẩm'));
+function sres() { const el = document.getElementById('sres'); if (el) el.innerHTML = searchHtml(searchList()); }
+function filterSheet() {
+  sheet(`<h2>Bộ lọc</h2><label class="l">Danh mục</label><div class="row" style="flex-wrap:wrap">${[['', 'Tất cả'], ['meal', 'Bữa ăn'], ['bakery', 'Bánh mì'], ['veggie', 'Rau củ'], ['meat', 'Thịt & hải sản'], ['dairy', 'Sữa'], ['fruit', 'Trái cây'], ['sweet', 'Đồ ngọt'], ['drink', 'Đồ uống']].map(c => `<button class="pill ${(S.filt.cat || '') === c[0] ? 'on' : ''}" onclick="S.filt.cat='${c[0]}';closeSheet();draw()">${c[1].replace('&', '&amp;')}</button>`).join('')}</div><button class="btn mt16" onclick="closeSheet()">Đóng</button>`);
+}
+const refundTotal = () => ORD.filter(o => o.payment_status === 'refunded').reduce((a, o) => a + (Number(o.total_cents) || 0), 0) + COMPLAINTS.reduce((a, c) => a + (c.refund || 0), 0);
+
+function storeRow(s) {
+  const n = PRODUCTS.filter(p => p.storeId === s.id && !p.donation).length;
+  return `<div class="card row" style="margin-bottom:8px;cursor:pointer" onclick="go('store','${q1(s.id)}')">${storeAv(s, 28)}<div class="grow"><b>${esc(s.name)}</b><div class="xs mut">${esc(s.addr)}${s.distanceText ? ' · ' + esc(s.distanceText) : ''}</div></div><span class="chip">${n} deal</span></div>`;
+}
+function orderCard(o) {
+  const items = orderItems(o), it = items[0] || {}, p = prod(it.product_id) || { name: it.product_name, label: orderLabel(o), cat: 'other' }, s = orderStore(o);
+  const n = items.reduce((a, i) => a + i.quantity, 0);
+  const badge = `<span class="chip ${STATUS_CHIP[o.status] || 'g'}">${STATUS_TXT[o.status] || esc(o.status)}</span>`;
+  return `<div class="card" style="margin-bottom:10px;cursor:pointer" onclick="go('order','${q1(o.id)}')"><div class="row between"><b>#${esc(o.order_number)}</b>${badge}</div>
+ <div class="row mt8"><div class="pimg ${orderLabel(o)}" style="width:56px;height:56px;font-size:30px;border-radius:14px">${pic(p, 30)}</div><div class="grow"><div class="b sm">${esc(it.product_name || p.name)}${items.length > 1 ? ' +' + (items.length - 1) : ''}</div><div class="xs mut">${esc(s.name)} · ${n} sản phẩm</div></div><b>${fmt(o.total_cents)}</b></div>
+ ${isPaid(o) && ['pending', 'confirmed', 'ready'].includes(o.status) ? `<div class="row mt12 xs b" style="color:var(--g8)"><i class="ti ti-clock" style="font-size:14px"></i>Nhận hàng trước ${cdSpan(o.pickup_deadline)}</div>` : ''}
+ ${o.status === 'awaiting_payment' ? `<div class="row mt12 xs b" style="color:var(--red)"><i class="ti ti-hourglass" style="font-size:14px"></i>Thanh toán trong ${cdSpan(o.pay_deadline)}</div>` : ''}</div>`;
+}
+
+/* ====================== MÀN HÌNH PHỤ ====================== */
+const SCRH = {};   // việc chạy sau khi vẽ màn hình (tải dữ liệu, đếm giờ…)
+const SCR = {
+  boot() { return `<div class="splash scr" style="display:grid;place-items:center"><div style="text-align:center"><div style="font-size:30px;font-weight:900">FOOD<span style="color:var(--y)">SAVE</span></div><div class="sm" style="opacity:.8;margin-top:8px">Đang khởi động…</div></div></div>`; },
+  oauth() { return `<div class="splash scr" style="display:grid;place-items:center"><div style="text-align:center"><div style="width:54px;height:54px;border:5px solid #fff4;border-top-color:#fff;border-radius:50%;margin:0 auto 16px;animation:sp 1s linear infinite"></div><b>Đang đăng nhập…</b></div></div>`; },
+  welcome() {
+    return `<div class="splash scr" style="display:flex;flex-direction:column">
+ <div style="padding:calc(48px + env(safe-area-inset-top)) 22px 28px"><span class="chip" style="background:#fff2;color:#fff">● THAM GIA NGAY</span><h1 style="font-size:30px;margin-top:14px;color:#fff">CHÀO MỪNG ĐẾN<br>FOOD<span style="color:var(--y)">SAVE</span></h1><p class="sm" style="opacity:.85;margin-top:8px">Cứu thực phẩm cận hạn – giảm giá sâu. Đăng nhập hoặc tạo tài khoản miễn phí trong 2 phút.</p></div>
+ <div style="background:var(--bg);border-radius:28px 28px 0 0;padding:22px 16px calc(24px + env(safe-area-inset-bottom));flex:1;color:var(--ink)">
+  <button class="sopt" onclick="startOAuth('google')"><span class="ico" style="background:#fde8e6;color:#db4437"><i class="ti ti-brand-google"></i></span>Tiếp tục với Google<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <button class="sopt" onclick="startOAuth('facebook')"><span class="ico" style="background:#e5edff;color:#1877f2"><i class="ti ti-brand-facebook"></i></span>Tiếp tục với Facebook<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <button class="sopt" onclick="go('email')"><span class="ico" style="background:#fde8e6;color:#db4437"><i class="ti ti-mail"></i></span>Tiếp tục với Gmail<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <button class="sopt" onclick="go('phone')"><span class="ico"><i class="ti ti-device-mobile"></i></span>Tiếp tục với SĐT<i class="ti ti-chevron-right mut" style="margin-left:auto"></i></button>
+  <p class="xs mut" style="text-align:center;margin-top:14px">Tiếp tục đồng nghĩa bạn chấp nhận <a href="#" onclick="event.preventDefault();go('legaldoc','terms')" style="color:var(--g8);font-weight:800">Điều khoản</a> & <a href="#" onclick="event.preventDefault();go('legaldoc','privacy')" style="color:var(--g8);font-weight:800">Bảo mật</a> của FoodSave.</p></div></div>`;
+  },
+  email() {
+    return `<div class="scr">${topbar('', '<div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>')}<div class="pad"><h1>Nhập Gmail<br>của bạn</h1><p class="sm mut mt8">Chúng tôi sẽ gửi mã OTP 6 chữ số đến email này.</p>
+ <label class="l">Địa chỉ Gmail</label><input id="em" class="field" type="email" inputmode="email" autocapitalize="off" autocomplete="email" placeholder="ten.ban@gmail.com" onkeydown="if(event.key==='Enter')sendEmailOtp()">
+ <div class="card row mt16 sm"><i class="ti ti-mail-check" style="color:var(--g7)"></i><span class="mut">Kiểm tra cả mục Spam/Quảng cáo nếu chưa thấy email.</span></div></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="sendEmailOtp()">Gửi mã OTP <i class="ti ti-send"></i></button></div></div>`;
+  },
+  phone() {
+    return `<div class="scr">${topbar('', '<div class="steps"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>')}<div class="pad"><h1>Nhập số<br>điện thoại</h1><p class="sm mut mt8">Chúng tôi sẽ gửi mã OTP xác minh đến số này.</p>
+ <label class="l">Số điện thoại</label><div class="row"><div class="field" style="width:84px;flex:none">🇻🇳 +84</div><input id="ph" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="09x xxx xxxx" onkeydown="if(event.key==='Enter')sendPhoneOtp()"></div>
+ <div class="card row mt16 sm"><i class="ti ti-lock" style="color:var(--g7)"></i><span class="mut">Số điện thoại chỉ dùng để xác minh tài khoản.</span></div></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="sendPhoneOtp()">Gửi mã OTP <i class="ti ti-send"></i></button></div></div>`;
+  },
+  otp() {
+    const o = S.otp || {};
+    if (!o.to) return `<div class="scr">${topbar('')}${errBox('Phiên nhập mã đã hết, vui lòng gửi mã mới.', "root('welcome')")}</div>`;
+    return `<div class="scr">${topbar('', '<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>')}<div class="pad"><h1>Nhập mã OTP</h1><p class="sm mut mt8">Mã 6 chữ số đã gửi đến <b>${esc(o.to)}</b></p>
+ <div class="otp mt20">${[0, 1, 2, 3, 4, 5].map(i => `<input maxlength="${i ? 1 : 6}" inputmode="numeric" autocomplete="one-time-code" oninput="otpIn(${i},this)" onkeydown="otpKey(${i},event)">`).join('')}</div>
+ <p class="sm mut" style="text-align:center;margin-top:14px"><span id="resend">${resendHtml()}</span></p></div>
+ <div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="verifyOtp()">Xác nhận <i class="ti ti-check"></i></button></div></div>`;
+  },
+  profile() {
+    const u = S.user || {}, em = u.email || '';
+    return `<div class="scr">${topbar('', '<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>')}<div class="pad"><h1>Thông tin<br>cá nhân</h1><p class="sm mut mt8">Hoàn tất hồ sơ chỉ trong 30 giây.</p>
+ <label class="l">Họ và tên</label><input id="nm" class="field" autocomplete="name" value="${esc(u.full_name && u.full_name !== u.email ? u.full_name : '')}">
+ <label class="l">Email ${em ? '' : '(tùy chọn)'}</label>${em ? `<input id="pe" class="field" value="${esc(em)}" disabled>` : '<input id="pe" class="field" type="email" placeholder="email@example.com">'}
+ <label class="l">Ngày sinh (tùy chọn)</label><input id="bd" class="field" inputmode="numeric" placeholder="DD / MM / YYYY">
+ <label class="card sm row mt12" style="cursor:pointer"><input type="checkbox" id="tc" style="width:20px;height:20px;accent-color:var(--g7)"><span>Tôi đồng ý với <a href="#" onclick="event.preventDefault();event.stopPropagation();go('legaldoc','terms')" style="color:var(--g8);font-weight:800">Điều khoản dịch vụ</a> và <a href="#" onclick="event.preventDefault();event.stopPropagation();go('legaldoc','privacy')" style="color:var(--g8);font-weight:800">Chính sách bảo mật</a>.</span></label></div>
+ <div class="pad mt16"><button class="btn" onclick="saveProfile()">Tiếp tục <i class="ti ti-arrow-right"></i></button></div></div>`;
+  },
+  loc() {
+    return `<div class="scr">${topbar('', '<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>')}<div class="pad"><h1>Xác nhận<br>vị trí</h1><p class="sm mut mt8">Gợi ý cửa hàng FoodSave gần nhất. Bấm lên bản đồ hoặc kéo ghim cho đúng chỗ. Bạn có thể bỏ qua và bật sau.</p>
+ <div class="mapbox mt16" id="lmap" style="margin:16px 0 0;height:210px"></div>
+ <button id="gpsb" class="sopt mt12" onclick="if(S.picker)S.picker.locate();else useGps()"><span class="ico"><i class="ti ti-current-location"></i></span><span><b>Vị trí hiện tại</b><br><span class="xs mut">Cho phép FoodSave truy cập GPS</span></span></button>
+ <div class="row"><input id="addr" class="field grow" placeholder="Nhập địa chỉ (số nhà, đường, phường…)" onkeydown="if(event.key==='Enter')S.picker&&S.picker.search()"><button class="btn soft sm" style="height:48px" onclick="S.picker&&S.picker.search()">Tìm</button></div>
+ <div id="lres" class="mt8"></div><p id="lstat" class="xs mut mt8"></p></div>
+ <div style="height:90px"></div><div style="position:absolute;left:16px;right:16px;bottom:24px"><button class="btn" onclick="finishLoc()">Xác nhận vị trí <i class="ti ti-arrow-right"></i></button></div></div>`;
+  },
+  notifperm() {
+    const st = ('Notification' in window) ? Notification.permission : 'unsupported';
+    return `<div class="scr" style="text-align:center;padding:0 22px">${topbar('')}<div style="width:120px;height:120px;border-radius:50%;background:var(--grbg);margin:20px auto;display:grid;place-items:center"><i class="ti ti-bell" style="font-size:54px;color:var(--g8)"></i></div>
+ <h1 style="font-size:22px">Bật thông báo<br>để không lỡ ưu đãi</h1><p class="sm mut mt8">FoodSave thông báo khi đơn của bạn sẵn sàng, có voucher mới hoặc deal giảm sâu.</p>
+ <div style="text-align:left" class="mt20">${[['ti-clock', 'Nhắc đơn hàng', 'Trạng thái cập nhật, nhắc giờ nhận'], ['ti-ticket', 'Voucher mới', 'Biết ngay khi có mã giảm giá'], ['ti-bolt', 'Flash Sale', 'Deal giảm sâu gần bạn']].map(x => `<div class="card row" style="margin-bottom:8px;border-left:4px solid var(--g7)"><span class="ico" style="width:34px;height:34px;border-radius:10px;background:var(--grbg);display:grid;place-items:center"><i class="ti ${x[0]}" style="color:var(--g8)"></i></span><div><b class="sm">${x[1]}</b><div class="xs mut">${x[2]}</div></div></div>`).join('')}</div>
+ ${st === 'denied' || st === 'unsupported' ? `<p class="xs mut mt16">${st === 'denied' ? 'Bạn đã tắt thông báo hệ thống. Thông báo vẫn hiện trong app (biểu tượng chuông).' : 'Thiết bị này chưa hỗ trợ thông báo hệ thống. Thông báo vẫn hiện trong app.'}</p>` : ''}
+ <button class="btn mt20" onclick="askNotif()">Cho phép thông báo <i class="ti ti-bell"></i></button><button class="b sm mt16" style="text-decoration:underline;color:var(--mut)" onclick="tab('home')">Để sau</button></div>`;
+  },
+
+  list(a) {
+    let L = buyable().filter(p => (!a.l || p.label === a.l) && (!a.cat || p.cat === a.cat) && (!a.fg || p.foodGroup === a.fg));
+    L = [...L].sort((x, y) => x.expiresHrs - y.expiresHrs);
+    return `<div class="scr">${topbar(esc(a.t), `<span class="xs mut">${S.loaded ? L.length + ' sản phẩm' : ''}</span>`)}<div class="pad">${listOrState(L, prodRow, emptyBox('🍽️', 'Chưa có sản phẩm'))}</div></div>`;
+  },
+
+  detail(id) {
+    const p = prod(id);
+    if (!p) return `<div class="scr">${topbar('Sản phẩm')}${S.loaded ? emptyBox('🍽️', 'Sản phẩm không còn bán', 'Có thể đã hết hàng hoặc hết hạn') : skel(1)}</div>`;
+    const raw = S.raw['p:' + id], s = store(p.storeId) || {}, lb = p.label, pl = pol(lb), meta = (raw && raw.metadata) || {};
+    const exp = raw && (raw.effective_deadline_at || raw.expires_at);
+    const imgs = (p.images && p.images.length ? p.images : (p.image ? [p.image] : []));
+    const fv = S.fav.has(id);
+    return `<div class="scr" style="padding-bottom:110px"><div style="background:linear-gradient(180deg,${lb === 'red' ? '#fbd6d2' : lb === 'yellow' ? '#fff0bf' : '#d9f2e2'},var(--bg));padding:calc(14px + env(safe-area-inset-top)) 16px 10px;text-align:center;position:relative">
+  <div class="row between"><button class="ib" onclick="back()"><i class="ti ti-arrow-left"></i></button><div class="row"><button class="ib" onclick="fav('${q1(id)}')"><i class="ti ti-heart${fv ? '-filled' : ''}" style="color:${fv ? 'var(--red)' : 'inherit'}"></i></button><button class="ib" onclick="shareProd('${q1(id)}')"><i class="ti ti-share"></i></button></div></div>
+  <div style="margin:8px 0 4px;height:230px;border-radius:22px;overflow:hidden;${imgs.length > 1 ? 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:0' : ''}">${imgs.length ? imgs.map(u => `<img src="${esc(u)}" alt="${esc(p.name)}" decoding="async" style="width:100%;height:100%;object-fit:cover;flex:none;scroll-snap-align:center" onerror="this.outerHTML='<div style=&quot;font-size:120px;padding-top:30px;width:100%;flex:none&quot;>${catEm(p)}</div>'">`).join('') : `<div style="font-size:120px;padding-top:30px">${catEm(p)}</div>`}</div>
+  <div class="row between"><span class="tag ${lb}">Nhãn ${LAB[lb] ? LAB[lb].n : ''}</span>${p.rating ? `<span class="tag" style="background:#0007;color:#fff"><i class="ti ti-star-filled" style="font-size:11px;color:var(--y)"></i> ${p.rating.toFixed(1)}</span>` : ''}</div></div>
+ <div class="pad"><div class="card"><button class="xs mut row" style="gap:4px" onclick="go('store','${q1(p.storeId)}')"><i class="ti ti-map-pin" style="font-size:13px"></i>${esc(p.store)}${p.distanceText ? ' · ' + esc(p.distanceText) : ''}<i class="ti ti-chevron-right" style="font-size:13px"></i></button>
+  <h2 style="font-size:20px;margin:4px 0 6px">${esc(p.name)}</h2><div class="price" style="font-size:24px">${fmt(p.price)}${p.original > p.price ? `<s style="font-size:14px">${fmt(p.original)}</s><span class="off" style="font-size:12px">-${pct(p)}%</span>` : ''}</div>
+  <div class="row mt8" style="flex-wrap:wrap;gap:5px"><span class="chip">Còn ${p.stock} suất</span>${p.sold ? `<span class="chip y">Đã bán ${p.sold}</span>` : ''}</div></div>
+ <div class="card mt12"><h2 class="sm row" style="gap:6px"><i class="ti ti-clock" style="color:var(--g7)"></i>Thông tin hạn sử dụng</h2><div class="grid3 mt8" style="grid-template-columns:${meta.manufactured_at ? '1fr 1fr' : '1fr'}">${meta.manufactured_at ? `<div style="background:var(--grbg);border-radius:12px;padding:10px"><div class="xs mut">Ngày sản xuất</div><b class="sm">${esc(meta.manufactured_at)}</b></div>` : ''}<div style="background:var(--redbg);border-radius:12px;padding:10px"><div class="xs mut">Thời gian còn lại</div><b class="sm" style="color:var(--red)">Còn ${left(p.expiresHrs)}</b></div></div>
+  ${exp ? `<div class="row mt8 sm" style="background:${lb === 'red' ? 'var(--redbg)' : 'var(--ylbg)'};border-radius:12px;padding:10px"><i class="ti ti-alert-triangle" style="color:${lb === 'red' ? 'var(--red)' : '#c48a00'}"></i><div><div class="xs mut">Hạn dùng</div><b>Dùng trước ${hhmm(exp)} ${dmy(exp)}</b></div></div>` : ''}
+  <p class="xs mut mt8">Hạn sử dụng do cửa hàng nhập, hệ thống tự cập nhật thời gian còn lại.</p></div>
+ ${p.desc || meta.ingredients ? `<div class="card mt12">${p.desc ? `<h2 class="sm">Mô tả sản phẩm</h2><p class="sm mut mt8">${esc(p.desc)}</p>` : ''}${meta.ingredients ? `<h2 class="sm mt12">Thành phần</h2><p class="sm mut mt8">${esc(meta.ingredients)}</p>` : ''}</div>` : ''}
+ ${pl ? `<div class="card mt12"><h2 class="sm">Chính sách nhận hàng</h2><div class="sm mut mt8" style="line-height:1.55">• Thanh toán trong <b>${pl.pay_minutes} phút</b> sau khi đặt, nhận hàng trong <b>${pl.pickup_minutes} phút</b> sau khi thanh toán.<br>• Huỷ miễn phí trong ${S.policy.grace_cancel_minutes} phút đầu sau thanh toán, hoặc trước hạn nhận ${pl.cancel_free_before_pickup_minutes} phút – hoàn 100%.<br>• Huỷ muộn / không đến nhận: không hoàn tiền, trừ điểm uy tín.</div></div>` : ''}
+ <div class="card mt12 row" style="cursor:pointer" onclick="go('store','${q1(p.storeId)}')">${storeAv(s, 28)}<div class="grow"><b>${esc(p.store)}</b><div class="xs mut">${esc(s.addr || '')}</div></div><i class="ti ti-chevron-right mut"></i></div></div>
+ <div style="left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;position:fixed;max-width:var(--af);margin:0 auto"><div><div class="xs mut">Giá</div><b style="font-size:17px">${fmt(p.price)}</b></div><button class="btn ghost" style="width:54px;flex:none" onclick="addCart('${q1(p.id)}')"><i class="ti ti-shopping-cart-plus"></i></button><button class="btn" ${p.stock <= 0 ? 'disabled' : ''} onclick="addCart('${q1(p.id)}',true)"><i class="ti ti-shopping-bag"></i>${p.stock <= 0 ? 'Hết hàng' : 'Đặt ngay'}</button></div></div>`;
+  },
+
+  store(id) {
+    const s = store(id), raw = S.raw['s:' + id];
+    if (!s) return `<div class="scr">${topbar('Cửa hàng')}${S.loaded ? emptyBox('🏪', 'Không tìm thấy cửa hàng') : skel(1)}</div>`;
+    const L = buyable().filter(p => p.storeId === id), hours = (raw && raw.opening_hours) || s.hours, lat = s.latitude, lng = s.longitude;
+    return `<div class="scr">${topbar(esc(s.name))}<div class="pad"><div style="background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border-radius:22px;padding:22px;text-align:center"><div>${(raw && raw.logo_url) ? `<img src="${esc(raw.logo_url)}" alt="" style="width:64px;height:64px;border-radius:18px;object-fit:cover" onerror="this.outerHTML='<span style=&quot;font-size:46px&quot;>${esc(s.logo)}</span>'">` : `<span style="font-size:46px">${esc(s.logo)}</span>`}</div><b style="font-size:18px">${esc(s.name)}</b>${s.rating ? `<div class="sm"><i class="ti ti-star-filled" style="font-size:13px;color:var(--y)"></i> ${s.rating.toFixed(1)}</div>` : ''}${s.verified ? '<div class="xs" style="opacity:.85;margin-top:2px"><i class="ti ti-rosette-discount-check"></i> Cửa hàng đã xác minh</div>' : ''}</div>
+ <div class="card mt12"><h2 class="sm"><i class="ti ti-map-pin" style="color:var(--red)"></i> Thông tin liên hệ</h2><div class="sm mt8" style="line-height:1.9"><b>Địa chỉ:</b> <span class="mut">${esc(s.addr)}</span>${hours ? `<br><b>Giờ mở cửa:</b> <span style="color:var(--g8)">${esc(hours)}</span>` : ''}${s.distanceText ? `<br><b>Khoảng cách:</b> <span class="mut">${esc(s.distanceText)}</span>` : ''}</div>
+  ${validLL(lat, lng) ? '<div class="mapbox mt12" id="smap" style="margin:12px 0 0;height:150px"></div>' : ''}
+  ${lat != null && lng != null ? `<a class="btn ghost sm mt12" style="width:100%;text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}"><i class="ti ti-direction"></i>Chỉ đường Google Maps</a>` : ''}</div>
+ <div class="mt16"><h2 class="sm" style="margin-bottom:8px"><i class="ti ti-flame" style="color:var(--red)"></i> Sản phẩm đang bán</h2>${listOrState(L, prodRow, '<p class="sm mut">Hiện chưa có sản phẩm.</p>')}</div></div></div>`;
+  },
+
+  map() {
+    const L2 = [...STORES].filter(s => buyable().some(p => p.storeId === s.id)).sort((x, y) => (x.distance || 999) - (y.distance || 999));
+    return `<div class="scr">${topbar('Cửa hàng gần bạn')}<div class="pad">
+ <div class="row"><input id="maddr" class="field grow" placeholder="Nhập địa chỉ để xem cửa hàng quanh đó" onkeydown="if(event.key==='Enter')mapSearch()"><button class="btn soft sm" style="height:48px" onclick="mapSearch()">Tìm</button></div><div id="mres" class="mt8"></div>
+ <button id="gpsb" class="sopt mt8" onclick="useGps()"><span class="ico"><i class="ti ti-current-location"></i></span><span><b>${S.loc && S.loc.latitude != null ? 'Cập nhật vị trí của tôi' : 'Bật vị trí để xếp theo khoảng cách'}</b><br><span class="xs mut">${esc(S.loc && S.loc.label ? S.loc.label : 'Chưa có vị trí')}</span></span></button></div>
+ <div class="mapbox mt8" id="bmap" style="height:300px"></div>
+ <div class="pad mt16"><h2 class="sm" style="margin-bottom:8px">Cửa hàng gần nhất</h2>${!S.loaded ? skel(2) : L2.length ? L2.map(storeRow).join('') : emptyBox('🏪', 'Chưa có cửa hàng nào đang bán')}</div></div>`;
+  },
+
+  /* ---------- giỏ hàng & thanh toán ---------- */
+  cart() {
+    const rows = S.cart.map(c => ({ c, p: prod(c.p) }));
+    if (!S.loaded && S.cart.length) return `<div class="scr">${topbar('Giỏ hàng')}${skel(2)}</div>`;
+    const gone = rows.filter(r => !r.p).map(r => r.c.p);
+    if (gone.length) { S.cart = S.cart.filter(c => !gone.includes(c.p)); saveCart(); if (!S.cart.length) return SCR.cart(); }
+    if (!S.cart.length) return `<div class="scr">${topbar('Giỏ hàng (0)')}<div class="empty"><div class="e">🛒</div><b>Giỏ hàng trống</b><br><span class="sm">Hãy chọn vài món cận hạn giá tốt nhé</span><button class="btn mt20" onclick="tab('home')">Khám phá ngay</button></div></div>`;
+    const list = S.cart.map(c => ({ c, p: prod(c.p) })).filter(r => r.p);
+    const tot = list.reduce((a, r) => a + r.p.price * r.c.q, 0), sv = list.reduce((a, r) => a + Math.max(0, r.p.original - r.p.price) * r.c.q, 0);
+    return `<div class="scr" style="padding-bottom:140px">${topbar('Giỏ hàng (' + cartN() + ')')}<div class="pad">${list.map(({ c, p }) => `<div class="card row" style="margin-bottom:10px"><div class="pimg ${p.label}" style="width:64px;height:64px;font-size:34px">${pic(p, 34)}</div><div class="grow"><b class="sm">${esc(p.name)}</b><div class="xs mut">${esc(p.store)}</div><div class="row between mt8"><div class="row" style="gap:8px"><button class="ib" style="width:28px;height:28px;border-radius:50%" onclick="qty('${q1(p.id)}',-1)"><i class="ti ti-minus" style="font-size:14px"></i></button><b>${c.q}</b><button class="ib" style="width:28px;height:28px;border-radius:50%;background:var(--grbg)" onclick="qty('${q1(p.id)}',1)"><i class="ti ti-plus" style="font-size:14px"></i></button></div><b style="color:var(--red)">${fmt(p.price * c.q)}</b></div></div></div>`).join('')}
+ ${sv > 0 ? `<div class="card row sm" style="background:var(--grbg);border:0"><i class="ti ti-trending-up" style="color:var(--g8)"></i><b style="color:var(--g8)">Bạn đã tiết kiệm ${fmt(sv)}!</b></div>` : ''}</div>
+ <div style="position:fixed;left:0;right:0;bottom:0;max-width:var(--af);margin:0 auto;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom))"><div class="row between sm" style="margin-bottom:8px"><span class="mut">Tạm tính</span><b style="font-size:18px">${fmt(tot)}</b></div><button class="btn" onclick="go('confirm')"><i class="ti ti-credit-card"></i>Thanh toán – ${fmt(tot)}</button></div></div>`;
+  },
+
+  confirm() {
+    const list = S.cart.map(c => ({ c, p: prod(c.p) })).filter(r => r.p);
+    if (!list.length) return `<div class="scr">${topbar('Xác nhận đơn hàng')}${emptyBox('🛒', 'Giỏ hàng trống')}</div>`;
+    const first = list[0].p, s = store(first.storeId) || {}, pl = pol(first.label);
+    const tot = list.reduce((a, r) => a + r.p.price * r.c.q, 0), v = S.voucher, disc = voucherEstimate(v, tot);
+    return `<div class="scr" style="padding-bottom:150px">${topbar('Xác nhận đơn hàng')}<div class="pad">
+ <div class="card row" style="background:var(--grbg);border:0">${storeAv(s, 26)}<div><b>${esc(first.store)}</b><div class="xs mut">${esc(s.addr || '')}</div></div></div>
+ <div class="card mt12"><div class="xs b mut" style="text-transform:uppercase;margin-bottom:6px">Chi tiết đơn hàng</div>${list.map(({ c, p }) => `<div class="row between sm" style="padding:5px 0"><span>${esc(p.name)} <span class="mut">x${c.q}</span></span><b>${fmt(p.price * c.q)}</b></div>`).join('')}</div>
+ <div class="row mt12"><input id="vc" class="field grow" placeholder="Nhập mã giảm giá" value="${esc(v ? v.code : '')}" style="text-transform:uppercase"><button class="btn soft sm" style="height:48px" onclick="applyV(document.getElementById('vc').value)">Áp dụng</button></div>
+ ${VOUCHERS.length ? `<div class="hs" style="padding:8px 0 0">${VOUCHERS.map(x => `<button class="chip y" style="flex:none;padding:6px 10px" onclick="applyV('${q1(x.code)}')">🎟 ${esc(x.code)}</button>`).join('')}</div>` : ''}
+ <div class="card mt12 sm"><div class="row between"><span class="mut">Tạm tính</span><span>${fmt(tot)}</span></div>${disc ? `<div class="row between mt8"><span class="mut">Giảm giá (${esc(v.code)}) – ước tính</span><b style="color:var(--g7)">-${fmt(disc)}</b></div>` : ''}<div class="row between mt8" style="font-size:17px"><b>Dự kiến</b><b style="color:var(--g9)">${fmt(Math.max(0, tot - disc))}</b></div><div class="xs mut mt8">Số tiền chính thức (gồm phí dịch vụ nếu có) do hệ thống tính khi tạo đơn.</div></div>
+ <div class="card mt12 sm" style="background:var(--ylbg);border:0;line-height:1.5"><b>Thanh toán trước, lấy hàng sau.</b> ${pl ? `Sau khi bấm thanh toán, hàng được giữ cho bạn ${pl.pay_minutes} phút (nhãn ${LAB[first.label].n}) để hoàn tất thanh toán, rồi nhận hàng trong ${pl.pickup_minutes} phút. Huỷ miễn phí trong ${S.policy.grace_cancel_minutes} phút đầu hoặc trước hạn nhận ${pl.cancel_free_before_pickup_minutes} phút.` : 'Hàng được giữ cho bạn trong thời hạn thanh toán hiển thị sau khi đặt.'}</div></div>
+ <div style="position:fixed;left:0;right:0;bottom:0;max-width:var(--af);margin:0 auto;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom))"><button class="btn" onclick="go('pay')">Chọn thanh toán <i class="ti ti-arrow-right"></i></button></div></div>`;
+  },
+
+  pay() {
+    const list = S.cart.map(c => ({ c, p: prod(c.p) })).filter(r => r.p);
+    const tot = list.reduce((a, r) => a + r.p.price * r.c.q, 0), est = Math.max(0, tot - voucherEstimate(S.voucher, tot));
+    const M = [['momo', 'M', '#a50064', 'Ví điện tử MoMo', 'Phổ biến'], ['zalopay', 'Z', '#2a9df4', 'Ví ZaloPay'], ['vnpay', 'V', '#d6334b', 'Quét mã QR VNPay'], ['vietqr', 'Q', '#0a7c4a', 'Chuyển khoản VietQR'], ['card', '💳', '#7a7f9a', 'Thẻ Visa / Mastercard']];
+    const label = { momo: 'MoMo', zalopay: 'ZaloPay', vnpay: 'VNPay', vietqr: 'VietQR', card: 'Visa/Mastercard' };
+    return `<div class="scr">${topbar('Thanh toán')}<div class="pad" style="text-align:center"><div class="xs mut">Dự kiến thanh toán</div><div style="font-size:34px;font-weight:900;color:var(--g9)">${fmt(est)}</div></div>
+ <div class="pad mt12"><label class="l" style="margin-top:0">Chọn phương thức</label>${M.map(m => `<button class="sopt" style="${S.pm === m[0] ? 'border:2px solid var(--g5);background:var(--grbg)' : ''}" onclick="S.pm='${m[0]}';draw()"><span class="ico" style="background:${m[2]};color:#fff;font-weight:900">${m[1]}</span><span class="grow"><b>${label[m[0]]}</b>${m[4] ? ` <span class="chip" style="font-size:9px">${m[4]}</span>` : ''}<br><span class="xs mut">${m[3]}</span></span><i class="ti ${S.pm === m[0] ? 'ti-circle-check-filled' : 'ti-circle'}" style="color:${S.pm === m[0] ? 'var(--g7)' : '#c3cbc5'}"></i></button>`).join('')}</div>
+ <div style="position:fixed;left:0;right:0;bottom:0;max-width:var(--af);margin:0 auto;background:#fff;padding:12px 16px calc(14px + env(safe-area-inset-bottom))"><button class="btn" id="paybtn" onclick="placeOrder()">Đặt hàng & thanh toán</button></div></div>`;
+  },
+
+  /* chờ thanh toán: hạn do server (pay_deadline); tự kiểm tra trạng thái 3 giây/lần */
+  paying(id) {
+    const o = orderOf(id);
+    if (!o) return `<div class="scr">${topbar('Thanh toán')}${errBox('Không tìm thấy đơn hàng', "tab('orders')")}</div>`;
+    const init = (S.payInit && S.payInit[id]) || {}, qr = init.qrCodeUrl ? qrSvg(init.qrCodeUrl) : '';
+    const manual = !init.mode || init.mode === 'manual_confirm';
+    const total = Math.max(1, tms(o.pay_deadline) - tms(o.created_at));
+    return `<div class="scr">${topbar('Thanh toán', `<span class="xs mut">#${esc(o.order_number)}</span>`)}<div class="pad" style="text-align:center">
+ <div class="xs mut">Tổng thanh toán</div><div style="font-size:34px;font-weight:900;color:var(--g9)">${fmt(o.total_cents)}</div>
+ <div class="card mt12" style="border:2px dashed var(--g5);background:var(--grbg)"><div class="xs mut"><i class="ti ti-hourglass"></i> Hàng được giữ, còn lại để thanh toán</div><div style="font-size:38px;color:var(--g9);margin:2px 0">${cdSpan(o.pay_deadline, `data-bar="hb" data-tot="${total}"`)}</div><div class="bar"><i id="hb" style="width:100%"></i></div><div class="xs mut mt8">Quá hạn đơn tự hủy, hàng trả về kho, bạn không bị tính lỗi.</div></div>
+ ${qr ? `<div class="qrbox mt12"><div class="xs mut" style="margin-bottom:8px">Quét mã bằng ứng dụng ví / ngân hàng</div>${qr}</div>` : ''}
+ ${init.payUrl ? `<a class="btn mt12" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(init.payUrl)}"><i class="ti ti-external-link"></i>Mở trang thanh toán</a>` : ''}
+ ${manual ? `<div class="card mt12 sm" style="background:var(--ylbg);border:0;text-align:left">Đang dùng <b>thanh toán mô phỏng</b> (chưa nối cổng thật). Bấm nút bên dưới để xác nhận bạn đã thanh toán.</div><button class="btn mt12" id="cfbtn" onclick="confirmPay('${q1(id)}')"><i class="ti ti-check"></i>Tôi đã thanh toán</button>`
+      : `<div class="row mt16" style="justify-content:center"><div style="width:22px;height:22px;border:3px solid var(--grbg);border-top-color:var(--g7);border-radius:50%;animation:sp 1s linear infinite"></div><span class="sm mut">Đang chờ cổng thanh toán xác nhận…</span></div>`}
+ <button class="b sm mt16" style="color:var(--red)" onclick="abandonPay('${q1(id)}')">Hủy thanh toán</button></div></div>`;
+  },
+
+  /* ---------- chi tiết đơn ---------- */
+  order(id) {
+    const o = orderOf(id);
+    if (!o) return `<div class="scr">${topbar('Chi tiết đơn hàng')}${S.loaded ? errBox('Không tìm thấy đơn hàng', "tab('orders')") : skel(1)}</div>`;
+    const s = orderStore(o), items = orderItems(o), lb = orderLabel(o), paid = isPaid(o), comp = complaintOf(o);
+    const stage = { awaiting_payment: 2, pending: 3, confirmed: 3, ready: 3, completed: 5 }[o.status];
+    const steps = ['Đặt hàng', 'Giữ hàng', 'Thanh toán', 'Chờ nhận', 'Hoàn thành'];
+    const waiting = paid && ['pending', 'confirmed', 'ready'].includes(o.status);
+    const canComplain = o.status === 'completed' && tms(o.complaint_deadline_at) > now() && !comp;
+    const sbanner = waiting ? `<div class="card row sm b" style="background:var(--grbg);border:0;color:var(--g9)"><i class="ti ti-circle-filled" style="font-size:10px;color:var(--g5)"></i>${o.status === 'ready' ? 'Cửa hàng đã chuẩn bị xong · ' : ''}Đang chờ lấy hàng · còn ${cdSpan(o.pickup_deadline)}</div>`
+      : o.status === 'awaiting_payment' ? `<div class="card row sm b" style="background:var(--redbg);border:0;color:var(--red)">Chờ thanh toán · còn ${cdSpan(o.pay_deadline)}</div>`
+        : o.status === 'completed' ? `<div class="card row sm b" style="background:var(--grbg);border:0"><i class="ti ti-circle-check" style="color:var(--g7)"></i>Đã nhận hàng thành công</div>`
+          : `<div class="card row sm b" style="background:#eef1ee;border:0"><i class="ti ti-circle-x"></i>${o.status === 'no_show' ? 'Không đến nhận hàng' : 'Đơn đã hủy'}${CANCEL_TXT[o.cancel_reason] ? ' · ' + esc(CANCEL_TXT[o.cancel_reason]) : ''}</div>`;
+    const t = treeRead();
+    return `<div class="scr" style="padding-bottom:30px">${topbar('Chi tiết đơn hàng', '<span class="xs mut">#' + esc(o.order_number) + '</span>')}<div class="pad">
+ ${sbanner}
+ ${stage ? `<div class="card mt12"><div class="stepper">${steps.map((x, i) => `<div class="stp ${i < stage ? 'done' : i === stage ? 'cur' : ''}"><b>${i < stage ? '✓' : i + 1}</b>${x}</div>`).join('')}</div></div>` : ''}
+ ${waiting ? `<div class="tree-card mt12" onclick="go('impact')"><div class="mini">💧🌱</div><div class="grow"><b class="sm">+25 giọt nước cho cây uy tín</b><div class="xs mut">Bạn đang có ${t.waterReserve} giọt · bấm để tưới cây</div></div><i class="ti ti-chevron-right mut"></i></div>
+ <div class="qrbox mt12"><div class="xs mut" style="margin-bottom:8px">Đưa mã này cho nhân viên cửa hàng</div>${qrSvg(o.qr_code)}<div style="font-size:${String(o.qr_code).length > 14 ? 15 : 22}px;font-weight:900;letter-spacing:.08em;margin-top:8px;word-break:break-all">${esc(o.qr_code)}</div><div class="xs mut">Thanh toán qua ${esc(payLbl(o.payment_method))}</div></div>
+ <div class="card row mt12" style="background:var(--grbg);border:0"><i class="ti ti-alarm" style="font-size:24px;color:var(--red)"></i><div><div class="xs mut">Hẹn lấy hàng</div><b>Trước ${hhmm(o.pickup_deadline)} ${dmy(o.pickup_deadline) === dmy(new Date()) ? 'hôm nay' : dmy(o.pickup_deadline)}</b></div></div>` : ''}
+ ${validLL(s.latitude, s.longitude) && isActive(o) ? `<div class="card mt12" style="padding:10px"><div class="mapbox" id="omap" style="margin:0;height:140px"></div><a class="btn ghost sm mt8" style="width:100%;text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${s.latitude},${s.longitude}"><i class="ti ti-direction"></i>Chỉ đường Google Maps</a></div>` : ''}
+ <div class="card mt12 row"><div>${storeAv(s, 26)}</div><div class="grow"><b>${esc(s.name)}</b><div class="xs mut">${esc(s.addr || '')}</div></div>${paid ? `<button class="btn soft sm" onclick="go('chat','${q1(o.id)}')"><i class="ti ti-message-circle"></i>Chat${(S.unreadChat && S.unreadChat[o.id]) ? ` (${S.unreadChat[o.id]})` : ''}</button>` : ''}</div>
+ <div class="card mt12"><div class="xs b mut" style="text-transform:uppercase;margin-bottom:6px">Mặt hàng đã đặt</div>${items.map(i => { const p = prod(i.product_id) || { name: i.product_name, label: lb, cat: 'other' }; return `<div class="row" style="padding:6px 0"><div class="pimg ${p.label}" style="width:48px;height:48px;font-size:26px;border-radius:12px">${pic(p, 26)}</div><div class="grow"><b class="sm">${esc(i.product_name)}</b><div class="xs mut">x${i.quantity} · Nhãn ${LAB[p.label] ? LAB[p.label].n : ''}</div></div><b class="sm">${fmt(i.unit_price_cents * i.quantity)}</b></div>`; }).join('')}
+  <div style="border-top:1px dashed var(--line);margin-top:8px;padding-top:8px" class="sm">${o.discount_cents ? `<div class="row between"><span class="mut">Giảm giá${o.voucher_code ? ' (' + esc(o.voucher_code) + ')' : ''}</span><b style="color:var(--g7)">-${fmt(o.discount_cents)}</b></div>` : ''}${o.platform_fee_cents ? `<div class="row between mt8"><span class="mut">Phí dịch vụ</span><b>${fmt(o.platform_fee_cents)}</b></div>` : ''}<div class="row between mt8"><span class="mut">${paid ? 'Đã thanh toán' : 'Tổng cộng'}</span><b style="font-size:16px">${fmt(o.total_cents)}</b></div></div></div>
+ ${o.status === 'completed' ? `<div class="card mt12 row sm" style="background:var(--grbg);border:0"><i class="ti ti-star-filled" style="color:#e0a512"></i><b>Hoàn tất${S.policy ? ' · +' + S.policy.reputation.pickup_success + ' điểm uy tín' : ''}</b></div>` : ''}
+ ${o.payment_status === 'refunded' ? `<div class="card mt12" style="background:var(--grbg);border:0"><div class="row"><i class="ti ti-cash" style="font-size:24px;color:var(--g8)"></i><div><b>Đã hoàn ${fmt(o.total_cents)}</b><div class="xs mut">${esc(CANCEL_TXT[o.cancel_reason] || 'Tiền đã được hoàn lại')}</div></div></div></div>` : ''}
+ ${comp ? complaintCard(comp) : ''}
+ <div class="mt16">${isActive(o) && o.status !== 'awaiting_payment' ? `<button class="btn red" onclick="cancelSheet('${q1(o.id)}')"><i class="ti ti-circle-x"></i>Huỷ đơn</button>` : ''}
+ ${o.status === 'awaiting_payment' ? `<button class="btn" onclick="go('paying','${q1(o.id)}')">Thanh toán ngay</button><button class="btn ghost mt8" onclick="cancelSheet('${q1(o.id)}')">Huỷ đơn</button>` : ''}
+ ${canComplain ? `<button class="btn ghost" onclick="complaintSheet('${q1(o.id)}')"><i class="ti ti-flag"></i>Khiếu nại đơn hàng</button><div class="xs mut" style="text-align:center;margin-top:6px">Còn thời hạn khiếu nại đến ${hhmm(o.complaint_deadline_at)} ${dmy(o.complaint_deadline_at)}</div>` : ''}
+ ${o.status === 'completed' && items[0] && prod(items[0].product_id) ? `<button class="btn mt8" onclick="addCart('${q1(items[0].product_id)}',true)"><i class="ti ti-repeat"></i>Mua lại</button>` : ''}</div></div></div>`;
+  },
+
+  chat(id) {
+    const o = orderOf(id), s = o ? orderStore(o) : { name: 'Cửa hàng' }, c = S.chat[id] || { messages: null, can_send: false };
+    const rows = (c.messages || []).map(m => m.sender_role === 'system'
+      ? `<div class="xs mut" style="text-align:center;margin:6px 0">${esc(m.body)}</div>`
+      : `<div class="bub ${m.sender_role === 'customer' ? 'mine' : 'you'}">${esc(m.body)}<small>${m.sender_role === 'customer' ? 'Bạn' : 'Cửa hàng'} · ${hhmm(m.created_at)}</small></div>`).join('');
+    return `<div class="scr" style="display:flex;flex-direction:column;height:100%">${topbar(esc(s.name), o ? `<span class="chip">#${esc(o.order_number)}</span>` : '')}
+ <div class="pad xs mut" style="text-align:center;margin-bottom:6px">Chat đóng khi đơn kết thúc. Nội dung được lưu để Admin xem khi có khiếu nại.</div>
+ <div id="msgs" class="pad grow" style="overflow-y:auto">${c.messages === null ? skel(1) : rows || '<div class="xs mut" style="text-align:center">Chưa có tin nhắn. Hãy nhắn cho cửa hàng nhé.</div>'}</div>
+ ${c.can_send ? `<div class="hs" style="padding:6px 16px">${['Tôi sắp đến', 'Cho tôi đổi giờ nhận?', 'Đơn của tôi đã sẵn sàng chưa?'].map(q => `<button class="pill" style="font-size:12px" onclick="sendChat('${q1(id)}',this.textContent)">${q}</button>`).join('')}</div>
+ <div class="row pad" style="padding-bottom:calc(14px + env(safe-area-inset-bottom))"><input id="cm" class="field grow" maxlength="500" placeholder="Nhắn tin cho cửa hàng…" onkeydown="if(event.key==='Enter')sendChat('${q1(id)}')"><button class="ib" style="background:var(--g8);border:0;width:48px;height:48px;color:#fff" onclick="sendChat('${q1(id)}')"><i class="ti ti-send"></i></button></div>`
+      : c.messages !== null ? '<div class="pad xs mut" style="text-align:center;padding-bottom:24px">Đơn đã kết thúc: cuộc trò chuyện chỉ còn xem lại.</div>' : ''}</div>`;
+  },
+
+  /* ---------- tài khoản ---------- */
+  notifs() {
+    return `<div class="scr">${topbar('Thông báo', '<button class="b sm" style="color:var(--g8)" onclick="readAllNotifs()">Đọc tất cả</button><button class="ib" onclick="go(\'notifset\')"><i class="ti ti-settings"></i></button>')}<div class="pad">${!S.loaded ? skel(2) : NOTIFS.length ? NOTIFS.map(n => `<div class="card row" style="margin-bottom:8px;border-left:4px solid ${n.unread ? 'var(--g7)' : 'var(--line)'};cursor:pointer" onclick="openNotif('${q1(n.id)}')"><div class="ib" style="background:var(--grbg);border:0"><i class="ti ${esc(n.icon)}" style="color:var(--g8)"></i></div><div class="grow"><b class="sm">${esc(n.title)}</b><div class="xs mut">${esc(n.desc)}</div><div class="xs mut" style="margin-top:2px">${esc(n.time)}</div></div>${n.unread ? '<i class="ti ti-circle-filled" style="font-size:9px;color:var(--g7)"></i>' : ''}</div>`).join('') : emptyBox('🔔', 'Chưa có thông báo')}</div></div>`;
+  },
+  notifset() {
+    const i = window.FSPwa ? FSPwa.info() : { supported: false, serverEnabled: false, subscribed: false, permission: 'default' };
+    const pushTxt = i.subscribed ? 'Đang bật trên thiết bị này' : i.permission === 'denied' ? 'Đang bị chặn trong cài đặt trình duyệt' : !i.supported ? (i.ios ? 'iPhone: cần iOS 16.4+ và thêm vào Màn hình chính' : 'Thiết bị chưa hỗ trợ') : !i.serverEnabled ? 'Máy chủ chưa bật thông báo đẩy' : 'Đang tắt';
+    const sw = (on, fn) => `<button onclick="${fn}" style="width:46px;height:28px;border-radius:99px;background:${on ? 'var(--g7)' : '#c9d2cb'};position:relative;flex:none"><i style="position:absolute;top:3px;${on ? 'right' : 'left'}:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></i></button>`;
+    return `<div class="scr">${topbar('Cài đặt thông báo')}<div class="pad">
+ <div class="card row"><span class="ico" style="width:38px;height:38px;border-radius:12px;background:var(--grbg);display:grid;place-items:center;flex:none"><i class="ti ti-device-mobile-message" style="color:var(--g8)"></i></span><div class="grow"><b class="sm">Thông báo đẩy trên thiết bị này</b><div class="xs mut">${pushTxt}</div></div>${sw(i.subscribed, 'togglePush()')}</div>
+ <p class="xs mut mt8">Tắt thông báo đẩy thì bạn vẫn thấy thông báo trong app (biểu tượng chuông).</p>
+ <h2 class="sm mt16" style="margin-bottom:8px">Nhận thông báo về</h2>
+ ${NGROUPS.map(g => `<div class="card row" style="margin-bottom:8px"><span class="ico" style="width:38px;height:38px;border-radius:12px;background:var(--grbg);display:grid;place-items:center;flex:none"><i class="ti ${g[1]}" style="color:var(--g8)"></i></span><div class="grow"><b class="sm">${g[2]}</b><div class="xs mut">${g[3]}</div></div>${sw(prefOn(g[0]), "setPref('" + g[0] + "'," + !prefOn(g[0]) + ")")}</div>`).join('')}</div></div>`;
+  },
+  legal() {
+    const items = [['terms', 'ti-file-text', 'Điều khoản dịch vụ'], ['privacy', 'ti-shield-lock', 'Chính sách bảo mật'], ['refund', 'ti-cash', 'Chính sách hoàn tiền'], ['help', 'ti-help-circle', 'Trợ giúp & hướng dẫn']];
+    return `<div class="scr">${topbar('Chính sách & điều khoản')}<div class="pad"><div class="menu">${items.map(x => `<button onclick="go('legaldoc','${x[0]}')"><i class="ti ${x[1]}"></i>${x[2]}<i class="ti ti-chevron-right chev"></i></button>`).join('')}</div></div></div>`;
+  },
+  legaldoc(k) {
+    const doc = window.FOODSAVE_LEGAL_CONTENT && window.FOODSAVE_LEGAL_CONTENT[k];
+    const title = { terms: 'Điều khoản dịch vụ', privacy: 'Chính sách bảo mật', refund: 'Chính sách hoàn tiền', help: 'Trợ giúp & hướng dẫn' }[k] || 'Nội dung';
+    return `<div class="scr">${topbar(title)}<div class="pad legalbox">${doc || '<p class="sm mut">Nội dung đang được cập nhật.</p>'}</div></div>`;
+  },
+  vouchers() {
+    return `<div class="scr">${topbar('Voucher')}<div class="pad">${VOUCHERS.length ? VOUCHERS.map(v => `<div class="card row" style="margin-bottom:10px;border-left:5px solid var(--y)"><div class="ib" style="background:var(--ylbg);border:0"><i class="ti ti-ticket" style="color:#c48a00"></i></div><div class="grow"><b>${esc(v.code)}</b><div class="xs mut">${esc(v.name)}${v.percent ? ' · giảm ' + v.percent + '%' : v.fixed ? ' · giảm ' + fmt(v.fixed) : ''}${v.min ? ' · đơn từ ' + fmt(v.min) : ''}${v.expiry ? ' · HSD ' + esc(v.expiry) : ''}</div></div><button class="btn sm" onclick="useVoucher('${q1(v.code)}')">Dùng</button></div>`).join('') : emptyBox('🎟️', 'Chưa có voucher nào', 'Voucher mới sẽ hiện ở đây')}
+ <div class="row mt12"><input id="nv" class="field grow" placeholder="Nhập mã giảm giá" style="text-transform:uppercase"><button class="btn soft sm" style="height:48px" onclick="useVoucher(document.getElementById('nv').value)">Dùng</button></div></div></div>`;
+  },
+  wallet() {
+    const rf = ORD.filter(o => o.payment_status === 'refunded'), cr = COMPLAINTS.filter(c => c.refund > 0);
+    return `<div class="scr">${topbar('Ví hoàn tiền')}<div class="pad"><div style="background:linear-gradient(120deg,var(--g9),var(--g7));color:#fff;border-radius:22px;padding:22px"><div class="xs" style="opacity:.8">Tổng tiền đã hoàn cho bạn</div><div style="font-size:34px;font-weight:900">${fmt(refundTotal())}</div><div class="xs" style="opacity:.8;margin-top:4px">Tính từ các đơn đã hủy được hoàn tiền và khiếu nại được chấp nhận</div></div>
+ <h2 class="sm mt16" style="margin-bottom:8px">Lịch sử hoàn tiền</h2>${rf.map(o => `<div class="card row" style="margin-bottom:8px;cursor:pointer" onclick="go('order','${q1(o.id)}')"><i class="ti ti-arrow-back-up" style="color:var(--g7)"></i><div class="grow"><b class="sm">Hoàn đơn #${esc(o.order_number)}</b><div class="xs mut">${esc(CANCEL_TXT[o.cancel_reason] || 'Đã hoàn tiền')}</div></div><b style="color:var(--g7)">+${fmt(o.total_cents)}</b></div>`).join('')}${cr.map(c => `<div class="card row" style="margin-bottom:8px"><i class="ti ti-flag" style="color:var(--g7)"></i><div class="grow"><b class="sm">Khiếu nại ${esc(c.code)}</b><div class="xs mut">Hoàn tiền theo kết quả khiếu nại</div></div><b style="color:var(--g7)">+${fmt(c.refund)}</b></div>`).join('') || ''}${rf.length || cr.length ? '' : '<p class="sm mut">Chưa có giao dịch hoàn tiền.</p>'}</div></div>`;
+  },
+  impact() {
+    const t = treeRead(), need = Math.ceil((T_FULL - t.water) / T_COST), eco = window.ECO_IMPACT && window.ECO_IMPACT.me && window.ECO_IMPACT.me.totals;
+    const pts = t.totalReputation;
+    return `<div class="scr">${topbar('Vườn cây uy tín')}<div class="pad">
+ <div class="garden">${sceneHTML()}
+  <div style="padding:16px"><span class="chip"><i class="ti ti-droplet" style="font-size:13px"></i> Trò chơi cây uy tín</span>
+  <h2 style="font-size:18px;margin:8px 0 4px;line-height:1.2">Giải cứu thực phẩm để lấy nước tưới cây</h2>
+  <p class="sm mut" style="line-height:1.55">Mỗi đơn hàng thanh toán thành công tạo 25 giọt nước. Dùng nước để nuôi cây uy tín; cây trưởng thành 100% sẽ được ghi nhận vào quỹ cây xanh.</p>
+  <div class="row between mt12"><div><div class="xs mut b" style="text-transform:uppercase">Giai đoạn</div><b>${stageLbl(t.water)}</b></div><b style="color:#e07a00;font-size:20px">${t.water}%</b></div>
+  <div class="bar mt8" style="height:10px"><i style="width:${t.water}%;background:linear-gradient(90deg,#34b563,#f3c94f)"></i></div>
+  <p class="xs mut mt8">${treeNext()}</p>
+  <div class="grid3 mt12" style="grid-template-columns:repeat(4,1fr);gap:8px"><div class="pill2"><b>${t.waterReserve}</b><span>Giọt nước</span></div><div class="pill2"><b>${t.totalWaterings}</b><span>Lần tưới</span></div><div class="pill2"><b>${t.donatedTrees}</b><span>Cây đã góp</span></div><div class="pill2"><b>+${pts}</b><span>Điểm xanh</span></div></div></div></div>
+ <div class="card mt12"><div class="mis"><span class="mi" style="background:var(--grbg);color:var(--g8)"><i class="ti ti-shopping-bag-check"></i></span><div><b class="sm">Cứu thực phẩm để nhận nước</b><div class="xs mut">${t.totalOrdersCredited} đơn đã tạo nước · mỗi đơn +25 giọt</div></div></div>
+  <div class="mis"><span class="mi" style="background:#e0f2fe;color:#0369a1"><i class="ti ti-droplet-up"></i></span><div><b class="sm">Tưới cây mỗi khi có nước</b><div class="xs mut">${Math.floor(t.waterReserve / T_COST)} lượt tưới đang chờ · mỗi lần +25% và +5 điểm</div></div></div>
+  <div class="mis"><span class="mi" style="background:#fef3c7;color:#92400e"><i class="ti ti-award"></i></span><div><b class="sm">Phần thưởng trưởng thành</b><div class="xs mut">Tưới thêm ${need} lần để hoàn thành cây và nhận +25 điểm xanh.</div></div></div></div>
+ <h2 class="sm mt20" style="margin-bottom:8px">🌍 Tác động của bạn</h2>
+ ${eco ? `<div class="grid3" style="grid-template-columns:1fr 1fr">${[['🍽️', (eco.food_saved_kg || 0).toFixed(1) + ' KG', 'Thực phẩm cứu'], ['🌱', (eco.co2_avoided_kg || 0).toFixed(1) + ' KG', 'CO₂ giảm phát'], ['💧', Math.round(eco.water_saved_liters || 0) + ' LÍT', 'Nước tiết kiệm'], ['🤝', Math.round(eco.meals_equivalent || 0), 'Suất ăn tương đương']].map(x => `<div class="card" style="text-align:center"><div style="font-size:26px">${x[0]}</div><b>${x[1]}</b><div class="xs mut">${x[2]}</div></div>`).join('')}</div>` : '<div class="card sm mut">Chưa có số liệu tác động. Hoàn tất đơn đầu tiên để bắt đầu tích lũy.</div>'}</div></div>`;
+  },
+  rep() {
+    const tr = S.trust, rp = S.policy && S.policy.reputation;
+    if (!tr) return `<div class="scr">${topbar('Điểm uy tín')}${S.authChecked ? skel(1) : ''}</div>`;
+    const rows = rp ? [['ti-circle-check', 'Nhận hàng thành công', '+' + rp.pickup_success, 'g'], ['ti-circle-x', 'Huỷ muộn', String(rp.late_cancel), 'r'], ['ti-user-off', 'Không đến nhận', String(rp.no_show), 'r'], ['ti-flag', 'Khiếu nại sai sự thật', String(rp.false_complaint), 'r']] : [];
+    return `<div class="scr">${topbar('Điểm uy tín')}<div class="pad"><div class="card" style="text-align:center"><div style="font-size:46px;font-weight:900;color:var(--g8)">${tr.points}</div><div class="xs mut">Hạng ${esc(tr.rank)}${rp ? ' · khởi đầu ' + rp.initial + ' điểm' : ''}</div><div class="bar mt12"><i style="width:${Math.min(100, tr.points)}%"></i></div></div>
+ ${tr.red_banned ? `<div class="card mt12 sm" style="background:var(--redbg);border:0"><b style="color:var(--red)"><i class="ti ti-ban"></i> Đang khóa mua nhãn đỏ đến ${dmy(tr.red_ban_until)}</b><div class="xs mut mt8">Bạn vẫn mua được nhãn xanh và vàng.</div></div>` : ''}
+ ${tr.blocked ? `<div class="card mt12 sm" style="background:var(--redbg);border:0"><b style="color:var(--red)">Điểm dưới ${rp ? rp.blocked_below : 40}: tạm chặn đặt hàng. Vui lòng liên hệ FoodSave.</b></div>` : ''}
+ <div class="card mt12"><h2 class="sm">Cách tính điểm</h2>${rows.map(r => `<div class="row between sm" style="padding:10px 0;border-bottom:1px solid #f1f4f1"><span class="row"><i class="ti ${r[0]}" style="color:${r[3] === 'g' ? 'var(--g7)' : 'var(--red)'}"></i>${r[1]}</span><b style="color:${r[3] === 'g' ? 'var(--g7)' : 'var(--red)'}">${r[2]}</b></div>`).join('')}<div class="xs mut mt12" style="line-height:1.5">• Không đến nhận ${tr.no_show_limit} lần trong ${tr.window_days} ngày: tạm khoá mua nhãn Đỏ${rp && S.policy ? ' ' + S.policy.red_ban_days + ' ngày' : ''}. Bạn đang có ${tr.no_show_count}/${tr.no_show_limit} lần.<br>• Dưới ${rp ? rp.blocked_below : 40} điểm: tạm chặn đặt hàng.</div></div></div></div>`;
+  },
+  help() {
+    const t = S.filt.ht || 'req', legal = window.FOODSAVE_LEGAL_CONTENT && window.FOODSAVE_LEGAL_CONTENT.help;
+    return `<div class="scr">${topbar('Trợ giúp & hỗ trợ')}<div class="seg">${[['req', 'Yêu cầu', 'ti-file-text'], ['faq', 'Trợ giúp', 'ti-help']].map(x => `<button class="${t === x[0] ? 'on' : ''}" onclick="S.filt.ht='${x[0]}';draw()"><i class="ti ${x[2]}" style="font-size:14px"></i> ${x[1]}</button>`).join('')}</div>
+ ${t === 'req' ? `<div class="pad mt12"><h2 class="sm">Gửi yêu cầu hỗ trợ</h2><p class="sm mut mt8">Mô tả vấn đề, đội ngũ FoodSave sẽ phản hồi qua email của bạn.</p><button class="btn mt12" onclick="ticketSheet()">+ Tạo yêu cầu mới</button><div class="card sm mut mt12">Có vấn đề với một đơn hàng đã nhận? Vào <b>Đơn hàng → Đã lấy</b> và bấm <b>Khiếu nại đơn hàng</b> để được xử lý nhanh hơn.</div></div>` : ''}
+ ${t === 'faq' ? `<div class="pad mt12 legalbox">${legal || '<p class="sm mut">Nội dung đang được cập nhật.</p>'}</div>` : ''}</div>`;
+  }
+};
+const payLbl = m => ({ momo: 'MoMo', zalopay: 'ZaloPay', vnpay: 'VNPay', card: 'Visa/Mastercard', vietqr: 'VietQR' }[m] || m || '');
+const resendHtml = () => { const w = Math.max(0, Math.ceil(((S.otp.resendAt || 0) - now()) / 1000)); return w > 0 ? `Gửi lại mã sau <b class="timer" style="color:var(--g8)">${w}s</b>` : `Chưa nhận được? <button class="b" style="color:var(--g8)" onclick="resendOtp()">Gửi lại</button>`; };
+function complaintCard(c) {
+  const idx = { open: 1, in_review: 2, resolved: 4, rejected: 4 }[c.apiStatus] || 1;
+  const stText = { open: 'Chờ cửa hàng phản hồi', in_review: 'FoodSave đang xem xét', resolved: 'Đã giải quyết', rejected: 'Đã bị bác bỏ' }[c.apiStatus] || c.apiStatus;
+  return `<div class="card mt12"><div class="row between"><b class="sm"><i class="ti ti-flag" style="color:var(--red)"></i> Khiếu nại ${esc(c.code)}</b><span class="chip ${c.apiStatus === 'resolved' ? '' : c.apiStatus === 'rejected' ? 'r' : 'y'}">${stText}</span></div>
+ <div class="xs mut mt8">Lý do: ${esc(c.reason || c.issue)} · ${c.photos} ảnh</div>
+ <div class="stepper mt12">${['Đã gửi', 'Cửa hàng phản hồi', 'Admin xử lý', 'Kết quả'].map((x, i) => `<div class="stp ${i < idx ? 'done' : i === idx ? 'cur' : ''}"><b>${i < idx ? '✓' : i + 1}</b>${x}</div>`).join('')}</div>
+ ${c.apiStatus === 'open' && c.respondBy ? `<div class="xs mut mt8">Cửa hàng còn ${cdSpan(new Date(c.respondBy).toISOString())} để phản hồi. Quá hạn hoặc tranh chấp sẽ chuyển Admin xử lý.</div>` : ''}
+ ${c.storeResponse ? `<div class="card sm mt8" style="background:var(--bg);border:0"><b>Cửa hàng phản hồi:</b> ${esc(c.storeResponse)}</div>` : ''}
+ ${c.resolution ? `<div class="card sm mt8" style="background:${c.apiStatus === 'resolved' ? 'var(--grbg)' : 'var(--redbg)'};border:0"><b>Kết quả:</b> ${esc(c.resolution)}${c.refund ? ` · hoàn ${fmt(c.refund)}` : ''}</div>` : ''}</div>`;
+}
+
+/* ---------- việc chạy sau khi vẽ ---------- */
+SCRH.tab = a => { if (a === 'home' && S.loaded) { const stores = STORES.filter(s => buyable().some(p => p.storeId === s.id)); mountMap('hmap', { stores, count: true, interactive: false, onTap: () => go('map') }); } };
+SCRH.loc = () => {
+  if (S.picker) { try { S.picker.destroy(); } catch (e) { /* bỏ qua */ } S.picker = null; }
+  const init = S.loc && validLL(S.loc.latitude, S.loc.longitude) ? { lat: Number(S.loc.latitude), lng: Number(S.loc.longitude) } : null;
+  if (!window.L || !window.FoodSaveMap) { const m = document.getElementById('lmap'); if (m) m.innerHTML = '<div class="mapfb">Chưa tải được bản đồ. Bạn có thể bỏ qua bước này và bật vị trí sau.</div>'; return; }
+  S.picker = FoodSaveMap.attachPicker({
+    mapEl: document.getElementById('lmap'), input: document.getElementById('addr'), results: document.getElementById('lres'), status: document.getElementById('lstat'),
+    locateButton: document.getElementById('gpsb'), initial: init,
+    onChange(p) { if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) S.tmpLoc = { latitude: p.lat, longitude: p.lng, label: p.formattedAddress || (S.tmpLoc && S.tmpLoc.label) || 'Vị trí đã ghim' }; }
+  });
+};
+SCRH.map = () => { if (S.loaded) mountMap('bmap', { stores: STORES.filter(s => buyable().some(p => p.storeId === s.id)), count: true, interactive: true, onPin: s => go('store', s.id) }); };
+SCRH.otp = () => {
+  timers.otp = setInterval(() => { const el = document.getElementById('resend'); if (el) el.innerHTML = resendHtml(); }, 1000);
+  const f = document.querySelector('.otp input'); if (f) setTimeout(() => f.focus(), 120);
+};
+SCRH.detail = id => {
+  if (!S.raw['p:' + id]) API('/catalog/products/' + encodeURIComponent(id)).then(r => { S.raw['p:' + id] = r; if (curScreen() === 'detail') softRefresh(); }).catch(() => { });
+  S._viewed = S._viewed || new Set();
+  if (S.user && !S._viewed.has(id)) { S._viewed.add(id); API('/customers/recent-views', { method: 'POST', body: { product_id: id } }).catch(() => { }); }
+};
+SCRH.store = id => {
+  const s0 = store(id); if (s0 && validLL(s0.latitude, s0.longitude)) mountMap('smap', { stores: [s0], interactive: false });
+  if (!S.raw['s:' + id]) API('/catalog/stores/' + encodeURIComponent(id)).then(r => { S.raw['s:' + id] = r; if (curScreen() === 'store') softRefresh(); }).catch(() => { });
+};
+SCRH.order = id => {
+  const o = orderOf(id); if (!o) return;
+  const os = orderStore(o); if (document.getElementById('omap')) mountMap('omap', { stores: [os], interactive: false });
+  refreshOrder(id).then(() => { if (orderChanged && curScreen() === 'order') softRefresh(); }).catch(() => { });
+  if (isPaid(o)) loadUnread();
+  if (isActive(o)) timers.ord = setInterval(() => { refreshOrder(id).then(() => { if (orderChanged && curScreen() === 'order') softRefresh(); }).catch(() => { }); }, 8000);
+};
+SCRH.paying = id => {
+  const o = orderOf(id);
+  if (o && o.payment_method === 'momo' && !(S.payInit && S.payInit[id])) {
+    API('/orders/' + encodeURIComponent(id) + '/payments/momo/refresh', { method: 'POST' }).then(r => { S.payInit = S.payInit || {}; S.payInit[id] = r.payment || {}; if (curScreen() === 'paying') { const y = V.scrollTop; draw(); V.scrollTop = y; } }).catch(() => { });
+  }
+  timers.pay = setInterval(async () => {
+    try {
+      const x = await refreshOrder(id);
+      if (x && isPaid(x)) { afterPaid(id); }
+      else if (x && x.status === 'cancelled') { clearTimers(); toast(CANCEL_TXT[x.cancel_reason] || 'Đơn đã hủy'); S.stack = [['tab', 'orders']]; S.tab = 'orders'; draw(); }
+    } catch (e) { /* thử lại ở lần sau */ }
+  }, 3000);
+};
+SCRH.chat = id => {
+  loadChat(id);
+  timers.chat = setInterval(() => loadChat(id), 6000);   // polling 6 giây theo spec
+};
+SCRH.notifs = () => { };
+async function loadUnread() { try { S.unreadChat = await API('/orders/chat/unread'); } catch (e) { /* bỏ qua */ } }
+
+/* ====================== HÀNH ĐỘNG ====================== */
+function shareProd(id) {
+  const p = prod(id); const url = location.origin + location.pathname;
+  if (navigator.share) navigator.share({ title: p ? p.name : 'FoodSave', text: p ? `${p.name} chỉ ${fmt(p.price)} trên FoodSave` : 'FoodSave', url }).catch(() => { });
+  else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast('Đã sao chép liên kết'), () => toast('Không sao chép được'));
+}
+async function askNotif() {
+  const i = window.FSPwa ? FSPwa.info() : null;
+  if (!i || !i.supported) toast(i && i.ios ? 'iPhone cần iOS 16.4+ và thêm FoodSave vào Màn hình chính để nhận thông báo đẩy. Thông báo vẫn hiện trong app.' : 'Thiết bị chưa hỗ trợ thông báo đẩy. Thông báo vẫn hiện trong app.');
+  else if (!i.serverEnabled) toast('Thông báo đẩy chưa được bật trên máy chủ. Thông báo vẫn hiện trong app.');
+  else { try { const ok = await FSPwa.pushEnable(); toast(ok ? 'Đã bật thông báo' : 'Bạn chưa cho phép. Thông báo vẫn hiện trong app.'); } catch (e) { toast(errMsg(e)); } }
+  tab('home');
+}
+async function openNotif(id) {
+  const n = NOTIFS.find(x => x.id === id); if (!n) return;
+  if (n.unread) { n.unread = false; FS.sync.markNotifRead(id).catch(() => { }); }
+  const g = notifTarget(n); if (g) go(g[0], g[1]); else draw();
+}
+async function readAllNotifs() { NOTIFS.forEach(n => n.unread = false); draw(); try { await FS.sync.markAllNotifsRead(); } catch (e) { toast(errMsg(e)); } }
+
+/* ---------- voucher: server tính số tiền thật khi tạo đơn; client chỉ ước tính để hiển thị ---------- */
+function voucherEstimate(v, tot) {
+  if (!v || (v.min && tot < v.min)) return 0;
+  return v.percent ? Math.round(tot * v.percent / 100) : Math.min(v.fixed || 0, tot);
+}
+async function lookupVoucher(code) {
+  code = String(code || '').trim().toUpperCase(); if (!code) return null;
+  let v = VOUCHERS.find(x => x.code === code);
+  if (v) return v;
+  const r = await API('/catalog/vouchers?code=' + encodeURIComponent(code));
+  const x = Array.isArray(r) && r[0]; if (!x) return null;
+  return { code: x.code, name: x.name, percent: x.percent_off, fixed: Math.round(Number(x.fixed_discount_cents) || 0), min: Math.round(Number(x.min_order_cents) || 0), expiry: x.expires_at ? dmy(x.expires_at) : '' };
+}
+async function applyV(code) {
+  try { const v = await lookupVoucher(code); if (!v) { toast('Mã giảm giá không hợp lệ hoặc đã hết hạn'); return; } S.voucher = v; toast('Đã áp dụng ' + v.code); draw(); } catch (e) { toast(errMsg(e)); }
+}
+async function useVoucher(code) {
+  try { const v = await lookupVoucher(code); if (!v) { toast('Mã không hợp lệ hoặc đã hết hạn'); return; } S.voucher = v; toast('Đã chọn mã ' + v.code); S.cart.length ? go('confirm') : tab('home'); } catch (e) { toast(errMsg(e)); }
+}
+
+/* ---------- đặt hàng: tạo đơn qua backend (giữ hàng) rồi chờ thanh toán ---------- */
+async function placeOrder() {
+  if (S.busy) return;
+  const list = S.cart.map(c => ({ c, p: prod(c.p) }));
+  if (list.some(r => !r.p)) { toast('Có sản phẩm không còn bán, vui lòng kiểm tra giỏ hàng'); go('cart'); return; }
+  const u = S.user || {};
+  const body = { items: list.map(r => ({ product_id: r.c.p, quantity: r.c.q })), pickup_slot_key: 'policy', payment_method: S.pm, donation_cents: 0 };
+  if (S.voucher) body.voucher_code = S.voucher.code;
+  if (u.full_name && u.full_name.trim().length >= 2) body.receiver_name = u.full_name.trim().slice(0, 140);
+  if (u.phone && u.phone.replace(/\D/g, '').length >= 8 && u.phone.length <= 20) body.receiver_phone = u.phone;
+  if (u.email && EMAIL_RE.test(u.email)) body.receiver_email = u.email;
+  S.busy = true; const btn = document.getElementById('paybtn'); if (btn) { btn.disabled = true; btn.textContent = 'Đang tạo đơn…'; }
+  try {
+    const res = S.pm === 'momo' ? await FS.sync.createMomoPayment(body) : await FS.sync.pushOrder(body);
+    if (!res || !res.order || !res.order.id) throw new Error('Không tạo được đơn hàng');
+    const id = res.order.id;
+    S.payInit = S.payInit || {}; S.payInit[id] = res.payment || {};
+    S.cart = []; saveCart(); S.voucher = null;
+    await refreshOrder(id).catch(() => { ORD.unshift({ ...res.order, order_items: res.items || [] }); });
+    S.stack = [['tab', 'home'], ['paying', id]]; draw();
+  } catch (e) {
+    toast(errMsg(e));
+    if (e && /product|stock|hết|conflict/i.test(e.code || e.message || '')) { reloadAll(); }
+  } finally { S.busy = false; if (btn) { btn.disabled = false; btn.textContent = 'Đặt hàng & thanh toán'; } }
+}
+async function confirmPay(id) {
+  if (S.busy) return; S.busy = true; const b = document.getElementById('cfbtn'); if (b) b.disabled = true;
+  try { const o = orderOf(id); await FS.sync.markOrderPaymentPaid(id, o && o.payment_method); const x = await refreshOrder(id); if (x && isPaid(x)) afterPaid(id); }
+  catch (e) {
+    if (e && e.code === 'PAYMENT_EXPIRED') { toast('Đơn đã quá hạn thanh toán và được hủy'); await refreshOrder(id).catch(() => { }); S.stack = [['tab', 'orders']]; S.tab = 'orders'; draw(); }
+    else toast(errMsg(e));
+  } finally { S.busy = false; if (b) b.disabled = false; }
+}
+function afterPaid(id) {
+  clearTimers();
+  const o = orderOf(id);
+  creditPaidOrders();
+  S.stack = [['tab', 'home'], ['order', id]]; draw();
+  push('ti-circle-check', 'Thanh toán thành công!', 'Đơn #' + (o ? o.order_number : '') + ' đã được ghi nhận. +25 giọt nước cho cây uy tín', ['order', id]);
+  loadTrust();
+}
+async function abandonPay(id) {
+  try { await FS.sync.cancelOrder(id, 'Hủy khi chưa thanh toán'); await refreshOrder(id).catch(() => { }); toast('Đã hủy đơn chưa thanh toán'); S.stack = [['tab', 'home']]; S.tab = 'home'; draw(); } catch (e) { toast(errMsg(e)); }
+}
+
+/* ---------- hủy đơn: số liệu hiển thị lấy từ GET /orders/:id/cancel-preview (server tính) ---------- */
+async function cancelSheet(id) {
+  sheet('<h2>Xác nhận huỷ đơn</h2><div class="row mt16" style="justify-content:center"><div style="width:26px;height:26px;border:3px solid var(--grbg);border-top-color:var(--g7);border-radius:50%;animation:sp 1s linear infinite"></div></div>');
+  let pv;
+  try { pv = await API('/orders/' + encodeURIComponent(id) + '/cancel-preview'); } catch (e) { sheet(`<h2>Không xem được kết quả huỷ</h2><p class="sm mut mt8">${esc(errMsg(e))}</p><button class="btn mt16" onclick="closeSheet()">Đóng</button>`); return; }
+  if (!pv.can_cancel) { sheet(`<h2>Không thể huỷ</h2><p class="sm mut mt8">${esc(pv.message)}</p><button class="btn mt16" onclick="closeSheet()">Đóng</button>`); return; }
+  const o = orderOf(id), full = pv.free;
+  sheet(`<h2 class="row" style="gap:8px"><i class="ti ti-alert-triangle" style="color:${full ? '#c48a00' : 'var(--red)'}"></i>Xác nhận huỷ đơn</h2><p class="sm mut mt8">Bạn có chắc muốn huỷ đơn #${esc(o ? o.order_number : '')}?</p>
+ <div class="card mt12" style="background:${full ? 'var(--grbg)' : 'var(--redbg)'};border:0">${pv.paid ? `<div class="row between sm"><span><i class="ti ti-cash"></i> Hoàn tiền</span><b style="color:${full ? 'var(--g8)' : 'var(--red)'}">${fmt(pv.refund_cents)}</b></div><div class="row between sm mt8"><span><i class="ti ti-star"></i> Điểm uy tín</span><b style="color:${full ? 'var(--g8)' : 'var(--red)'}">${pv.penalty_points ? '-' + pv.penalty_points + ' điểm' : '0'}</b></div>` : ''}
+ <div class="xs mut ${pv.paid ? 'mt8' : ''}">${esc(pv.message)}${pv.paid && pv.cancel_free_until && full ? ' (miễn phí đến ' + hhmm(pv.cancel_free_until) + ')' : ''}</div></div>
+ <button class="btn red mt16" id="docancel" onclick="doCancel('${q1(id)}')">Xác nhận huỷ</button><button class="b sm mt12" style="width:100%;color:var(--mut)" onclick="closeSheet()">Giữ lại đơn hàng</button>`);
+}
+async function doCancel(id) {
+  const b = document.getElementById('docancel'); if (b) b.disabled = true;
+  try {
+    const r = await FS.sync.cancelOrder(id);
+    closeSheet(); await refreshOrder(id).catch(() => { }); loadTrust();
+    S.filt.ot = 'cancel'; S.stack = [['tab', 'orders']]; S.tab = 'orders'; draw();
+    toast(r && r.refunded ? 'Đã huỷ – hoàn ' + fmt(r.refund_cents) : 'Đã huỷ đơn');
+  } catch (e) { if (b) b.disabled = false; closeSheet(); toast(errMsg(e)); }
+}
+
+/* ---------- khiếu nại: ảnh bắt buộc, tải lên Supabase Storage qua upload-url (như web) ---------- */
+const CP_REASONS = [['wrong_item', 'Giao sai sản phẩm'], ['spoiled_expired', 'Hư hỏng / hết hạn'], ['missing_items', 'Thiếu sản phẩm'], ['other', 'Khác']];
+function complaintSheet(id) { S.cp = { id, reason: 'wrong_item', issue: '', urls: [], uploading: false, sending: false }; renderCP(); }
+function renderCP() {
+  const c = S.cp; if (!c) return;
+  sheet(`<h2>Khiếu nại đơn #${esc((orderOf(c.id) || {}).order_number || '')}</h2><p class="xs mut mt8">Cửa hàng có ${S.policy ? S.policy.complaint.store_response_hours : 12} giờ để phản hồi. Cần ảnh minh chứng. Khiếu nại sai sự thật sẽ bị trừ điểm uy tín.</p>
+ <label class="l">Lý do</label><div class="row" style="flex-wrap:wrap;gap:6px">${CP_REASONS.map(r => `<button class="pill ${c.reason === r[0] ? 'on' : ''}" onclick="S.cp.reason='${r[0]}';renderCP()">${r[1]}</button>`).join('')}</div>
+ <label class="l">Mô tả chi tiết (tối thiểu 10 ký tự)</label><textarea class="field" rows="3" maxlength="2000" placeholder="Mô tả vấn đề…" oninput="S.cp.issue=this.value">${esc(c.issue)}</textarea>
+ <label class="l">Ảnh minh chứng * (${c.urls.length}/5)</label>
+ <div class="row" style="flex-wrap:wrap;gap:8px">${c.urls.map((u, i) => `<div style="position:relative"><img src="${esc(u)}" alt="" style="width:64px;height:64px;border-radius:12px;object-fit:cover"><button class="ib" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%" onclick="S.cp.urls.splice(${i},1);renderCP()"><i class="ti ti-x" style="font-size:12px"></i></button></div>`).join('')}
+ ${c.urls.length < 5 ? `<label class="sopt" style="width:auto;margin:0;padding:10px 14px;cursor:pointer"><span class="ico"><i class="ti ti-camera"></i></span>${c.uploading ? 'Đang tải ảnh…' : 'Chụp / chọn ảnh'}<input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onchange="cpFiles(this.files)" ${c.uploading ? 'disabled' : ''}></label>` : ''}</div>
+ <div class="xs mut mt8">JPG / PNG / WEBP · tối đa 5MB mỗi ảnh</div>
+ <button class="btn mt16" id="cpsend" ${c.uploading || c.sending ? 'disabled' : ''} onclick="cpSend()">Gửi khiếu nại</button>`);
+}
+async function cpFiles(fileList) {
+  const c = S.cp; if (!c) return;
+  const files = [...fileList].slice(0, 5 - c.urls.length); c.uploading = true; renderCP();
+  try {
+    for (const f of files) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) { toast('Chỉ nhận ảnh JPG, PNG hoặc WEBP'); continue; }
+      if (f.size > 5 * 1024 * 1024) { toast('Ảnh quá 5MB: ' + f.name); continue; }
+      const up = await API('/orders/complaints/upload-url', { method: 'POST', body: { content_type: f.type } });
+      const r = await sb().storage.from('partner-assets').uploadToSignedUrl(up.path, up.token, f, { contentType: f.type });
+      if (r && r.error) throw new Error('Không tải được ảnh lên, vui lòng thử lại');
+      c.urls.push(up.public_url);
+    }
+  } catch (e) { toast(errMsg(e)); }
+  c.uploading = false; renderCP();
+}
+async function cpSend() {
+  const c = S.cp; if (!c || c.sending) return;
+  if ((c.issue || '').trim().length < 10) { toast('Vui lòng mô tả vấn đề tối thiểu 10 ký tự'); return; }
+  if (!c.urls.length) { toast('Cần gửi ít nhất 1 ảnh minh chứng'); return; }
+  c.sending = true;
+  try {
+    await FS.sync.pushComplaint({ order_id: c.id, reason_code: c.reason, issue: c.issue.trim(), image_urls: c.urls });
+    S.cp = null; closeSheet(); toast('Đã gửi khiếu nại');
+    await FS.sync.hydratePage().catch(() => { }); softRefresh();
+  } catch (e) { c.sending = false; toast(errMsg(e)); if (e && (e.code === 'COMPLAINT_WINDOW_CLOSED' || e.code === 'COMPLAINT_ALREADY_EXISTS')) { S.cp = null; closeSheet(); FS.sync.hydratePage().catch(() => { }); } }
+}
+
+/* ---------- chat theo đơn (order_messages): polling 6 giây ---------- */
+async function loadChat(id) {
+  try {
+    const r = await API('/orders/' + encodeURIComponent(id) + '/messages');
+    const old = S.chat[id], key = m => (m.messages || []).map(x => x.id).join(',') + '|' + m.can_send;
+    S.chat[id] = r;
+    if (curScreen() === 'chat' && (!old || key(old) !== key(r))) { const ae = document.activeElement, typed = ae && ae.id === 'cm' ? ae.value : ''; draw(); const el = document.getElementById('cm'); if (el && typed) { el.value = typed; el.focus(); } const m = document.getElementById('msgs'); if (m) m.scrollTop = 1e6; }
+    API('/orders/' + encodeURIComponent(id) + '/messages/read', { method: 'POST' }).catch(() => { });
+  } catch (e) { if (!S.chat[id]) { S.chat[id] = { messages: [], can_send: false }; if (curScreen() === 'chat') draw(); toast(errMsg(e)); } }
+}
+async function sendChat(id, txt) {
+  const el = document.getElementById('cm'); const body = (txt || (el && el.value) || '').trim();
+  if (!body) return;
+  try { await API('/orders/' + encodeURIComponent(id) + '/messages', { method: 'POST', body: { body } }); if (el) el.value = ''; await loadChat(id); }
+  catch (e) { toast(errMsg(e)); }
+}
+
+/* ---------- hỗ trợ: gửi qua POST /support/contact (API có sẵn) ---------- */
+function ticketSheet() {
+  const u = S.user || {}, em = u.email || (u.metadata && u.metadata.contact_email) || '';
+  sheet(`<h2>Tạo yêu cầu mới</h2><label class="l">Tiêu đề *</label><input id="tks" class="field" maxlength="180" placeholder="Ví dụ: Không nhận được mã đặt hàng">
+ ${em ? '' : '<label class="l">Email nhận phản hồi *</label><input id="tke" class="field" type="email" placeholder="email@example.com">'}
+ <label class="l">Nội dung cần giải quyết * (tối thiểu 10 ký tự)</label><textarea id="tk" class="field" rows="4" maxlength="2000" placeholder="Mô tả chi tiết vấn đề…"></textarea>
+ <div class="row mt16"><button class="btn ghost" onclick="closeSheet()">Hủy</button><button class="btn" id="tksend" onclick="sendTicket('${esc(em)}')">Gửi yêu cầu</button></div>`);
+}
+async function sendTicket(em) {
+  const u = S.user || {}, subject = (document.getElementById('tks').value || '').trim(), message = (document.getElementById('tk').value || '').trim();
+  const email = em || (document.getElementById('tke') && document.getElementById('tke').value.trim()) || '';
+  if (subject.length < 2) { toast('Nhập tiêu đề'); return; }
+  if (message.length < 10) { toast('Nội dung tối thiểu 10 ký tự'); return; }
+  if (!EMAIL_RE.test(email)) { toast('Cần email hợp lệ để nhận phản hồi'); return; }
+  const b = document.getElementById('tksend'); if (b) b.disabled = true;
+  try {
+    const body = { full_name: (u.full_name || 'Khách hàng').slice(0, 140), email, subject, message };
+    if (u.phone && u.phone.length >= 8 && u.phone.length <= 30) body.phone = u.phone;
+    await API('/support/contact', { method: 'POST', body }); closeSheet(); toast('Đã gửi yêu cầu. FoodSave sẽ phản hồi qua email.');
+  } catch (e) { if (b) b.disabled = false; toast(errMsg(e)); }
+}
+
+/* ====================== KHỞI ĐỘNG ====================== */
+/* Nhắc cập nhật khi có service worker (phiên bản) mới */
+function watchUpdates() {
+  if (!('serviceWorker' in navigator)) return;
+  const had = !!navigator.serviceWorker.controller; let shown = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!had || shown) return; shown = true;
+    sheet('<h2><i class="ti ti-refresh" style="color:var(--g7)"></i> Có phiên bản mới</h2><p class="sm mut mt8">FoodSave vừa được cập nhật. Tải lại để dùng bản mới nhất.</p><button class="btn mt16" onclick="location.reload()">Tải lại ngay</button><button class="b sm mt12" style="width:100%;color:var(--mut)" onclick="closeSheet()">Để sau</button>');
+  });
+}
+function hasOAuthReturn() { return /[#&?](access_token|code|error_description)=/.test(location.hash + location.search) || sessionStorage.getItem('foodsave.app.oauth') === '1'; }
+async function boot() {
+  S.loc = readLoc();
+  if (window.FSPwa) FSPwa.init({ role: 'customer', client: 'app', ui: false, request: API });   // đăng ký service worker (offline.html, push); app tự vẽ nút bật/tắt thông báo
+  watchUpdates();
+  root('boot');
+  const sess = AUTH().readSession();
+  const oauth = hasOAuthReturn();
+  if (!sess && !oauth) { S.authChecked = true; root('welcome'); return; }
+  if (oauth && !sess) {   // chờ Supabase đổi mã/token trong URL thành phiên (sự kiện foodsave:session-saved)
+    root('oauth');
+    setTimeout(() => { if (!S.user && curScreen() === 'oauth') { sessionStorage.removeItem('foodsave.app.oauth'); S.authChecked = true; root('welcome'); toast('Đăng nhập chưa hoàn tất, vui lòng thử lại'); } }, 12000);
+    return;
+  }
+  await afterLogin();
+  if (curScreen() === 'boot') root('welcome');
+}
+try { sessionStorage.removeItem('foodsave.app.oauth'); } catch (e) { /* bỏ qua */ }
+window.addEventListener('foodsave:session-saved', () => { try { sessionStorage.removeItem('foodsave.app.oauth'); if (/[#?]/.test(location.href) && hasOAuthReturn()) history.replaceState(null, '', location.pathname); } catch (e) { /* bỏ qua */ } });
+document.addEventListener('DOMContentLoaded', boot);
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="frontend/foodsave-map.js?v=20261003e"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="frontend/foodsave-legal-content.js?v=20260927"></script>
+<script src="frontend/foodsave-auth-client.js?v=20261003e"></script>
+<script src="frontend/foodsave-live-data.js?v=20261030a"></script>
+<script src="frontend/foodsave-pwa.js?v=20261030a"></script>
+</body>
+</html>

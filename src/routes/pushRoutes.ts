@@ -11,7 +11,8 @@ const subscribeBodySchema = z.object({
   keys: z.object({
     p256dh: z.string().min(10).max(300),
     auth: z.string().min(10).max(300)
-  }).strict()
+  }).strict(),
+  client: z.enum(["web", "app"]).optional()
 }).strict();
 
 const unsubscribeBodySchema = z.object({ endpoint: z.string().url().max(1000) }).strict();
@@ -30,7 +31,7 @@ pushRoutes.post(
   asyncHandler(async (req: Request, res: Response) => {
     const body = req.validated?.body as z.infer<typeof subscribeBodySchema>;
     const owner = res.locals.pushOwner as { kind: "user" | "volunteer"; id: string };
-    sendSuccess(res, await pushService.subscribe(owner, { endpoint: body.endpoint, keys: body.keys, userAgent: req.headers["user-agent"] }));
+    sendSuccess(res, await pushService.subscribe(owner, { endpoint: body.endpoint, keys: body.keys, userAgent: req.headers["user-agent"], client: body.client }));
   })
 );
 

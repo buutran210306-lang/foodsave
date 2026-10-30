@@ -269,6 +269,16 @@ Replace the existing localStorage sync methods with HTTP calls:
 - `FS.sync.getEcoImpactPlatform` -> `GET /eco-impact/platform`
 - `FS.sync.getEcoImpactLeaderboard` -> `GET /eco-impact/leaderboard`
 
+## App người mua (PWA)
+
+- Trang: `FOODSAVE_APP.html` (người mua). Dùng chung `frontend/foodsave-live-data.js`, `foodsave-auth-client.js`, `foodsave-map.js`, `foodsave-pwa.js` với web; không có dữ liệu giả. Mở bằng HTTPS hoặc `http://localhost` (GPS, service worker, push cần).
+- API riêng cho app: `GET /catalog/policy` (luật đang áp dụng), `GET /orders/:id/cancel-preview` (xem trước huỷ).
+- Chạy thử ở máy: `npm run dev`, rồi mở `FOODSAVE_APP.html` bằng Live Server / `http://localhost`.
+- Cấu hình Supabase cho Gmail + OTP: Authentication → Providers → bật Email; Email Templates (Magic Link và Confirm signup) đổi nội dung để gửi mã `{{ .Token }}` thay vì link; URL Configuration → thêm `https://<tên miền>/FOODSAVE_APP.html` vào Redirect URLs (cho Google/Facebook); Rate Limits: mặc định chỉ vài email mỗi giờ, khi chạy thật nên gắn SMTP riêng.
+- Thông báo đẩy: biến môi trường VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (tạo bằng `npm run gen:vapid`). SQL 032 và 037. iPhone cần iOS ≥ 16.4 và "Thêm vào Màn hình chính".
+- Cài app: web hiện thanh "Cài app FoodSave" trên điện thoại (không tự chuyển hướng); app cài ra mở `FOODSAVE_APP.html` (`manifest-app.webmanifest`). Mỗi lần phát hành đổi `CACHE_VERSION` trong `sw.js`.
+- Kiểm thử: `npm run typecheck`, `npm run test:order` (79 kịch bản, database giả). Kiểm thử tay trên máy thật: `HUONG_DAN_THU_APP_NGUOI_MUA.md`.
+
 ## Eco Impact Tracker
 
 - Completed orders and completed donations create idempotent rows in `eco_impact_events`.

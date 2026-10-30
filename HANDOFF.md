@@ -248,3 +248,46 @@ Tiền: mọi cột `*_cents` lưu **VND nguyên** (65.000đ = 65000), không nh
 6. Thử trên điện thoại thật: cài PWA, bật thông báo, thanh toán một đơn (mô phỏng) khi đã tắt app; thử quét QR bằng camera ở cổng cửa hàng.
 7. Admin → Chính sách: bấm "Lưu cấu hình" một lần thử, kiểm tra Nhật ký hoạt động ghi đúng, rồi "Khôi phục mặc định".
 8. Nhắc lại các giới hạn đã biết: tiền vẫn mô phỏng; ảnh bằng chứng khiếu nại đang công khai (khi triển khai thật chuyển bucket riêng + link tạm thời); một cửa hàng mỗi chủ tài khoản; PWA/push theo giới hạn ở mục Đợt 4a; các màn Admin chưa nối API vẫn là dữ liệu mẫu.
+
+## App người mua (PWA) — Đợt 1 (30/10)
+
+- File mới: `FOODSAVE_APP.html` (từ `FOODSAVE_APP_demo.html`, giữ giao diện). Dùng chung `frontend/foodsave-live-data.js` (FS.sync: sản phẩm, cửa hàng, đơn, thông báo, khiếu nại, tác động) và `frontend/foodsave-auth-client.js` (phiên đăng nhập, OAuth). Không copy code của web.
+- API thêm (không cần SQL): `GET /api/v1/catalog/policy` (luật hiện hành: số phút theo nhãn, điểm uy tín, giờ khiếu nại; công khai, chỉ đọc) và `GET /api/v1/orders/:id/cancel-preview` (xem trước hủy: hoàn bao nhiêu, trừ bao nhiêu điểm; dùng chung hàm `cancelOutcome` với hủy thật).
+- Đăng nhập: Google/Facebook (OAuth Supabase, redirect về chính `FOODSAVE_APP.html`), SĐT + OTP (backend), Gmail + OTP (`signInWithOtp` / `verifyOtp type:'email'`).
+  - Việc cần làm trong Supabase: Authentication → Providers → Email bật; Authentication → Email Templates → "Magic Link" và "Confirm signup": thay link bằng mã `{{ .Token }}`; Authentication → URL Configuration → thêm `https://<tên miền>/FOODSAVE_APP.html` vào Redirect URLs; Rate Limits: mặc định chỉ vài email/giờ, khi chạy thật nên gắn SMTP riêng.
+- Tài khoản không phải người mua (từ thiện, cửa hàng, admin) đăng nhập vào app: bị đăng xuất và hiện hướng dẫn dùng cổng riêng. Kiểm tra vai trò xảy ra TRƯỚC khi ghi hồ sơ.
+- Mã QR nhận hàng là mã QR THẬT (thư viện `qrcode-generator@1.4.4` từ cdnjs) mã hóa `orders.qr_code`, để cổng cửa hàng quét bằng camera được. (QR trên web hiện là họa tiết trang trí, không quét được.)
+- Vườn cây: dùng cùng khóa `foodsave.treeGame.v1` / `foodsave.treeGame.creditedOrders.v1` và cùng khóa chống trùng `#<order_number>` với web. Chỉ cộng nước cho đơn `payment_status = paid` và `paid_at` trong 2 giờ gần nhất.
+
+## App người mua (PWA) — Đợt 2: bản đồ (30/10)
+
+- Dùng Leaflet 1.9.4 + `frontend/foodsave-map.js` của web (ảnh bản đồ OpenStreetMap France, tự chuyển Esri khi lỗi; tra địa chỉ Photon). Không thêm khóa/dịch vụ mới. `FOODSAVE_GOOGLE_MAPS_KEY` đang rỗng ở web nên app chỉ dùng Leaflet.
+- Chỗ có bản đồ: Trang chủ "Gần bạn" (nhỏ, chạm mở màn Bản đồ), màn Bản đồ (ghim có số sản phẩm + chấm vị trí, chạm ghim mở cửa hàng), bước "Xác nhận vị trí" khi đăng ký (GPS / tìm địa chỉ / kéo ghim), trang Cửa hàng và Chi tiết đơn (bản đồ nhỏ + "Chỉ đường Google Maps").
+- Vị trí lưu ở khóa `foodsave.nearby.location` (giống web); tên địa chỉ hiển thị ở `foodsave.app.locLabel`. Cửa hàng không có tọa độ thì không ghim. Mất mạng / chưa tải được Leaflet: hiện thông báo, danh sách cửa hàng vẫn dùng được.
+
+## App người mua (PWA) — Đợt 3: thông báo (30/10)
+
+- SQL mới `database/Orders/037_push_client.sql` (chạy SAU 032, không cần sao lưu, chạy lại được): cột `push_subscriptions.client` ('web' | 'app'). Chưa chạy thì vẫn hoạt động, chỉ là bấm thông báo sẽ mở bản web.
+- Push đúng người, một lần mỗi sự kiện, qua `createNotification()`. Loại mới: `order-ready` ("Cửa hàng … đã chuẩn bị xong đơn, đến nhận trước hh:mm", gửi khi cửa hàng bấm "Sẵn sàng" ở cổng đối tác; trạng thái `ready` đã có sẵn nên KHÔNG cần SQL cho phần này) và `voucher-new`.
+- Voucher mới: báo đúng một lần khi voucher được TẠO (không báo khi bật/tắt lại, không báo voucher chưa tới ngày bắt đầu). Voucher toàn hệ thống (Admin): 1 thông báo cho mọi người mua + push cho ai đã bật. Voucher của cửa hàng: chỉ người đã yêu thích hoặc đã đặt ở cửa hàng đó (tối đa 300 người). Hệ thống chưa có "cấp voucher riêng cho từng người".
+- Cài đặt thông báo (Cá nhân → Cài đặt thông báo): 3 nhóm Đơn hàng / Tin nhắn & khiếu nại / Khuyến mãi & voucher, lưu ở `profiles.metadata.notification_prefs`. Chỉ tắt push; thông báo trong app (chuông) vẫn ghi.
+- Bấm thông báo mở đúng màn trong app: `/FOODSAVE_APP.html#order=<id>`, `#chat=<id>`, `#complaint=<id>`, `#voucher`.
+- App dùng `frontend/foodsave-pwa.js` với `FSPwa.init({client:'app', ui:false})` (không hiện thanh nút nổi của web). Banner trong app: kiểm tra thông báo mới mỗi 20 giây. Nhắc cập nhật khi service worker mới. Chính sách/điều khoản/hoàn tiền/trợ giúp dùng `foodsave-legal-content.js` (không có banner cookie).
+- Cần cho push thật: biến môi trường VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_SUBJECT (đã nêu ở Đợt 4a). iPhone: iOS ≥ 16.4 và đã "Thêm vào Màn hình chính".
+
+## App người mua (PWA) — Đợt 4: cài app từ web (30/10)
+
+- `manifest-app.webmanifest`: `start_url` và `id` = `/FOODSAVE_APP.html`, `display: standalone`, `orientation: portrait`, `theme_color #14613b`, icon 192 / 512 / maskable-512 / apple-touch-180 (dùng icon sẵn có trong `icons/`; KHÔNG chạy `scripts/make-icons.js`). `FOODSAVE_APP.html` và `FOODSAVE_USER.html` đều trỏ manifest này, nên app cài từ web mở ra `FOODSAVE_APP.html`; cùng origin nên giữ phiên Supabase.
+- `sw.js` lên `fs-v2`: cache vỏ app (icon, manifest, các tệp `frontend/*.js` dùng chung) + thư viện CDN cố định (Leaflet, Supabase JS, Tabler icons, qrcode-generator) ở kho riêng `fs-cdn-v1` (stale-while-revalidate). Không cache `/api/`, đơn hàng, thanh toán. Trang HTML vẫn mạng trước, mất mạng → `offline.html`. Mỗi lần phát hành đổi `CACHE_VERSION`.
+- Web (`FOODSAVE_USER.html`), chỉ thêm: manifest, `frontend/foodsave-install.js`, mục "Cài đặt app" (chân trang + menu tài khoản). Không tự chuyển hướng ai sang app.
+  - Điện thoại chưa cài: thanh "Cài app FoodSave để dùng tiện hơn – bấm để cài" (nút Cài + nút đóng; đóng = để sau 7 ngày, `localStorage foodsave.install.dismissedAt`).
+  - Android/Chrome: `beforeinstallprompt.prompt()`. iPhone/Safari và trình duyệt không có hộp thoại: bảng hướng dẫn "Chia sẻ → Thêm vào MH chính".
+  - Mục "Cài đặt app" hiện cả trên máy tính khi trình duyệt cho cài; ẩn khi đã cài (`appinstalled` hoặc đang chạy standalone, nhớ ở `foodsave.install.installed`). Gỡ app xong muốn hiện lại banner thì xóa khóa này.
+  - Nút "Cài ứng dụng" nổi cũ của `foodsave-pwa.js` bị ẩn trên web để không trùng.
+
+## App người mua (PWA) — Đợt 5: kiểm thử và hoàn thiện (30/10)
+
+- `npm run typecheck` sạch; `npm run test:order` 79/79 (có kịch bản mới: xem trước huỷ khớp huỷ thật, push "cửa hàng chuẩn bị xong" đúng người / một lần / đúng đường dẫn app, tắt nhóm thông báo, voucher mới một lần). `test:ledger-db` cần database thật, chưa chạy.
+- Giao diện đã thử bằng Chrome không đầu với API giả: không lỗi JS ở các luồng đăng nhập (Gmail, SĐT, tài khoản từ thiện bị chặn), người mới, đặt hàng, đơn, chat, huỷ, khiếu nại, bản đồ, thông báo, chính sách; banner cài app (điện thoại có / máy tính không); service worker + cache.
+- CHƯA thử trên máy thật (cần bạn làm): GPS, Google/Facebook OAuth, OTP email/SMS thật, thanh toán MoMo thật, push thật, cài trên Android/iPhone, quét QR bằng camera. Danh sách từng bước: `HUONG_DAN_THU_APP_NGUOI_MUA.md`.
+- Rủi ro còn lại: ảnh khiếu nại công khai; vị trí nhập tay không có toạ độ; không có API ví / voucher riêng / ticket hỗ trợ có lịch sử / Chat AI cho người mua; ESG và đánh giá cửa hàng chưa có API công khai (app ẩn các khối này); vườn cây còn lưu localStorage (đề xuất lưu server: bảng `tree_game_state(user_id, state jsonb, credited_orders text[])` + endpoint GET/PUT, cộng nước phía server khi `markPaid`, để đồng bộ web/app và chống gian lận).

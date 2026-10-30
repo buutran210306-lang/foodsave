@@ -19,6 +19,7 @@ import { HTTP_STATUS } from "../constants/http";
 import { AppError } from "../utils/appError";
 import { logger } from "../utils/logger";
 import { assertOwnerOrAdmin, getRange, handleSupabaseError, requireRecord, supabaseAdmin, toPagination } from "./supabaseService";
+import { voucherAnnounceService } from "./voucherAnnounceService";
 
 const productSelect = "*, stores!inner(id,name,slug,owner_id,emoji,logo_url,address,district,city,latitude,longitude,rating,is_verified,is_open,opening_hours,opening_schedule,status)";
 const storeSelect = "*";
@@ -436,6 +437,7 @@ export const catalogService = {
       .single();
 
     if (error) handleSupabaseError(error, "Failed to create voucher");
+    await voucherAnnounceService.announce(data as Voucher);
     return data as Voucher;
   }
 };
